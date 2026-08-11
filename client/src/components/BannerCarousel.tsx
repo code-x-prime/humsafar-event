@@ -105,36 +105,44 @@ function BannerSlide({ banner }: { banner: Banner }) {
       )}
 
       {banner.title && (
-        <div className="absolute inset-x-0 bottom-0 flex flex-col bg-linear-to-t from-black/70 via-black/35 to-transparent px-5 pb-6 pt-16 sm:inset-0 sm:justify-center sm:bg-none sm:px-0 sm:py-0 sm:pl-[9%] sm:pt-0 sm:max-w-[55%]">
-          {banner.eyebrow && (
-            <p className="font-heading text-[10px] font-semibold uppercase tracking-[.18em] text-white/80 sm:text-xs">
-              {banner.eyebrow}
-            </p>
-          )}
+        <>
+          {/* Dark scrim behind the text so it stays readable over bright/busy
+              photos — mobile gets a bottom-up gradient (text sits at the
+              bottom), desktop gets a left-to-right one (text sits on the left,
+              sm:max-w-[55%] below). */}
+          <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/35 to-transparent sm:bg-linear-to-r sm:from-black/65 sm:via-black/30 sm:to-transparent" />
 
-          <h1 className="mt-2 font-display text-xl font-semibold leading-tight text-white sm:mt-3 sm:text-4xl lg:text-5xl">
-            <HeadingText title={banner.title} highlightWord={banner.highlightWord} />
-          </h1>
+          <div className="absolute inset-x-0 bottom-0 flex flex-col px-5 pb-6 pt-16 sm:inset-0 sm:justify-center sm:px-0 sm:py-0 sm:pl-[9%] sm:pt-0 sm:max-w-[55%]">
+            {banner.eyebrow && (
+              <p className="font-heading text-[10px] font-semibold uppercase tracking-[.18em] text-white/80 sm:text-xs">
+                {banner.eyebrow}
+              </p>
+            )}
 
-          {banner.subtitle && (
-            <p className="mt-2.5 max-w-sm font-sans text-[11px] leading-relaxed text-white/85 sm:mt-4 sm:text-sm">
-              {banner.subtitle}
-            </p>
-          )}
+            <h1 className="mt-2 font-display text-xl font-semibold leading-tight text-white sm:mt-3 sm:text-4xl lg:text-5xl">
+              <HeadingText title={banner.title} highlightWord={banner.highlightWord} />
+            </h1>
 
-          {banner.ctaText && banner.ctaLink && (
-            <Link
-              href={banner.ctaLink}
-              className="mt-4 inline-block w-fit rounded-(--radius-btn,12px) bg-white px-5 py-2 font-heading text-xs font-semibold text-primary hover:bg-white/90 sm:mt-6 sm:px-6 sm:py-2.5 sm:text-sm"
-            >
-              {banner.ctaText}
-            </Link>
-          )}
+            {banner.subtitle && (
+              <p className="mt-2.5 max-w-sm font-sans text-[11px] leading-relaxed text-white/85 sm:mt-4 sm:text-sm">
+                {banner.subtitle}
+              </p>
+            )}
 
-          {banner.ctaFootnote && (
-            <p className="mt-2.5 font-sans text-[10px] text-white/70 sm:mt-3 sm:text-xs">{banner.ctaFootnote}</p>
-          )}
-        </div>
+            {banner.ctaText && banner.ctaLink && (
+              <Link
+                href={banner.ctaLink}
+                className="mt-4 inline-block w-fit rounded-(--radius-btn,12px) bg-white px-5 py-2 font-heading text-xs font-semibold text-primary hover:bg-white/90 sm:mt-6 sm:px-6 sm:py-2.5 sm:text-sm"
+              >
+                {banner.ctaText}
+              </Link>
+            )}
+
+            {banner.ctaFootnote && (
+              <p className="mt-2.5 font-sans text-[10px] text-white/70 sm:mt-3 sm:text-xs">{banner.ctaFootnote}</p>
+            )}
+          </div>
+        </>
       )}
     </div>
   );
