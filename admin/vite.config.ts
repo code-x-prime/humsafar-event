@@ -17,4 +17,21 @@ export default defineConfig({
       '@': path.resolve(dirname, './src'),
     },
   },
+  preview: {
+    port: 4177,
+    host: "0.0.0.0",
+    allowedHosts: [
+      "admin.humsafarevent.com",
+      "www.admin.humsafarevent.com",
+    ],
+  },
+  // Add server configuration for development
+  server: {
+    port: 4177,
+    host: "0.0.0.0",
+    allowedHosts: [
+      "admin.humsafarevent.com",
+      "www.admin.humsafarevent.com",
+    ],
+  },
 })
