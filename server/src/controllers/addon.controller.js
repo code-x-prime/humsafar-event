@@ -1,4 +1,4 @@
-import * as addOnService from '../services/addon.service.js';
+import * as addOnService from '../services/addOn.service.js';
 import { success } from '../utils/apiResponse.js';
 
 export const list = async (req, res) => {
