@@ -1,0 +1,36 @@
+<div style="font-family: 'Jost', 'Inter', Arial, sans-serif; max-width: 480px; margin: 0 auto;">
+  <div style="background: #0E2A4D; padding: 24px; text-align: center;">
+    <span style="font-family: 'Playfair Display', Georgia, serif; color: #ffffff; font-size: 22px;">
+      Humsafar Events
+    </span>
+  </div>
+  <div style="padding: 32px 24px; background: #ffffff; color: #0B1620;">
+    <p style="font-size: 16px; margin: 0 0 4px;">Hi {{customerName}},</p>
+    <p style="font-size: 15px; margin: 0 0 20px;">
+      Your booking <strong>{{orderNumber}}</strong> has been cancelled.
+    </p>
+
+    {{#if reason}}
+    <div style="background: #F7F9FC; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+      <p style="font-size: 13px; color: #6B7A88; margin: 0 0 4px;">Reason</p>
+      <p style="font-size: 14px; margin: 0;">{{reason}}</p>
+    </div>
+    {{/if}}
+
+    {{#if amountPaid}}
+    <p style="font-size: 14px; margin: 0 0 20px;">
+      Any amount paid (₹{{amountPaid}}) will be refunded per our refund policy — please allow a few
+      business days for it to reflect.
+    </p>
+    {{/if}}
+
+    <p style="font-size: 13px; color: #6B7A88; margin-top: 24px;">
+      Questions? Reply to this email or reach us on WhatsApp — we're happy to help you rebook.
+    </p>
+  </div>
+  <div style="background: #081C36; padding: 16px 24px; text-align: center;">
+    <p style="font-size: 12px; color: #D6E0EE; margin: 0;">
+      Humsafar Events &middot; Together in Every Journey
+    </p>
+  </div>
+</div>

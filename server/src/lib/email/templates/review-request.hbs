@@ -1,0 +1,38 @@
+<div style="font-family: 'Jost', 'Inter', Arial, sans-serif; max-width: 480px; margin: 0 auto;">
+  <div style="background: #0E2A4D; padding: 24px; text-align: center;">
+    <span style="font-family: 'Playfair Display', Georgia, serif; color: #ffffff; font-size: 22px;">
+      Humsafar Events
+    </span>
+  </div>
+  <div style="padding: 32px 24px; background: #ffffff; color: #0B1620;">
+    <p style="font-size: 16px; margin: 0 0 4px;">Hi {{customerName}},</p>
+    <p style="font-size: 15px; margin: 0 0 20px;">
+      How was your recent decoration from booking <strong>{{orderNumber}}</strong>?
+    </p>
+
+    {{#if products}}
+    <div style="background: #F7F9FC; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+      <p style="font-size: 13px; color: #6B7A88; margin: 0 0 8px;">You booked</p>
+      <ul style="margin: 0; padding-left: 18px; font-size: 14px;">
+        {{#each products}}
+        <li style="margin-bottom: 4px;">{{this}}</li>
+        {{/each}}
+      </ul>
+    </div>
+    {{/if}}
+
+    <p style="font-size: 14px; margin: 0 0 20px;">
+      Your feedback helps other families plan their celebrations with confidence — log in to your
+      profile to leave a quick review.
+    </p>
+
+    <p style="font-size: 13px; color: #6B7A88; margin-top: 24px;">
+      Thank you for choosing Humsafar Events.
+    </p>
+  </div>
+  <div style="background: #081C36; padding: 16px 24px; text-align: center;">
+    <p style="font-size: 12px; color: #D6E0EE; margin: 0;">
+      Humsafar Events &middot; Together in Every Journey
+    </p>
+  </div>
+</div>

@@ -1,0 +1,11 @@
+node_modules/
+.env
+.env.local
+.env.production
+dist/
+*.log
+
+# Claude Code local config and scratch docs — not for the repo
+.claude/
+ASSUMPTIONS.md
+VERIFICATION.md
