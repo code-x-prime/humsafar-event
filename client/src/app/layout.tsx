@@ -1,19 +1,8 @@
 import type { Metadata } from "next";
-import { Nunito, Plus_Jakarta_Sans } from "next/font/google";
+import "@fontsource-variable/nunito";
+import "@fontsource-variable/plus-jakarta-sans";
 import "./globals.css";
 import { AppProviders } from "./providers";
-
-const nunito = Nunito({
-  variable: "--font-nunito",
-  weight: ["200", "300", "400", "600", "700"],
-  subsets: ["latin"],
-});
-
-const plusJakartaSans = Plus_Jakarta_Sans({
-  variable: "--font-plus-jakarta",
-  weight: ["400", "500", "600", "700"],
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Humsafar Events",
@@ -27,7 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${nunito.variable} ${plusJakartaSans.variable} antialiased`}>
+      <body className="antialiased">
         <AppProviders>{children}</AppProviders>
       </body>
     </html>
