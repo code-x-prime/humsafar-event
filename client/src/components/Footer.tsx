@@ -2,6 +2,27 @@ import Image from "next/image";
 import Link from "next/link";
 import { Phone, Mail, ShieldCheck, Truck, Headset } from "lucide-react";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
+
+interface FooterCity {
+  id: string;
+  name: string;
+  slug: string;
+  isServiceable: boolean;
+}
+
+async function getTopCities(): Promise<FooterCity[]> {
+  const res = await fetch(`${API_BASE}/cities`, { cache: "no-store" });
+  if (!res.ok) return [];
+  const json = await res.json();
+  if (!json.success) return [];
+  const grouped = json.data as Record<string, FooterCity[]>;
+  return Object.values(grouped)
+    .flat()
+    .filter((c) => c.isServiceable)
+    .slice(0, 5);
+}
+
 const TRUST_BADGES = [
   { icon: ShieldCheck, title: "Secure Payments", subtitle: "Safe & encrypted transactions" },
   { icon: Truck, title: "Delhi NCR · Chandigarh · Jaipur", subtitle: "On-time setup, every time" },
@@ -13,14 +34,6 @@ const IMPORTANT_LINKS = [
   { href: "/about", label: "About Us" },
   { href: "/privacy", label: "Privacy Policy" },
   { href: "/refund-policy", label: "Refund Policy" },
-];
-
-const TOP_CITIES = [
-  { href: "/locations/delhi", label: "Delhi" },
-  { href: "/locations/gurugram", label: "Gurugram" },
-  { href: "/locations/noida", label: "Noida" },
-  { href: "/locations/chandigarh", label: "Chandigarh" },
-  { href: "/locations/jaipur", label: "Jaipur" },
 ];
 
 const INFO_LINKS = [
@@ -58,7 +71,9 @@ const SOCIAL_LINKS = [
   },
 ];
 
-export function Footer() {
+export async function Footer() {
+  const topCities = await getTopCities();
+
   return (
     <footer className="bg-background pt-8">
       {/* Trust badges */}
@@ -135,20 +150,22 @@ export function Footer() {
             </ul>
           </div>
 
-          <div>
-            <p className="font-heading text-xs font-semibold uppercase tracking-[.14em] text-(--orange-600)">
-              Top Cities
-            </p>
-            <ul className="mt-4 flex flex-col gap-2 font-sans text-sm">
-              {TOP_CITIES.map((link) => (
-                <li key={link.href}>
-                  <Link href={link.href} className="hover:text-(--orange-600)">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {topCities.length > 0 && (
+            <div>
+              <p className="font-heading text-xs font-semibold uppercase tracking-[.14em] text-(--orange-600)">
+                Top Cities
+              </p>
+              <ul className="mt-4 flex flex-col gap-2 font-sans text-sm">
+                {topCities.map((city) => (
+                  <li key={city.id}>
+                    <Link href={`/locations/${city.slug}`} className="hover:text-(--orange-600)">
+                      {city.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div>
             <p className="font-heading text-xs font-semibold uppercase tracking-[.14em] text-(--orange-600)">
