@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Star, Clock, CheckCircle2, XCircle, ChevronLeft, ChevronRight, MapPin, MessageCircle } from "lucide-react";
+import { Star, Clock, CheckCircle2, XCircle, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import type { ProductDetailData } from "@/app/decoration/[slug]/page";
 import { CustomizeOrderDialog } from "./CustomizeOrderDialog";
 import { CitySelector } from "./CitySelector";
@@ -30,12 +30,11 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
 
   const images = product.media.length > 0 ? product.media : null;
   const category = product.categories[0]?.category;
-  const whatsappMessage = `Hi! I'm interested in "${product.title}"${
-    typeof window !== "undefined" ? ` — ${window.location.href}` : ""
-  }`;
+  const whatsappMessage = `Hi! I'm interested in "${product.title}"${typeof window !== "undefined" ? ` — ${window.location.href}` : ""
+    }`;
 
   return (
-    <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_1fr]">
+    <div className="mt-4 grid grid-cols-1 gap-6 pb-20 lg:grid-cols-[1fr_1fr] lg:pb-0">
       {/* Gallery */}
       <div>
         <div className="relative aspect-square w-full overflow-hidden rounded-(--radius-card,16px) border border-(--ink-100) bg-white">
@@ -80,9 +79,8 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
               <button
                 key={img.id}
                 onClick={() => setActiveImage(i)}
-                className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-md border-2 ${
-                  i === activeImage ? "border-(--blue-600)" : "border-(--ink-100)"
-                }`}
+                className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-md border-2 ${i === activeImage ? "border-(--blue-600)" : "border-(--ink-100)"
+                  }`}
               >
                 <Image src={img.url} alt="" fill className="object-cover" />
               </button>
@@ -154,11 +152,10 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
                 <button
                   key={variant.id}
                   onClick={() => setActiveVariant(i)}
-                  className={`flex items-center gap-2 rounded-full border px-3 py-1.5 font-sans text-xs transition-colors ${
-                    i === activeVariant
-                      ? "border-(--blue-600) bg-(--surface-alt,#F7F9FC) text-accent"
-                      : "border-(--ink-300) text-(--ink-700) hover:border-(--blue-600)"
-                  }`}
+                  className={`flex items-center gap-2 rounded-full border px-3 py-1.5 font-sans text-xs transition-colors ${i === activeVariant
+                    ? "border-(--blue-600) bg-(--surface-alt,#F7F9FC) text-accent"
+                    : "border-(--ink-300) text-(--ink-700) hover:border-(--blue-600)"
+                    }`}
                 >
                   {variant.swatches.length > 0 && (
                     <span className="flex overflow-hidden rounded-full border border-(--ink-100)">
@@ -174,7 +171,7 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
           </div>
         )}
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        <div className="mt-6 hidden gap-3 lg:flex">
           {whatsappNumber && (
             <a
               href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`}
@@ -182,13 +179,13 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 rounded-(--radius-btn,12px) bg-[#25D366] px-6 py-3 font-heading text-sm font-semibold text-white hover:bg-[#20bd5a]"
             >
-              <MessageCircle className="h-4 w-4" />
+              <Image src="/whatsapp.png" alt="" width={18} height={18} className="h-4.5 w-4.5" />
               WhatsApp
             </a>
           )}
           <button
             onClick={() => setDialogOpen(true)}
-            className="flex-1 rounded-(--radius-btn,12px) bg-primary px-6 py-3 font-heading text-sm font-semibold text-primary-foreground sm:flex-none"
+            className="flex-1 rounded-(--radius-btn,12px) bg-primary px-10 py-3 font-heading text-base font-semibold text-primary-foreground"
           >
             Book Now
           </button>
@@ -210,11 +207,10 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`rounded-full px-3.5 py-1.5 font-heading text-sm transition-colors ${
-                  activeTab === tab
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-(--surface-alt,#F7F9FC) text-(--ink-700) hover:text-accent"
-                }`}
+                className={`rounded-full px-3.5 py-1.5 font-heading text-sm transition-colors ${activeTab === tab
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-(--surface-alt,#F7F9FC) text-(--ink-700) hover:text-accent"
+                  }`}
               >
                 {tab}
               </button>
@@ -304,6 +300,29 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
             />
           </div>
         )}
+      </div>
+
+      {/* Mobile-only fixed bottom action bar: WhatsApp circle + Book Now pill */}
+      <div className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-3 border-t border-(--ink-100) bg-background px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] lg:hidden">
+        {whatsappNumber && (
+          <a
+            href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Chat on WhatsApp"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-[#25D366] shadow-md"
+          >
+            <Image src="/whatsapp.png" alt="" width={26} height={26} className="h-6.5 w-6.5" />
+          </a>
+        )}
+
+        <button
+          onClick={() => setDialogOpen(true)}
+          className="flex flex-1 items-center justify-center gap-2 rounded-md bg-primary py-3 font-heading text-sm font-semibold text-primary-foreground shadow-md"
+        >
+          Book Now
+          <ChevronRight className="h-4 w-4" />
+        </button>
       </div>
     </div>
   );

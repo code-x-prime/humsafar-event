@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { X, User, ChevronRight, MessageCircle } from "lucide-react";
+import { X, User, ChevronRight } from "lucide-react";
 
 interface CategoryNavItem {
   id: string;
@@ -126,8 +126,8 @@ export function MobileDrawer({
             rel="noopener noreferrer"
             className="flex items-center gap-3 rounded-(--radius-card,16px) bg-[#25D366]/10 px-4 py-3 hover:bg-[#25D366]/15"
           >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white">
-              <MessageCircle className="h-4.5 w-4.5" />
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white">
+              <Image src="/whatsapp.png" alt="WhatsApp" width={22} height={22} className="h-5.5 w-5.5" />
             </span>
             <div>
               <p className="font-heading text-sm font-semibold text-(--navy-800)">WhatsApp Support</p>

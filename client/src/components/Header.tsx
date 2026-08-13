@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingBag, User, Headset, ChevronDown, Menu } from "lucide-react";
+import { User, Headset, ChevronDown, Menu } from "lucide-react";
+import { IconShoppingCart } from "@tabler/icons-react";
 import { CitySelector } from "./CitySelector";
 import { HeaderSearch } from "./HeaderSearch";
 import { MobileDrawer } from "./MobileDrawer";
@@ -67,7 +68,7 @@ export function Header() {
           <CitySelector onOpen={() => setOpenDropdown(null)} />
         </div>
 
-        <div className="hidden flex-1 md:block">
+        <div className="hidden max-w-md flex-1 md:block">
           <HeaderSearch />
         </div>
 
@@ -80,7 +81,7 @@ export function Header() {
             Support
           </Link>
           <Link href="/cart" className="relative hover:text-accent" aria-label="Cart">
-            <ShoppingBag className="h-5 w-5" />
+            <IconShoppingCart className="h-5 w-5" />
             {itemCount > 0 && (
               <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-(--coral-600) px-1 text-[10px] font-semibold text-white">
                 {itemCount}
@@ -91,7 +92,9 @@ export function Header() {
             href={isAuthenticated ? "/profile" : "/login"}
             className="flex items-center gap-1.5 font-heading text-sm hover:text-accent"
           >
-            <User className="h-5 w-5" />
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-(--coral-600) text-white">
+              <User className="h-4 w-4" />
+            </span>
             <span className="hidden sm:inline">{isAuthenticated ? user?.name || "Profile" : "Sign In"}</span>
           </Link>
         </div>

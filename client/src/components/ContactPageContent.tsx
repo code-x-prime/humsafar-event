@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { PartyPopper, MessageCircle, Phone, Mail, Clock, MapPin, Send, ChevronDown, Tag, User, Loader2 } from "lucide-react";
+import Image from "next/image";
+import { PartyPopper, Phone, Mail, Clock, MapPin, Send, ChevronDown, Tag, User, Loader2, MessageCircle } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { postJson, ApiError } from "@/lib/api";
@@ -13,15 +14,17 @@ const EMAIL = "deepakjaat17@yahoo.com";
 
 const QUICK_CONTACT = [
   {
-    icon: MessageCircle,
+    icon: null,
+    image: "/whatsapp.png",
     label: "WhatsApp",
     sub: "Chat instantly",
     href: `https://wa.me/${WHATSAPP_NUMBER}`,
-    iconBg: "bg-(--success,#15803D)/10",
-    iconColor: "text-(--success,#15803D)",
+    iconBg: "bg-white",
+    iconColor: "",
   },
   {
     icon: Phone,
+    image: undefined,
     label: "Call Us",
     sub: PHONE_DISPLAY,
     href: `tel:${PHONE_TEL}`,
@@ -30,6 +33,7 @@ const QUICK_CONTACT = [
   },
   {
     icon: Mail,
+    image: undefined,
     label: "Email",
     sub: "Write to us",
     href: `mailto:${EMAIL}`,
@@ -137,7 +141,11 @@ export function ContactPageContent() {
                 className="flex flex-col items-center gap-2 rounded-2xl border border-(--ink-100) bg-white px-6 py-6 text-center transition-shadow hover:shadow-[0_8px_20px_rgba(11,22,32,0.08)]"
               >
                 <span className={`flex h-11 w-11 items-center justify-center rounded-full ${c.iconBg}`}>
-                  <c.icon className={`h-5 w-5 ${c.iconColor}`} />
+                  {c.image ? (
+                    <Image src={c.image} alt={c.label} width={28} height={28} className="h-7 w-7" />
+                  ) : (
+                    c.icon && <c.icon className={`h-5 w-5 ${c.iconColor}`} />
+                  )}
                 </span>
                 <span className="font-heading text-sm font-semibold text-(--navy-800)">{c.label}</span>
                 <span className="font-sans text-xs text-(--ink-500)">{c.sub}</span>
@@ -160,8 +168,8 @@ export function ContactPageContent() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 py-3">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-(--success,#15803D)/10">
-                      <MessageCircle className="h-4 w-4 text-(--success,#15803D)" />
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white">
+                      <Image src="/whatsapp.png" alt="WhatsApp" width={20} height={20} className="h-5 w-5" />
                     </span>
                     <div>
                       <dt className="font-heading text-[11px] uppercase tracking-wide text-(--ink-500)">WhatsApp</dt>

@@ -216,8 +216,8 @@ export default function LoginPage() {
     <div className="flex min-h-screen flex-col">
       <Header />
 
-      <main className="flex flex-1 items-center justify-center px-4 py-16">
-        <div className="w-full max-w-sm rounded-(--radius-card,16px) border border-(--ink-100) p-8 shadow-sm">
+      <main className="flex flex-1 items-center justify-center bg-(--surface-alt,#F7F9FC) px-4 py-10 sm:py-16">
+        <div className="w-full max-w-sm rounded-(--radius-card,16px) border border-(--ink-100) bg-background p-6 shadow-lg sm:p-8">
           {step === "form" && (
             <>
               <div className="flex rounded-full bg-(--surface-alt,#F7F9FC) p-1">
