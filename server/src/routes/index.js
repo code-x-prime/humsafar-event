@@ -3,6 +3,7 @@ import authRoutes from './public/auth.routes.js';
 import cityRoutes from './public/city.routes.js';
 import pincodeRoutes from './public/pincode.routes.js';
 import bannerRoutes from './public/banner.routes.js';
+import galleryRoutes from './public/gallery.routes.js';
 import categoryRoutes from './public/category.routes.js';
 import productRoutes from './public/product.routes.js';
 import searchRoutes from './public/search.routes.js';
@@ -25,6 +26,7 @@ const publicRoutes = [
   { path: '/cities', route: cityRoutes },
   { path: '/pincodes', route: pincodeRoutes },
   { path: '/banners', route: bannerRoutes },
+  { path: '/gallery', route: galleryRoutes },
   { path: '/categories', route: categoryRoutes },
   { path: '/products', route: productRoutes },
   { path: '/search', route: searchRoutes },

@@ -302,6 +302,25 @@ model HomeBanner {
   @@index([isActive, position])
 }
 
+// A single photo in the public /gallery page (Pinterest-style masonry).
+// showOnHome controls whether it also appears in a home page gallery strip —
+// off by default so newly uploaded photos don't surface on the home page
+// until an admin opts them in.
+model GalleryImage {
+  id         String   @id @default(cuid())
+  image      String
+  imageR2Key String?
+  title      String?
+  showOnHome Boolean  @default(false)
+  isActive   Boolean  @default(true)
+  position   Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([isActive, position])
+  @@index([showOnHome, isActive, position])
+}
+
 model ProductVariant {
   id        String   @id @default(cuid())
   productId String

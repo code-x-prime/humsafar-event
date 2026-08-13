@@ -17,6 +17,7 @@ import { SectionsPage } from './routes/sections'
 import { CouponsPage } from './routes/coupons'
 import { TestimonialsPage } from './routes/testimonials'
 import { EnquiriesPage } from './routes/enquiries'
+import { GalleryPage } from './routes/gallery'
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -37,6 +38,7 @@ export const router = createBrowserRouter([
       { path: 'cities', element: <CitiesPage /> },
       { path: 'pincodes', element: <Navigate to="/cities" replace /> },
       { path: 'banners', element: <BannersPage /> },
+      { path: 'gallery', element: <GalleryPage /> },
       { path: 'orders', element: <OrdersPage /> },
       { path: 'users', element: <UsersPage /> },
       { path: 'reviews', element: <ReviewsPage /> },
