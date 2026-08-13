@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Calendar as CalendarIcon, CalendarDays, MapPin, Tag, Plus, ShieldCheck, Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
+import { useCity } from "@/context/CityContext";
 import { getJson, postJson, deleteJson, ApiError } from "@/lib/api";
 import { loadRazorpayScript } from "@/lib/loadRazorpayScript";
 import { Calendar } from "@/components/ui/calendar";
@@ -84,13 +85,15 @@ export function CheckoutSection() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const { cart, refresh: refreshCart } = useCart();
+  const { citiesByRegion } = useCity();
 
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [addressForm, setAddressForm] = useState(EMPTY_ADDRESS_FORM);
-  const [cities, setCities] = useState<City[]>([]);
   const [savingAddress, setSavingAddress] = useState(false);
+
+  const cities: City[] = Object.values(citiesByRegion).flat();
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [customDatePopoverOpen, setCustomDatePopoverOpen] = useState(false);
@@ -119,10 +122,6 @@ export function CheckoutSection() {
         if (def) setSelectedAddressId(def.id);
         else setShowAddressForm(true);
       })
-      .catch(() => {});
-
-    getJson<Record<string, City[]>>("/cities")
-      .then((data) => setCities(Object.values(data).flat()))
       .catch(() => {});
   }, [isAuthenticated]);
 
