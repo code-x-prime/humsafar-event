@@ -17,6 +17,7 @@ import razorpayWebhookRoutes from './public/razorpayWebhook.routes.js';
 import reviewRoutes from './public/review.routes.js';
 import testimonialRoutes from './public/testimonial.routes.js';
 import enquiryRoutes from './public/enquiry.routes.js';
+import sitemapRoutes from './public/sitemap.routes.js';
 import adminRoutes from './admin/index.js';
 
 const router = Router();
@@ -40,6 +41,7 @@ const publicRoutes = [
   { path: '/reviews', route: reviewRoutes },
   { path: '/testimonials', route: testimonialRoutes },
   { path: '/enquiries', route: enquiryRoutes },
+  { path: '/sitemap-data', route: sitemapRoutes },
 ];
 
 publicRoutes.forEach(({ path, route }) => router.use(path, route));
