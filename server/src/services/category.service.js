@@ -175,6 +175,8 @@ export async function getPublicTree() {
       id: true,
       name: true,
       slug: true,
+      image: true,
+      icon: true,
       children: {
         where: { isActive: true, showInMenu: true },
         orderBy: { position: 'asc' },
@@ -182,10 +184,12 @@ export async function getPublicTree() {
           id: true,
           name: true,
           slug: true,
+          image: true,
+          icon: true,
           children: {
             where: { isActive: true, showInMenu: true },
             orderBy: { position: 'asc' },
-            select: { id: true, name: true, slug: true },
+            select: { id: true, name: true, slug: true, image: true, icon: true },
           },
         },
       },
