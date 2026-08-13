@@ -12,7 +12,7 @@ const HIDDEN_PREFIXES = ["/cart", "/decoration", "/orders"];
 
 const SIDE_ITEMS_LEFT = [
   { href: "/", label: "Home", icon: Home },
-  { href: "/#categories", label: "Categories", icon: LayoutGrid },
+  { href: "/categories", label: "Categories", icon: LayoutGrid },
 ];
 
 const SIDE_ITEMS_RIGHT = [
