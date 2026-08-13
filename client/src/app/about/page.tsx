@@ -8,7 +8,6 @@ import {
   Clock,
   MapPin,
   PartyPopper,
-  MessageCircle,
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -111,7 +110,7 @@ export default async function AboutPage() {
               rel="noopener noreferrer"
               className="flex items-center gap-2 rounded-full border border-(--ink-300) px-7 py-3 font-heading text-sm font-semibold text-(--navy-800) hover:border-(--orange-400)"
             >
-              <MessageCircle className="h-4 w-4 text-[#25D366]" />
+              <Image src="/whatsapp.png" alt="" width={18} height={18} className="h-4.5 w-4.5" />
               Chat With Us
             </a>
           </div>

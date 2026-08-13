@@ -21,7 +21,6 @@ const IMPORTANT_LINKS = [
 const INFO_LINKS = [
   { href: "/contact", label: "Contact Us" },
   { href: "/gallery", label: "Gallery" },
-  { href: "/reviews", label: "Reviews" },
   { href: "/faq", label: "FAQ" },
 ];
 
