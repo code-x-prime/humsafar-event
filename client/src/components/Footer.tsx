@@ -1,27 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { Phone, Mail, ShieldCheck, Truck, Headset } from "lucide-react";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
-
-interface FooterCity {
-  id: string;
-  name: string;
-  slug: string;
-  isServiceable: boolean;
-}
-
-async function getTopCities(): Promise<FooterCity[]> {
-  const res = await fetch(`${API_BASE}/cities`, { cache: "no-store" });
-  if (!res.ok) return [];
-  const json = await res.json();
-  if (!json.success) return [];
-  const grouped = json.data as Record<string, FooterCity[]>;
-  return Object.values(grouped)
-    .flat()
-    .filter((c) => c.isServiceable)
-    .slice(0, 5);
-}
+import { useCity } from "@/context/CityContext";
 
 const TRUST_BADGES = [
   { icon: ShieldCheck, title: "Secure Payments", subtitle: "Safe & encrypted transactions" },
@@ -71,8 +53,12 @@ const SOCIAL_LINKS = [
   },
 ];
 
-export async function Footer() {
-  const topCities = await getTopCities();
+export function Footer() {
+  const { citiesByRegion } = useCity();
+  const topCities = Object.values(citiesByRegion)
+    .flat()
+    .filter((c) => c.isServiceable)
+    .slice(0, 5);
 
   return (
     <footer className="bg-background pt-8">
