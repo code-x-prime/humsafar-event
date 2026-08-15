@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**.r2.dev" },
       { protocol: "https", hostname: "**.r2.cloudflarestorage.com" },
     ],
+    // Next.js's default quality (75) visibly softens photos — banners, gallery,
+    // and product shots all looked compressed/blurry at that setting. 90 keeps
+    // file size reasonable while staying close to source quality.
+    qualities: [75, 90],
   },
 };
 
