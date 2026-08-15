@@ -10,3 +10,8 @@ export const getBySlug = async (req, res) => {
   const product = await shopProductService.getPublicBySlug(req.params.slug);
   return success(res, { data: product, message: 'Product fetched' });
 };
+
+export const related = async (req, res) => {
+  const data = await shopProductService.getRelated(req.params.slug);
+  return success(res, { data, message: 'Related products fetched' });
+};

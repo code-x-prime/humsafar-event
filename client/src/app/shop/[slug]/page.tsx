@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ShopProductDetail, type ShopProductDetailData } from "@/components/ShopProductDetail";
+import { RelatedShopProducts } from "@/components/RelatedShopProducts";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
 
@@ -35,6 +36,7 @@ export default async function ShopProductPage({ params }: { params: Promise<{ sl
       <main className="flex-1 bg-(--surface-alt,#F7F9FC)">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:py-10">
           <ShopProductDetail product={product} />
+          <RelatedShopProducts slug={product.slug} />
         </div>
       </main>
 
