@@ -68,10 +68,22 @@ async function getOrCreateCart({ userId, guestSessionId }) {
   let cart = await prisma.cart.findFirst({ where, include: { items: { include: ITEM_INCLUDE, orderBy: { createdAt: 'asc' } } } });
 
   if (!cart) {
-    cart = await prisma.cart.create({
-      data: userId ? { userId } : { guestSessionId },
-      include: { items: { include: ITEM_INCLUDE, orderBy: { createdAt: 'asc' } } },
-    });
+    try {
+      cart = await prisma.cart.create({
+        data: userId ? { userId } : { guestSessionId },
+        include: { items: { include: ITEM_INCLUDE, orderBy: { createdAt: 'asc' } } },
+      });
+    } catch (err) {
+      // A valid, unexpired JWT can still reference a userId that's no longer
+      // in the DB (account deleted server-side after the token was issued).
+      // Surface this as an auth failure so the client's existing "session
+      // expired" handling logs them out, instead of leaking the raw FK
+      // constraint error from Prisma.
+      if (err.code === 'P2003' && userId) {
+        throw apiError(401, ERROR_CODES.INVALID_TOKEN, 'Your session is no longer valid — please log in again');
+      }
+      throw err;
+    }
   }
 
   return cart;
