@@ -236,3 +236,58 @@ export async function getPublicBySlug(slug) {
 
   return product;
 }
+
+const RELATED_SELECT = {
+  id: true,
+  title: true,
+  slug: true,
+  price: true,
+  mrp: true,
+  avgRating: true,
+  reviewCount: true,
+  media: { where: { isPrimary: true }, take: 1, select: { url: true } },
+};
+
+const RELATED_LIMIT = 10;
+
+// Same pattern as the decoration catalog's getRelated: "Similar Products" =
+// other active products sharing a category, "You May Also Like" = featured
+// active products outside that category, so the two rows don't overlap.
+export async function getRelated(slug) {
+  const product = await prisma.shopProduct.findFirst({
+    where: { slug, isActive: true },
+    select: { id: true, categories: { select: { categoryId: true } } },
+  });
+
+  if (!product) throw apiError(404, ERROR_CODES.NOT_FOUND, 'Shop product not found');
+
+  const categoryIds = product.categories.map((c) => c.categoryId);
+
+  const [similar, youMayLike] = await Promise.all([
+    categoryIds.length > 0
+      ? prisma.shopProduct.findMany({
+          where: {
+            isActive: true,
+            id: { not: product.id },
+            categories: { some: { categoryId: { in: categoryIds } } },
+          },
+          orderBy: { position: 'asc' },
+          take: RELATED_LIMIT,
+          select: RELATED_SELECT,
+        })
+      : [],
+    prisma.shopProduct.findMany({
+      where: {
+        isActive: true,
+        isFeatured: true,
+        id: { not: product.id },
+        categories: categoryIds.length > 0 ? { none: { categoryId: { in: categoryIds } } } : undefined,
+      },
+      orderBy: { position: 'asc' },
+      take: RELATED_LIMIT,
+      select: RELATED_SELECT,
+    }),
+  ]);
+
+  return { similar, youMayLike };
+}

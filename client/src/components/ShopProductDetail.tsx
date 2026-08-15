@@ -8,6 +8,14 @@ import { toast } from "sonner";
 import { Star, ShoppingBag, Truck, CheckCircle2, ChevronRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { getJson } from "@/lib/api";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  type CarouselApi,
+} from "@/components/ui/carousel";
 
 interface ShopProductMedia {
   id: string;
@@ -62,8 +70,15 @@ export function ShopProductDetail({ product }: { product: ShopProductDetailData 
   const router = useRouter();
   const { addShopItemToCart } = useCart();
   const [activeImage, setActiveImage] = useState(0);
+  const [galleryApi, setGalleryApi] = useState<CarouselApi>();
   const [adding, setAdding] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!galleryApi) return;
+    setActiveImage(galleryApi.selectedScrollSnap());
+    galleryApi.on("select", () => setActiveImage(galleryApi.selectedScrollSnap()));
+  }, [galleryApi]);
 
   useEffect(() => {
     getJson<{ whatsappNumber: string }>("/settings/contact")
@@ -110,29 +125,43 @@ export function ShopProductDetail({ product }: { product: ShopProductDetailData 
     <div className="grid grid-cols-1 gap-6 pb-20 lg:grid-cols-[1fr_1fr] lg:pb-0">
       {/* Gallery */}
       <div>
-        <div className="relative aspect-square w-full overflow-hidden rounded-(--radius-card,16px) border border-(--ink-100) bg-white">
-          {images ? (
-            <Image
-              src={images[activeImage].url}
-              alt={images[activeImage].alt || product.title}
-              fill
-              quality={90}
-              className="object-cover"
-              priority
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center font-sans text-sm text-(--ink-500)">
-              No image available
-            </div>
-          )}
-        </div>
+        {images ? (
+          <Carousel setApi={setGalleryApi} className="w-full">
+            <CarouselContent className="ml-0">
+              {images.map((img, i) => (
+                <CarouselItem key={img.id} className="pl-0">
+                  <div className="relative aspect-square w-full overflow-hidden rounded-(--radius-card,16px) border border-(--ink-100) bg-white">
+                    <Image
+                      src={img.url}
+                      alt={img.alt || product.title}
+                      fill
+                      quality={90}
+                      className="object-cover"
+                      priority={i === 0}
+                    />
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            {images.length > 1 && (
+              <>
+                <CarouselPrevious className="left-3 hidden bg-white/90 shadow hover:bg-white sm:flex" />
+                <CarouselNext className="right-3 hidden bg-white/90 shadow hover:bg-white sm:flex" />
+              </>
+            )}
+          </Carousel>
+        ) : (
+          <div className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-(--radius-card,16px) border border-(--ink-100) bg-white font-sans text-sm text-(--ink-500)">
+            No image available
+          </div>
+        )}
 
         {images && images.length > 1 && (
-          <div className="mt-3 flex gap-2">
+          <div className="mt-3 flex gap-2 overflow-x-auto">
             {images.map((img, i) => (
               <button
                 key={img.id}
-                onClick={() => setActiveImage(i)}
+                onClick={() => galleryApi?.scrollTo(i)}
                 className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-md border-2 ${i === activeImage ? "border-(--blue-600)" : "border-(--ink-100)"}`}
               >
                 <Image src={img.url} alt="" fill quality={90} className="object-cover" />
