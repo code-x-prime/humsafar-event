@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { ShopListing, type ShopProductSummary, type ShopCategorySummary } from "@/components/ShopListing";
+import { ShopListing, type ShopCategorySummary } from "@/components/ShopListing";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
 
@@ -10,19 +10,6 @@ export const metadata: Metadata = {
   description: "Shop premium decoration products, delivered to your doorstep.",
 };
 
-async function getProducts(query: { categorySlug?: string; sort?: string; search?: string }): Promise<ShopProductSummary[]> {
-  const params = new URLSearchParams();
-  if (query.categorySlug) params.set("categorySlug", query.categorySlug);
-  if (query.sort) params.set("sort", query.sort);
-  if (query.search) params.set("search", query.search);
-  params.set("limit", "48");
-
-  const res = await fetch(`${API_BASE}/shop/products?${params.toString()}`, { cache: "no-store" });
-  if (!res.ok) return [];
-  const json = await res.json();
-  return json.success ? json.data : [];
-}
-
 async function getCategories(): Promise<ShopCategorySummary[]> {
   const res = await fetch(`${API_BASE}/shop/categories`, { cache: "no-store" });
   if (!res.ok) return [];
@@ -30,16 +17,8 @@ async function getCategories(): Promise<ShopCategorySummary[]> {
   return json.success ? json.data : [];
 }
 
-export default async function ShopPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ category?: string; sort?: string; search?: string }>;
-}) {
-  const query = await searchParams;
-  const [products, categories] = await Promise.all([
-    getProducts({ categorySlug: query.category, sort: query.sort, search: query.search }),
-    getCategories(),
-  ]);
+export default async function ShopPage() {
+  const categories = await getCategories();
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -58,13 +37,7 @@ export default async function ShopPage({
           </p>
         </div>
 
-        <ShopListing
-          products={products}
-          categories={categories}
-          activeCategory={query.category}
-          activeSort={query.sort}
-          activeSearch={query.search}
-        />
+        <ShopListing categories={categories} />
       </main>
 
       <Footer />
