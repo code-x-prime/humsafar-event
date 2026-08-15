@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { X, Plus, Minus, Sparkles } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { useCity } from "@/context/CityContext";
 
 interface AddOn {
   id: string;
@@ -28,6 +29,7 @@ const UNCATEGORIZED = "__uncategorized__";
 export function CustomizeOrderDialog({ productId, productTitle, variantId, addOns, open, onClose }: CustomizeOrderDialogProps) {
   const router = useRouter();
   const { addToCart } = useCart();
+  const { selectedCity } = useCity();
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -66,7 +68,13 @@ export function CustomizeOrderDialog({ productId, productTitle, variantId, addOn
   async function handleProceed(skip: boolean) {
     setSubmitting(true);
     try {
-      await addToCart({ productId, variantId, addOnIds: skip ? [] : selectedAddOnIds, qty: 1 });
+      await addToCart({
+        productId,
+        variantId,
+        addOnIds: skip ? [] : selectedAddOnIds,
+        qty: 1,
+        cityId: selectedCity?.id,
+      });
       onClose();
       router.push("/cart");
     } catch {

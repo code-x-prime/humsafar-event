@@ -5,16 +5,43 @@ import { ERROR_CODES } from '../config/constants.js';
 // instead of the default 500 with the full Prisma error dump — every model
 // with a @unique field (slug, email, etc.) benefits without needing its own
 // try/catch in the service layer.
+//
+// err.meta.target is an array of column names for a plain @unique field
+// (e.g. ['slug']), but for a composite @@id/@@unique — the join tables like
+// ProductCategory, ProductCity, ProductAddOn, ProductSectionItem — Postgres
+// instead reports the constraint's name as a single string (e.g.
+// "Product_pkey" or a custom map name). Falling back to a bare "value" there
+// left the message with no actionable detail, so we recognize that shape and
+// name the relation instead.
 function fromPrismaError(err) {
   if (err.code !== 'P2002') return null;
 
-  const fields = err.meta?.target;
-  const fieldList = Array.isArray(fields) ? fields.join(', ') : fields || 'value';
+  const target = err.meta?.target;
+
+  if (Array.isArray(target)) {
+    return {
+      status: 409,
+      code: ERROR_CODES.CONFLICT,
+      message: `This ${target.join(', ')} is already in use — please choose a different one.`,
+    };
+  }
+
+  if (typeof target === 'string') {
+    const relationHint = target.match(/^([A-Za-z]+)/)?.[1];
+    const readable = relationHint
+      ? relationHint.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase()
+      : 'entry';
+    return {
+      status: 409,
+      code: ERROR_CODES.CONFLICT,
+      message: `That ${readable} was already added — remove the duplicate selection and try again.`,
+    };
+  }
 
   return {
     status: 409,
     code: ERROR_CODES.CONFLICT,
-    message: `This ${fieldList} is already in use — please choose a different one.`,
+    message: 'This value is already in use — please choose a different one.',
   };
 }
 

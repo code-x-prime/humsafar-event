@@ -138,8 +138,21 @@ export async function getById(id) {
   return product;
 }
 
+// Defends against duplicate ids in a relation array (a stale double-click,
+// browser back/forward re-submitting old state, etc.) — each of these join
+// tables has a composite primary key on [productId, <relationId>], so a
+// repeated id in the array would otherwise reach createMany() and fail the
+// whole save with a generic P2002 instead of just being silently deduped.
+function dedupeIds(ids) {
+  return ids ? [...new Set(ids)] : ids;
+}
+
 export async function create(data) {
-  const { categoryIds, cityIds, media, variants, faqItems, addOnIds, sectionIds, ...rest } = data;
+  const { categoryIds: rawCategoryIds, cityIds: rawCityIds, media, variants, faqItems, addOnIds: rawAddOnIds, sectionIds: rawSectionIds, ...rest } = data;
+  const categoryIds = dedupeIds(rawCategoryIds);
+  const cityIds = dedupeIds(rawCityIds);
+  const addOnIds = dedupeIds(rawAddOnIds);
+  const sectionIds = dedupeIds(rawSectionIds);
   const slug = await uniqueSlug(rest.slug || slugify(rest.title));
   const metaTitle = rest.metaTitle || rest.title;
   const metaDescription = rest.metaDescription || rest.shortDescription || undefined;
@@ -170,7 +183,11 @@ export async function create(data) {
 
 export async function update(id, data) {
   await getById(id);
-  const { categoryIds, cityIds, media, variants, faqItems, addOnIds, sectionIds, ...rest } = data;
+  const { categoryIds: rawCategoryIds, cityIds: rawCityIds, media, variants, faqItems, addOnIds: rawAddOnIds, sectionIds: rawSectionIds, ...rest } = data;
+  const categoryIds = dedupeIds(rawCategoryIds);
+  const cityIds = dedupeIds(rawCityIds);
+  const addOnIds = dedupeIds(rawAddOnIds);
+  const sectionIds = dedupeIds(rawSectionIds);
 
   if (rest.slug) {
     rest.slug = await uniqueSlug(rest.slug, id);

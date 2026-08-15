@@ -52,6 +52,7 @@ interface AddToCartInput {
   variantId?: string;
   addOnIds?: string[];
   qty?: number;
+  cityId?: string;
 }
 
 interface CartContextValue {
