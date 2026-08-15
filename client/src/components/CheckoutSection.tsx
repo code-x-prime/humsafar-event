@@ -601,16 +601,16 @@ export function CheckoutSection() {
         <div className="rounded-2xl border border-(--ink-100) bg-white p-4">
           <p className="font-heading text-sm font-semibold text-(--navy-800)">Order Summary</p>
 
-          {cart?.items && cart.items.length > 0 && (
+          {cart?.items && cart.items.some((item) => item.product) && (
             <div className="mt-3 flex flex-col gap-3 border-b border-(--ink-100) pb-3">
-              {cart.items.map((item) => (
+              {cart.items.filter((item) => item.product).map((item) => (
                 <div key={item.id} className="font-sans text-sm">
                   <div className="flex justify-between text-(--ink-700)">
                     <span>
-                      {item.product.title}
+                      {item.product!.title}
                       {item.qty > 1 ? ` × ${item.qty}` : ""}
                     </span>
-                    <span>&#8377;{Number(item.product.price).toLocaleString("en-IN")}</span>
+                    <span>&#8377;{Number(item.product!.price).toLocaleString("en-IN")}</span>
                   </div>
                   {item.addOns.length > 0 && (
                     <ul className="mt-1 flex flex-col gap-0.5 pl-3">

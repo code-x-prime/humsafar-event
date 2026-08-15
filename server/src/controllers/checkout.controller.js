@@ -55,3 +55,8 @@ export const cancelOrder = async (req, res) => {
   await paymentCheckoutService.cancelUnpaidOrder(req.user.sub, req.params.orderId);
   return success(res, { message: 'Order cancelled' });
 };
+
+export const cancelPaidOrder = async (req, res) => {
+  const order = await paymentCheckoutService.cancelPaidOrder(req.user.sub, req.params.orderId, req.body.reason);
+  return success(res, { data: order, message: 'Order cancelled' });
+};

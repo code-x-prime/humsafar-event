@@ -2,7 +2,7 @@ import * as settingsCache from '../config/settings.service.js';
 import { maskSecret } from '../utils/crypto.js';
 import { ERROR_CODES } from '../config/constants.js';
 
-const GROUPS = ['GENERAL', 'CONTACT', 'SOCIAL', 'SEO', 'PAYMENT', 'STORAGE', 'EMAIL', 'BUSINESS_RULES'];
+const GROUPS = ['GENERAL', 'CONTACT', 'SOCIAL', 'SEO', 'PAYMENT', 'STORAGE', 'EMAIL', 'BUSINESS_RULES', 'SHIPPING'];
 
 // Fields considered secret within each group — encrypted at rest, masked on read,
 // write-only from the admin UI (an empty/unset field on save means "keep existing value").
@@ -10,6 +10,7 @@ const SECRET_FIELDS_BY_GROUP = {
   STORAGE: ['accessKeyId', 'secretAccessKey'],
   PAYMENT: ['keySecret', 'webhookSecret'],
   EMAIL: ['smtpPassword', 'brevoApiKey'],
+  SHIPPING: ['shiprocketPassword'],
 };
 
 function apiError(status, code, message) {

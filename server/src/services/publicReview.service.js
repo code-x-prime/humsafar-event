@@ -17,7 +17,7 @@ function apiError(status, code, message) {
 // review something you didn't actually receive.
 export async function submitReview(userId, { orderId, productId, rating, title, comment }) {
   const order = await prisma.order.findFirst({
-    where: { id: orderId, userId, status: 'COMPLETED' },
+    where: { id: orderId, userId, kind: 'BOOKING', status: 'COMPLETED' },
     include: { items: true },
   });
 
@@ -64,7 +64,7 @@ export async function submitReview(userId, { orderId, productId, rating, title, 
 // only where it's actually allowed.
 export async function getReviewableItems(userId) {
   const orders = await prisma.order.findMany({
-    where: { userId, status: 'COMPLETED' },
+    where: { userId, kind: 'BOOKING', status: 'COMPLETED' },
     include: { items: true },
   });
 

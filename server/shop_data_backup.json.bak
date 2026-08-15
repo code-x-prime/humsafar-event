@@ -1,0 +1,311 @@
+{
+  "orders": [
+    {
+      "id": "cmsu6k99t000b64u7shfs93st",
+      "orderNumber": "HS-202608-90001",
+      "userId": "cmsu6k91w000a64u7zy9vms4i",
+      "status": "DELIVERED",
+      "addressSnapshot": {
+        "city": "Noida",
+        "line1": "B-42, Sector 15",
+        "line2": "Near City Mall",
+        "phone": "9812345670",
+        "state": "Uttar Pradesh",
+        "pincode": "201301",
+        "fullName": "Priya Sharma",
+        "landmark": null
+      },
+      "subtotal": "899",
+      "shippingCharge": "0",
+      "discount": "0",
+      "taxAmount": "0",
+      "total": "899",
+      "amountPaid": "899",
+      "customerNote": null,
+      "adminNote": null,
+      "cancelReason": null,
+      "createdAt": "2026-08-15T09:35:23.633Z",
+      "updatedAt": "2026-08-15T09:35:23.633Z"
+    },
+    {
+      "id": "cmsu6k9gw000f64u7gxv58efc",
+      "orderNumber": "HS-202608-90002",
+      "userId": "cmsu6k91w000a64u7zy9vms4i",
+      "status": "SHIPPED",
+      "addressSnapshot": {
+        "city": "Noida",
+        "line1": "B-42, Sector 15",
+        "line2": "Near City Mall",
+        "phone": "9812345670",
+        "state": "Uttar Pradesh",
+        "pincode": "201301",
+        "fullName": "Priya Sharma",
+        "landmark": null
+      },
+      "subtotal": "998",
+      "shippingCharge": "0",
+      "discount": "0",
+      "taxAmount": "0",
+      "total": "998",
+      "amountPaid": "998",
+      "customerNote": null,
+      "adminNote": null,
+      "cancelReason": null,
+      "createdAt": "2026-08-15T09:35:23.888Z",
+      "updatedAt": "2026-08-15T09:35:23.888Z"
+    },
+    {
+      "id": "cmsu6k9nt000k64u7pqfeq7yp",
+      "orderNumber": "HS-202608-90003",
+      "userId": "cmsu6k91w000a64u7zy9vms4i",
+      "status": "CONFIRMED",
+      "addressSnapshot": {
+        "city": "Noida",
+        "line1": "B-42, Sector 15",
+        "line2": "Near City Mall",
+        "phone": "9812345670",
+        "state": "Uttar Pradesh",
+        "pincode": "201301",
+        "fullName": "Priya Sharma",
+        "landmark": null
+      },
+      "subtotal": "1499",
+      "shippingCharge": "0",
+      "discount": "0",
+      "taxAmount": "269.82",
+      "total": "1768.82",
+      "amountPaid": "1768.82",
+      "customerNote": null,
+      "adminNote": null,
+      "cancelReason": null,
+      "createdAt": "2026-08-15T09:35:24.137Z",
+      "updatedAt": "2026-08-15T09:35:24.137Z"
+    },
+    {
+      "id": "cmsu6k9tx000n64u7h057rctw",
+      "orderNumber": "HS-202608-90004",
+      "userId": "cmsu6k91w000a64u7zy9vms4i",
+      "status": "PENDING_PAYMENT",
+      "addressSnapshot": {
+        "city": "Noida",
+        "line1": "B-42, Sector 15",
+        "line2": "Near City Mall",
+        "phone": "9812345670",
+        "state": "Uttar Pradesh",
+        "pincode": "201301",
+        "fullName": "Priya Sharma",
+        "landmark": null
+      },
+      "subtotal": "549",
+      "shippingCharge": "0",
+      "discount": "0",
+      "taxAmount": "0",
+      "total": "549",
+      "amountPaid": "0",
+      "customerNote": null,
+      "adminNote": null,
+      "cancelReason": null,
+      "createdAt": "2026-08-15T09:35:24.357Z",
+      "updatedAt": "2026-08-15T09:35:24.357Z"
+    }
+  ],
+  "items": [
+    {
+      "id": "cmsu6k9au000c64u74xdosmfm",
+      "orderId": "cmsu6k99t000b64u7shfs93st",
+      "productId": "cmsu6k7y1000464u7vii2tuc1",
+      "productSnapshot": {
+        "slug": "rose-gold-balloon-arch-kit",
+        "image": null,
+        "price": "899",
+        "title": "Rose Gold Balloon Arch Kit"
+      },
+      "qty": 1,
+      "unitPrice": "899",
+      "subtotal": "899"
+    },
+    {
+      "id": "cmsu6k9hu000g64u7oukoi3lk",
+      "orderId": "cmsu6k9gw000f64u7gxv58efc",
+      "productId": "cmsu6k89p000664u7eou2ujyc",
+      "productSnapshot": {
+        "slug": "scented-soy-candle-set-pack-of-3",
+        "image": null,
+        "price": "649",
+        "title": "Scented Soy Candle Set (Pack of 3)"
+      },
+      "qty": 1,
+      "unitPrice": "649",
+      "subtotal": "649"
+    },
+    {
+      "id": "cmsu6k9hu000h64u7dm3wduzw",
+      "orderId": "cmsu6k9gw000f64u7gxv58efc",
+      "productId": "cmsu6k8fm000764u7lgsa1sby",
+      "productSnapshot": {
+        "slug": "fairy-light-string-10m-warm-white",
+        "image": null,
+        "price": "349",
+        "title": "Fairy Light String (10m, Warm White)"
+      },
+      "qty": 1,
+      "unitPrice": "349",
+      "subtotal": "349"
+    },
+    {
+      "id": "cmsu6k9os000l64u7r7jdxky0",
+      "orderId": "cmsu6k9nt000k64u7pqfeq7yp",
+      "productId": "cmsu6k8lf000864u72lkuhhyh",
+      "productSnapshot": {
+        "slug": "celebration-gift-hamper-deluxe",
+        "image": null,
+        "price": "1499",
+        "title": "Celebration Gift Hamper — Deluxe"
+      },
+      "qty": 1,
+      "unitPrice": "1499",
+      "subtotal": "1499"
+    },
+    {
+      "id": "cmsu6k9uw000o64u768z8soj4",
+      "orderId": "cmsu6k9tx000n64u7h057rctw",
+      "productId": "cmsu6k8r9000964u787d0zybh",
+      "productSnapshot": {
+        "slug": "confetti-balloon-bouquet-set-of-12",
+        "image": null,
+        "price": "549",
+        "title": "Confetti Balloon Bouquet (Set of 12)"
+      },
+      "qty": 1,
+      "unitPrice": "549",
+      "subtotal": "549"
+    }
+  ],
+  "payments": [
+    {
+      "id": "cmsu6k9dr000d64u7yvsz1k9t",
+      "orderId": "cmsu6k99t000b64u7shfs93st",
+      "gateway": "razorpay",
+      "razorpayOrderId": null,
+      "razorpayPaymentId": "pay_demo_cmsu6k99t000b64u7shfs93st",
+      "razorpaySignature": null,
+      "amount": "899",
+      "status": "PAID",
+      "method": "card",
+      "rawPayload": null,
+      "refundId": null,
+      "refundAmount": null,
+      "createdAt": "2026-08-15T09:35:23.775Z",
+      "updatedAt": "2026-08-15T09:35:23.775Z"
+    },
+    {
+      "id": "cmsu6k9ks000i64u71pin8i9w",
+      "orderId": "cmsu6k9gw000f64u7gxv58efc",
+      "gateway": "razorpay",
+      "razorpayOrderId": null,
+      "razorpayPaymentId": "pay_demo_cmsu6k9gw000f64u7gxv58efc",
+      "razorpaySignature": null,
+      "amount": "998",
+      "status": "PAID",
+      "method": "upi",
+      "rawPayload": null,
+      "refundId": null,
+      "refundAmount": null,
+      "createdAt": "2026-08-15T09:35:24.028Z",
+      "updatedAt": "2026-08-15T09:35:24.028Z"
+    },
+    {
+      "id": "cmsu6k9rr000m64u7y5v56zjb",
+      "orderId": "cmsu6k9nt000k64u7pqfeq7yp",
+      "gateway": "razorpay",
+      "razorpayOrderId": null,
+      "razorpayPaymentId": "pay_demo_cmsu6k9nt000k64u7pqfeq7yp",
+      "razorpaySignature": null,
+      "amount": "1768.82",
+      "status": "PAID",
+      "method": "card",
+      "rawPayload": null,
+      "refundId": null,
+      "refundAmount": null,
+      "createdAt": "2026-08-15T09:35:24.279Z",
+      "updatedAt": "2026-08-15T09:35:24.279Z"
+    }
+  ],
+  "shipments": [
+    {
+      "id": "cmsu6k9es000e64u7ltrfvrzo",
+      "orderId": "cmsu6k99t000b64u7shfs93st",
+      "mode": "AUTO",
+      "status": "DELIVERED",
+      "shiprocketOrderId": null,
+      "shipmentId": null,
+      "awbCode": "SR123456789IN",
+      "courierName": "Delhivery",
+      "trackingUrl": "https://shiprocket.co/tracking/SR123456789IN",
+      "labelUrl": null,
+      "manifestUrl": null,
+      "pickupScheduledAt": null,
+      "deliveredAt": "2026-08-15T09:35:23.811Z",
+      "lastTrackedAt": null,
+      "rawResponse": null,
+      "error": null,
+      "createdAt": "2026-08-15T09:35:23.812Z",
+      "updatedAt": "2026-08-15T09:35:23.812Z"
+    },
+    {
+      "id": "cmsu6k9ls000j64u7883y9nva",
+      "orderId": "cmsu6k9gw000f64u7gxv58efc",
+      "mode": "AUTO",
+      "status": "IN_TRANSIT",
+      "shiprocketOrderId": null,
+      "shipmentId": null,
+      "awbCode": "SR987654321IN",
+      "courierName": "Bluedart",
+      "trackingUrl": "https://shiprocket.co/tracking/SR987654321IN",
+      "labelUrl": null,
+      "manifestUrl": null,
+      "pickupScheduledAt": "2026-08-15T09:35:24.063Z",
+      "deliveredAt": null,
+      "lastTrackedAt": null,
+      "rawResponse": null,
+      "error": null,
+      "createdAt": "2026-08-15T09:35:24.064Z",
+      "updatedAt": "2026-08-15T09:35:24.064Z"
+    }
+  ],
+  "carts": [
+    {
+      "id": "cmsu6c31t0000tou7i46vgawc",
+      "userId": null,
+      "createdAt": "2026-08-15T09:29:02.321Z",
+      "updatedAt": "2026-08-15T09:29:02.321Z",
+      "guestSessionId": "fe89891e-c0a1-47df-b1a7-e51d2a15b11c"
+    }
+  ],
+  "cartItems": [
+    {
+      "id": "cmsu6pzho000080u76hyg8q1w",
+      "cartId": "cmsu6c31t0000tou7i46vgawc",
+      "productId": "cmsu6k89p000664u7eou2ujyc",
+      "qty": 1,
+      "createdAt": "2026-08-15T09:39:50.893Z"
+    }
+  ],
+  "addresses": [
+    {
+      "id": "demo-shop-address-1",
+      "userId": "cmsu6k91w000a64u7zy9vms4i",
+      "label": null,
+      "fullName": "Priya Sharma",
+      "phone": "9812345670",
+      "line1": "B-42, Sector 15",
+      "line2": "Near City Mall",
+      "landmark": null,
+      "city": "Noida",
+      "state": "Uttar Pradesh",
+      "pincode": "201301",
+      "isDefault": true,
+      "createdAt": "2026-08-15T09:35:23.452Z"
+    }
+  ]
+}

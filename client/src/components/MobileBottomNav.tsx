@@ -8,7 +8,7 @@ import { Home, LayoutGrid, Phone, Headset } from "lucide-react";
 const WHATSAPP_NUMBER = "919899899150";
 const PHONE_TEL = "+919899899150";
 
-const HIDDEN_PREFIXES = ["/cart", "/decoration", "/orders"];
+const HIDDEN_PREFIXES = ["/cart", "/decoration", "/orders", "/shop/"];
 
 const SIDE_ITEMS_LEFT = [
   { href: "/", label: "Home", icon: Home },

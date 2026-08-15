@@ -23,7 +23,11 @@ function getTransporter() {
 
 export async function sendViaSmtp({ to, subject, html, text, cc, attachments }) {
   const transporter = getTransporter();
-  if (!transporter) throw new Error('SMTP is not configured');
+  if (!transporter) {
+    const err = new Error('SMTP is not configured');
+    err.nonRetryable = true;
+    throw err;
+  }
 
   const cfg = settings.getGroup('EMAIL');
   const from = `${cfg.fromName || 'Humsafar Events'} <${cfg.fromEmail}>`;

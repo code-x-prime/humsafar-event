@@ -11,6 +11,11 @@ export const addCartItemSchema = z.object({
   notes: z.string().optional(),
 });
 
+export const addShopCartItemSchema = z.object({
+  productId: z.string().min(1),
+  qty: z.coerce.number().int().positive().optional(),
+});
+
 export const updateCartItemSchema = z.object({
   qty: z.coerce.number().int().positive().optional(),
   variantId: z.string().nullable().optional(),

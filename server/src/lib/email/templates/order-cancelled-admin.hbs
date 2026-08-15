@@ -1,0 +1,20 @@
+<div style="font-family: 'Jost', 'Inter', Arial, sans-serif; max-width: 480px; margin: 0 auto;">
+  <div style="background: #E0623D; padding: 20px 24px;">
+    <span style="color: #ffffff; font-size: 18px; font-weight: 700;">Customer Cancelled a Booking</span>
+  </div>
+  <div style="padding: 24px; background: #ffffff; color: #0B1620;">
+    <p style="font-size: 15px; margin: 0 0 12px;">
+      <strong>{{orderNumber}}</strong> was cancelled by the customer.
+    </p>
+    <p style="font-size: 14px; margin: 0 0 12px;"><strong>Customer:</strong> {{customerName}}{{#if customerPhone}} · {{customerPhone}}{{/if}}</p>
+    {{#if reason}}
+    <div style="background: #F7F9FC; border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+      <p style="font-size: 13px; color: #6B7A88; margin: 0 0 4px;">Reason given</p>
+      <p style="font-size: 14px; margin: 0;">{{reason}}</p>
+    </div>
+    {{/if}}
+    <p style="font-size: 13px; color: #6B7A88; margin: 0;">
+      Amount paid: ₹{{amountPaid}}
+    </p>
+  </div>
+</div>

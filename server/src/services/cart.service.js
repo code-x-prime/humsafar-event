@@ -20,6 +20,18 @@ const ITEM_INCLUDE = {
       media: { where: { isPrimary: true }, take: 1, select: { url: true } },
     },
   },
+  shopProduct: {
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      price: true,
+      mrp: true,
+      stock: true,
+      isActive: true,
+      media: { where: { isPrimary: true }, take: 1, select: { url: true } },
+    },
+  },
   variant: { select: { id: true, name: true, swatches: true } },
 };
 
@@ -44,7 +56,9 @@ async function attachAddOns(cart) {
 
 // Identifies which cart a request belongs to: the logged-in user's cart if
 // authenticated, otherwise the cart tied to their guest session id. Creates
-// one if it doesn't exist yet — every cart operation starts here.
+// one if it doesn't exist yet — every cart operation starts here. One cart
+// holds a mix of decoration-booking items (product) and Shop With Us items
+// (shopProduct); the two are only ever separated at checkout time.
 async function getOrCreateCart({ userId, guestSessionId }) {
   if (!userId && !guestSessionId) {
     throw apiError(400, ERROR_CODES.VALIDATION_ERROR, 'Missing guest session id');
@@ -68,9 +82,9 @@ export async function getCart(identity) {
   return attachAddOns(cart);
 }
 
-// Adds a product to the cart. If an identical line (same product + same
-// add-on selection + same event date/slot/city) already exists, its qty is
-// increased instead of creating a duplicate row.
+// Adds a decoration-booking product to the cart. If an identical line (same
+// product + same add-on selection + same event date/slot/city) already
+// exists, its qty is increased instead of creating a duplicate row.
 export async function addItem(identity, { productId, variantId, addOnIds = [], qty = 1, eventDate, timeSlotId, cityId, notes }) {
   const product = await prisma.product.findUnique({ where: { id: productId } });
   if (!product || !product.isActive) throw apiError(404, ERROR_CODES.NOT_FOUND, 'Product not found');
@@ -114,6 +128,24 @@ export async function addItem(identity, { productId, variantId, addOnIds = [], q
   return getCart(identity);
 }
 
+// Adds a Shop With Us product to the cart. Simpler than addItem above — no
+// variants/add-ons/event fields, dedupes purely on shopProductId.
+export async function addShopItem(identity, { productId, qty = 1 }) {
+  const product = await prisma.shopProduct.findUnique({ where: { id: productId } });
+  if (!product || !product.isActive) throw apiError(404, ERROR_CODES.NOT_FOUND, 'Product not found');
+
+  const cart = await getOrCreateCart(identity);
+  const existing = cart.items.find((item) => item.shopProductId === productId);
+
+  if (existing) {
+    await prisma.cartItem.update({ where: { id: existing.id }, data: { qty: existing.qty + qty } });
+  } else {
+    await prisma.cartItem.create({ data: { cartId: cart.id, shopProductId: productId, qty } });
+  }
+
+  return getCart(identity);
+}
+
 export async function updateItem(identity, itemId, data) {
   const cart = await getOrCreateCart(identity);
   const item = cart.items.find((i) => i.id === itemId);
@@ -142,8 +174,9 @@ export async function removeItem(identity, itemId) {
 }
 
 // Called right after login: folds the guest cart's items into the user's
-// cart (merging qty for identical lines, same as addItem), then discards the
-// now-empty guest cart so nothing is left behind under the old session id.
+// cart (merging qty for identical lines, same as addItem/addShopItem), then
+// discards the now-empty guest cart so nothing is left behind under the old
+// session id.
 export async function mergeGuestCart(userId, guestSessionId) {
   if (!guestSessionId) return getCart({ userId });
 
@@ -154,19 +187,23 @@ export async function mergeGuestCart(userId, guestSessionId) {
 
   if (guestCart && guestCart.items.length > 0) {
     for (const item of guestCart.items) {
-      await addItem(
-        { userId },
-        {
-          productId: item.productId,
-          variantId: item.variantId || undefined,
-          addOnIds: item.addOnIds,
-          qty: item.qty,
-          eventDate: item.eventDate?.toISOString(),
-          timeSlotId: item.timeSlotId || undefined,
-          cityId: item.cityId || undefined,
-          notes: item.notes || undefined,
-        }
-      );
+      if (item.shopProductId) {
+        await addShopItem({ userId }, { productId: item.shopProductId, qty: item.qty });
+      } else {
+        await addItem(
+          { userId },
+          {
+            productId: item.productId,
+            variantId: item.variantId || undefined,
+            addOnIds: item.addOnIds,
+            qty: item.qty,
+            eventDate: item.eventDate?.toISOString(),
+            timeSlotId: item.timeSlotId || undefined,
+            cityId: item.cityId || undefined,
+            notes: item.notes || undefined,
+          }
+        );
+      }
     }
   }
 

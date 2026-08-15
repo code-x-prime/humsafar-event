@@ -18,6 +18,11 @@ import { CouponsPage } from './routes/coupons'
 import { TestimonialsPage } from './routes/testimonials'
 import { EnquiriesPage } from './routes/enquiries'
 import { GalleryPage } from './routes/gallery'
+import { ShopProductsPage } from './routes/shopProducts'
+import { ShopProductFormPage } from './routes/shopProductForm'
+import { ShopCategoriesPage } from './routes/shopCategories'
+import { ShopOrdersPage } from './routes/shopOrders'
+import { ShopReviewsPage } from './routes/shopReviews'
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -44,6 +49,12 @@ export const router = createBrowserRouter([
       { path: 'reviews', element: <ReviewsPage /> },
       { path: 'enquiries', element: <EnquiriesPage /> },
       { path: 'settings', element: <SettingsPage /> },
+      { path: 'shop/products', element: <ShopProductsPage /> },
+      { path: 'shop/products/new', element: <ShopProductFormPage /> },
+      { path: 'shop/products/:id', element: <ShopProductFormPage /> },
+      { path: 'shop/categories', element: <ShopCategoriesPage /> },
+      { path: 'shop/orders', element: <ShopOrdersPage /> },
+      { path: 'shop/reviews', element: <ShopReviewsPage /> },
     ],
   },
 ])

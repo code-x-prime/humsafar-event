@@ -13,6 +13,7 @@ interface CategoryNavItem {
 }
 
 const QUICK_LINKS = [
+  { href: "/shop", label: "Shop With Us" },
   { href: "/orders", label: "Track Order" },
   { href: "/reviews", label: "Reviews" },
   { href: "/about", label: "About" },

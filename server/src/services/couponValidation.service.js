@@ -62,7 +62,7 @@ export async function validateCoupon(code, { subtotal, productSubtotal, cityId, 
 
   if (coupon.perUserLimit) {
     const userUsage = await prisma.order.count({
-      where: { userId, couponCode: coupon.code, status: REAL_ORDER_STATUS_FILTER },
+      where: { userId, kind: 'BOOKING', couponCode: coupon.code, status: REAL_ORDER_STATUS_FILTER },
     });
     if (userUsage >= coupon.perUserLimit) {
       throw apiError(422, ERROR_CODES.VALIDATION_ERROR, 'You have already used this coupon the maximum number of times');
@@ -71,7 +71,7 @@ export async function validateCoupon(code, { subtotal, productSubtotal, cityId, 
 
   if (coupon.newUserOnly || coupon.minRepeatOrders) {
     const priorOrderCount = await prisma.order.count({
-      where: { userId, status: REAL_ORDER_STATUS_FILTER },
+      where: { userId, kind: 'BOOKING', status: REAL_ORDER_STATUS_FILTER },
     });
     if (coupon.newUserOnly && priorOrderCount > 0) {
       throw apiError(422, ERROR_CODES.VALIDATION_ERROR, 'This coupon is only valid for your first order');
@@ -113,7 +113,7 @@ export async function getEligibleCoupons(userId, { subtotal, productSubtotal, ca
 
   const needsOrderCount = candidates.some((c) => c.newUserOnly || c.minRepeatOrders);
   const priorOrderCount = needsOrderCount
-    ? await prisma.order.count({ where: { userId, status: REAL_ORDER_STATUS_FILTER } })
+    ? await prisma.order.count({ where: { userId, kind: 'BOOKING', status: REAL_ORDER_STATUS_FILTER } })
     : 0;
 
   const eligible = [];
@@ -127,7 +127,7 @@ export async function getEligibleCoupons(userId, { subtotal, productSubtotal, ca
 
     if (coupon.perUserLimit) {
       const userUsage = await prisma.order.count({
-        where: { userId, couponCode: coupon.code, status: REAL_ORDER_STATUS_FILTER },
+        where: { userId, kind: 'BOOKING', couponCode: coupon.code, status: REAL_ORDER_STATUS_FILTER },
       });
       if (userUsage >= coupon.perUserLimit) continue;
     }

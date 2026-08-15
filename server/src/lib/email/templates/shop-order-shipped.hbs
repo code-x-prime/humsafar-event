@@ -1,0 +1,39 @@
+<div style="font-family: 'Jost', 'Inter', Arial, sans-serif; max-width: 480px; margin: 0 auto;">
+  <div style="background: #0E2A4D; padding: 24px; text-align: center;">
+    <span style="font-family: 'Playfair Display', Georgia, serif; color: #ffffff; font-size: 22px;">
+      Humsafar Events — Shop With Us
+    </span>
+  </div>
+  <div style="padding: 32px 24px; background: #ffffff; color: #0B1620;">
+    <p style="font-size: 16px; margin: 0 0 4px;">Hi {{customerName}},</p>
+    <p style="font-size: 15px; margin: 0 0 20px;">
+      Great news — your order <strong>{{orderNumber}}</strong> has shipped!
+    </p>
+
+    <div style="background: #F7F9FC; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+      {{#if courierName}}
+      <p style="font-size: 13px; color: #6B7A88; margin: 0 0 4px;">Courier</p>
+      <p style="font-size: 15px; font-weight: 600; margin: 0 0 12px;">{{courierName}}</p>
+      {{/if}}
+      <p style="font-size: 13px; color: #6B7A88; margin: 0 0 4px;">Tracking Number (AWB)</p>
+      <p style="font-size: 18px; font-weight: 700; color: #0E2A4D; margin: 0;">{{awbCode}}</p>
+    </div>
+
+    {{#if trackingUrl}}
+    <p style="text-align: center; margin: 0 0 20px;">
+      <a href="{{trackingUrl}}" style="display: inline-block; background: #E0623D; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-size: 14px; font-weight: 600;">
+        Track Your Order
+      </a>
+    </p>
+    {{/if}}
+
+    <p style="font-size: 13px; color: #6B7A88; margin-top: 24px;">
+      Questions about your delivery? Reply to this email or reach us on WhatsApp.
+    </p>
+  </div>
+  <div style="background: #081C36; padding: 16px 24px; text-align: center;">
+    <p style="font-size: 12px; color: #D6E0EE; margin: 0;">
+      Humsafar Events &middot; Together in Every Journey
+    </p>
+  </div>
+</div>

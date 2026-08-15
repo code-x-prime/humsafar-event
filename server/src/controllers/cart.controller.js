@@ -41,6 +41,13 @@ export const addItem = async (req, res) => {
   return success(res, { status: 201, data: cart, message: 'Added to cart' });
 };
 
+export const addShopItem = async (req, res) => {
+  const identity = requireIdentity(req, res);
+  if (!identity) return;
+  const cart = await cartService.addShopItem(identity, req.body);
+  return success(res, { status: 201, data: cart, message: 'Added to cart' });
+};
+
 export const updateItem = async (req, res) => {
   const identity = requireIdentity(req, res);
   if (!identity) return;

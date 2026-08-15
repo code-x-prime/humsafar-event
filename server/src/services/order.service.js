@@ -23,7 +23,7 @@ const INCLUDE = {
 
 export async function list(query) {
   const { page, limit, skip, take } = getPagination(query);
-  const where = buildWhere(query, { searchFields: ['orderNumber'], filterFields: ['status', 'cityId'] });
+  const where = { kind: 'BOOKING', ...buildWhere(query, { searchFields: ['orderNumber'], filterFields: ['status', 'cityId'] }) };
   const orderBy = buildOrderBy(query, 'createdAt', 'desc');
 
   const [items, total] = await Promise.all([
@@ -35,7 +35,7 @@ export async function list(query) {
 }
 
 export async function getById(id) {
-  const order = await prisma.order.findUnique({ where: { id }, include: INCLUDE });
+  const order = await prisma.order.findFirst({ where: { id, kind: 'BOOKING' }, include: INCLUDE });
   if (!order) throw apiError(404, ERROR_CODES.NOT_FOUND, 'Order not found');
   return order;
 }
@@ -50,7 +50,7 @@ function generateOrderNumber() {
 export async function create(data) {
   const amountDue = data.total - (data.amountPaid || 0);
   return prisma.order.create({
-    data: { ...data, orderNumber: generateOrderNumber(), amountDue },
+    data: { ...data, kind: 'BOOKING', orderNumber: generateOrderNumber(), amountDue },
     include: INCLUDE,
   });
 }

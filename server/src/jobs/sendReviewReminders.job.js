@@ -13,7 +13,7 @@ export async function sendReviewReminders() {
   const cutoff = new Date(Date.now() - TWELVE_HOURS_MS);
 
   const orders = await prisma.order.findMany({
-    where: { status: 'COMPLETED', reviewReminderSentAt: null, updatedAt: { lte: cutoff } },
+    where: { kind: 'BOOKING', status: 'COMPLETED', reviewReminderSentAt: null, updatedAt: { lte: cutoff } },
     include: { items: true, user: { select: { name: true, email: true } } },
   });
 

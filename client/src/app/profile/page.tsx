@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { User, Mail, Phone, LogOut, Package, ChevronRight, Loader2 } from "lucide-react";
+import { User, Mail, Phone, LogOut, Package, ChevronRight, Loader2, MapPin, PartyPopper, ShoppingBag } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/context/AuthContext";
@@ -26,6 +26,18 @@ interface OrderSummary {
   thumbnailTitle: string;
 }
 
+interface ShopOrderSummary {
+  id: string;
+  orderNumber: string;
+  status: string;
+  total: string;
+  amountPaid: string;
+  itemCount: number;
+  thumbnailTitle: string;
+  shipment: { status: string; awbCode: string | null; trackingUrl: string | null; courierName: string | null } | null;
+  createdAt: string;
+}
+
 const STATUS_STYLES: Record<string, string> = {
   PENDING_PAYMENT: "bg-(--surface-alt,#F7F9FC) text-(--ink-500)",
   CONFIRMED: "bg-(--blue-600)/10 text-(--blue-600)",
@@ -36,28 +48,46 @@ const STATUS_STYLES: Record<string, string> = {
   REFUNDED: "bg-(--coral-600)/10 text-(--coral-600)",
 };
 
+const SHOP_STATUS_STYLES: Record<string, string> = {
+  PENDING_PAYMENT: "bg-(--surface-alt,#F7F9FC) text-(--ink-500)",
+  CONFIRMED: "bg-(--blue-600)/10 text-(--blue-600)",
+  SHIPPED: "bg-(--orange-600)/10 text-(--orange-600)",
+  DELIVERED: "bg-(--success,#15803D)/10 text-(--success,#15803D)",
+  CANCELLED: "bg-(--coral-600)/10 text-(--coral-600)",
+  REFUNDED: "bg-(--coral-600)/10 text-(--coral-600)",
+};
+
+type OrdersTab = "booking" | "shop";
+
 export default function ProfilePage() {
   const { isAuthenticated, logout } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [orders, setOrders] = useState<OrderSummary[]>([]);
+  const [shopOrders, setShopOrders] = useState<ShopOrderSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ name: "", email: "" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [ordersTab, setOrdersTab] = useState<OrdersTab>("booking");
 
   useEffect(() => {
     if (!isAuthenticated) {
       setLoading(false);
       return;
     }
-    Promise.all([getJson<Profile>("/profile"), getJson<OrderSummary[]>("/checkout/my-orders")])
-      .then(([p, o]) => {
+    Promise.all([
+      getJson<Profile>("/profile"),
+      getJson<OrderSummary[]>("/checkout/my-orders"),
+      getJson<ShopOrderSummary[]>("/shop/checkout/my-orders"),
+    ])
+      .then(([p, o, so]) => {
         setProfile(p);
         setForm({ name: p.name || "", email: p.email || "" });
         setOrders(o);
+        setShopOrders(so);
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, [isAuthenticated]);
 
@@ -171,50 +201,136 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              <button
-                onClick={logout}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-(--ink-300) py-2.5 font-heading text-sm font-semibold text-(--ink-700)"
-              >
-                <LogOut className="h-4 w-4" /> Sign Out
-              </button>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button
+                  onClick={logout}
+                  className="flex items-center justify-center gap-2 rounded-full border border-(--ink-300) py-2.5 font-heading text-sm font-semibold text-(--ink-700)"
+                >
+                  <LogOut className="h-4 w-4" /> Sign Out
+                </button>
+                <Link
+                  href="/profile/addresses"
+                  className="flex items-center justify-center gap-2 rounded-full border border-(--ink-300) py-2.5 font-heading text-sm font-semibold text-(--ink-700)"
+                >
+                  <MapPin className="h-4 w-4" /> My Addresses
+                </Link>
+              </div>
 
               <h2 className="mt-8 font-heading text-base font-semibold text-(--navy-800)">My Orders</h2>
 
-              {orders.length === 0 ? (
-                <div className="mt-3 rounded-2xl border border-(--ink-100) bg-white p-8 text-center font-sans text-sm text-(--ink-500)">
-                  No bookings yet.
-                </div>
-              ) : (
-                <div className="mt-3 flex flex-col gap-2">
-                  {orders.map((order) => (
-                    <Link
-                      key={order.id}
-                      href={`/profile/orders/${order.id}`}
-                      className="flex items-center gap-3 rounded-2xl border border-(--ink-100) bg-white p-4 hover:shadow-sm"
+              {/* Orders tabs */}
+              <div className="mt-3 flex gap-2 rounded-full bg-white p-1.5 shadow-sm">
+                <button
+                  onClick={() => setOrdersTab("booking")}
+                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2.5 font-heading text-sm font-semibold transition-colors ${
+                    ordersTab === "booking" ? "bg-primary text-primary-foreground" : "text-(--ink-700)"
+                  }`}
+                >
+                  <PartyPopper className="h-4 w-4" />
+                  Decoration
+                  {orders.length > 0 && (
+                    <span
+                      className={`ml-1 flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-bold ${
+                        ordersTab === "booking" ? "bg-white/25 text-primary-foreground" : "bg-(--coral-600) text-white"
+                      }`}
                     >
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--surface-alt,#F7F9FC)">
-                        <Package className="h-4 w-4 text-(--ink-700)" />
-                      </span>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="font-heading text-sm font-semibold text-(--navy-800)">{order.orderNumber}</p>
-                          <span className={`rounded-full px-2 py-0.5 font-heading text-[10px] font-semibold ${STATUS_STYLES[order.status] || "bg-(--surface-alt,#F7F9FC) text-(--ink-500)"}`}>
-                            {order.status.replace("_", " ")}
-                          </span>
+                      {orders.length}
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={() => setOrdersTab("shop")}
+                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2.5 font-heading text-sm font-semibold transition-colors ${
+                    ordersTab === "shop" ? "bg-primary text-primary-foreground" : "text-(--ink-700)"
+                  }`}
+                >
+                  <ShoppingBag className="h-4 w-4" />
+                  Shop With Us
+                  {shopOrders.length > 0 && (
+                    <span
+                      className={`ml-1 flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-bold ${
+                        ordersTab === "shop" ? "bg-white/25 text-primary-foreground" : "bg-(--coral-600) text-white"
+                      }`}
+                    >
+                      {shopOrders.length}
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              {ordersTab === "booking" &&
+                (orders.length === 0 ? (
+                  <div className="mt-3 rounded-2xl border border-(--ink-100) bg-white p-8 text-center font-sans text-sm text-(--ink-500)">
+                    No bookings yet.
+                  </div>
+                ) : (
+                  <div className="mt-3 flex flex-col gap-2">
+                    {orders.map((order) => (
+                      <Link
+                        key={order.id}
+                        href={`/profile/orders/${order.id}`}
+                        className="flex items-center gap-3 rounded-2xl border border-(--ink-100) bg-white p-4 hover:shadow-sm"
+                      >
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--surface-alt,#F7F9FC)">
+                          <Package className="h-4 w-4 text-(--ink-700)" />
+                        </span>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-heading text-sm font-semibold text-(--navy-800)">{order.orderNumber}</p>
+                            <span className={`rounded-full px-2 py-0.5 font-heading text-[10px] font-semibold ${STATUS_STYLES[order.status] || "bg-(--surface-alt,#F7F9FC) text-(--ink-500)"}`}>
+                              {order.status.replace("_", " ")}
+                            </span>
+                          </div>
+                          <p className="font-sans text-xs text-(--ink-500)">
+                            {order.thumbnailTitle}{order.itemCount > 1 ? ` + ${order.itemCount - 1} more` : ""} &middot; {order.eventDate}
+                          </p>
                         </div>
-                        <p className="font-sans text-xs text-(--ink-500)">
-                          {order.thumbnailTitle}{order.itemCount > 1 ? ` + ${order.itemCount - 1} more` : ""} &middot; {order.eventDate}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-heading text-sm font-semibold text-(--navy-800)">&#8377;{order.total}</p>
-                        {Number(order.amountDue) > 0 && <p className="font-sans text-[10px] text-(--coral-600)">&#8377;{order.amountDue} due</p>}
-                      </div>
-                      <ChevronRight className="h-4 w-4 shrink-0 text-(--ink-500)" />
-                    </Link>
-                  ))}
-                </div>
-              )}
+                        <div className="text-right">
+                          <p className="font-heading text-sm font-semibold text-(--navy-800)">&#8377;{order.total}</p>
+                          {Number(order.amountDue) > 0 && <p className="font-sans text-[10px] text-(--coral-600)">&#8377;{order.amountDue} due</p>}
+                        </div>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-(--ink-500)" />
+                      </Link>
+                    ))}
+                  </div>
+                ))}
+
+              {ordersTab === "shop" &&
+                (shopOrders.length === 0 ? (
+                  <div className="mt-3 rounded-2xl border border-(--ink-100) bg-white p-8 text-center font-sans text-sm text-(--ink-500)">
+                    No shop orders yet.
+                  </div>
+                ) : (
+                  <div className="mt-3 flex flex-col gap-2">
+                    {shopOrders.map((order) => (
+                      <Link
+                        key={order.id}
+                        href={`/profile/shop-orders/${order.id}`}
+                        className="flex items-center gap-3 rounded-2xl border border-(--ink-100) bg-white p-4 hover:shadow-sm"
+                      >
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--surface-alt,#F7F9FC)">
+                          <Package className="h-4 w-4 text-(--ink-700)" />
+                        </span>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-heading text-sm font-semibold text-(--navy-800)">{order.orderNumber}</p>
+                            <span className={`rounded-full px-2 py-0.5 font-heading text-[10px] font-semibold ${SHOP_STATUS_STYLES[order.status] || "bg-(--surface-alt,#F7F9FC) text-(--ink-500)"}`}>
+                              {order.status.replace("_", " ")}
+                            </span>
+                          </div>
+                          <p className="font-sans text-xs text-(--ink-500)">
+                            {order.thumbnailTitle}{order.itemCount > 1 ? ` + ${order.itemCount - 1} more` : ""}
+                            {order.shipment?.awbCode ? ` · AWB ${order.shipment.awbCode}` : ""}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-heading text-sm font-semibold text-(--navy-800)">&#8377;{order.total}</p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-(--ink-500)" />
+                      </Link>
+                    ))}
+                  </div>
+                ))}
             </>
           )}
         </div>

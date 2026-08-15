@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Phone, Cloud, CreditCard, Mail, Lock, Check } from 'lucide-react'
+import { Phone, Cloud, CreditCard, Mail, Lock, Check, Truck } from 'lucide-react'
 
 type SettingsGroupData = Record<string, string | number | boolean | undefined>
 
@@ -51,7 +51,15 @@ const GROUPS = [
     icon: Mail,
     description: 'Transactional email provider for OTPs, receipts, and notifications.',
     fields: [
-      { name: 'provider', label: 'Provider', hint: 'SMTP or BREVO', secret: false },
+      {
+        name: 'provider',
+        label: 'Provider',
+        secret: false,
+        options: [
+          { value: 'BREVO', label: 'Brevo' },
+          { value: 'SMTP', label: 'SMTP' },
+        ],
+      },
       { name: 'fromName', label: 'From Name', secret: false },
       { name: 'fromEmail', label: 'From Email', secret: false },
       { name: 'smtpHost', label: 'SMTP Host', secret: false },
@@ -59,6 +67,34 @@ const GROUPS = [
       { name: 'smtpUser', label: 'SMTP User', secret: false },
       { name: 'smtpPassword', label: 'SMTP Password', secret: true },
       { name: 'brevoApiKey', label: 'Brevo API Key', secret: true },
+    ],
+  },
+  {
+    key: 'shipping',
+    label: 'Shipping (Shop With Us)',
+    icon: Truck,
+    description: 'Shiprocket account, pickup warehouse address, and shop tax rate — used only by Shop With Us orders.',
+    fields: [
+      { name: 'shiprocketEmail', label: 'Shiprocket Email', secret: false },
+      { name: 'shiprocketPassword', label: 'Shiprocket Password', secret: true },
+      {
+        name: 'shipmentMode',
+        label: 'Shipment Mode',
+        hint: 'Auto: every new paid order is pushed to Shiprocket and assigned a courier automatically. Manual: you ship each order yourself from the order screen.',
+        secret: false,
+        options: [
+          { value: 'AUTO', label: 'Auto — ship automatically' },
+          { value: 'MANUAL', label: 'Manual — I’ll assign couriers myself' },
+        ],
+      },
+      { name: 'pickupLocationName', label: 'Shiprocket Pickup Location Nickname', hint: 'Must exactly match a pickup address already added in your Shiprocket dashboard', secret: false },
+      { name: 'warehouseName', label: 'Warehouse Contact Name', secret: false },
+      { name: 'warehousePhone', label: 'Warehouse Phone', secret: false },
+      { name: 'warehouseAddress', label: 'Warehouse Address Line', secret: false },
+      { name: 'warehouseCity', label: 'Warehouse City', secret: false },
+      { name: 'warehouseState', label: 'Warehouse State', secret: false },
+      { name: 'warehousePincode', label: 'Warehouse Pincode', secret: false },
+      { name: 'shopTaxPercent', label: 'Tax / GST %', hint: 'A percentage added to every Shop With Us order, e.g. enter 18 for 18% GST', secret: false },
     ],
   },
 ] as const
@@ -126,13 +162,28 @@ function SettingsGroupCard({ group }: { group: (typeof GROUPS)[number] }) {
                   {field.label}
                   {field.secret && <Lock className="h-3 w-3 text-muted-foreground" />}
                 </Label>
-                <Input
-                  id={field.name}
-                  type={field.secret ? 'password' : 'text'}
-                  placeholder={field.secret ? 'Leave blank to keep existing value' : undefined}
-                  value={String(form[field.name] ?? '')}
-                  onChange={(e) => setForm({ ...form, [field.name]: e.target.value })}
-                />
+                {'options' in field && field.options ? (
+                  <select
+                    id={field.name}
+                    value={String(form[field.name] ?? field.options[0].value)}
+                    onChange={(e) => setForm({ ...form, [field.name]: e.target.value })}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    {field.options.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <Input
+                    id={field.name}
+                    type={field.secret ? 'password' : 'text'}
+                    placeholder={field.secret ? 'Leave blank to keep existing value' : undefined}
+                    value={String(form[field.name] ?? '')}
+                    onChange={(e) => setForm({ ...form, [field.name]: e.target.value })}
+                  />
+                )}
                 {'hint' in field && field.hint && <p className="text-xs text-muted-foreground">{field.hint}</p>}
               </div>
             ))}

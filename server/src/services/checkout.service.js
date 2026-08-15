@@ -15,18 +15,19 @@ function apiError(status, code, message) {
 
 export async function getOrderForUser(userId, orderId) {
   const order = await prisma.order.findFirst({
-    where: { id: orderId, userId },
+    where: { id: orderId, userId, kind: 'BOOKING' },
     select: { orderNumber: true, status: true, total: true, amountPaid: true, amountDue: true, eventDate: true },
   });
   if (!order) throw apiError(404, ERROR_CODES.NOT_FOUND, 'Order not found');
-  return { ...order, eventDate: order.eventDate.toISOString().slice(0, 10) };
+  return { ...order, eventDate: order.eventDate?.toISOString().slice(0, 10) };
 }
 
-// GET /checkout/my-orders — every order a customer has placed, newest first,
-// for the profile page's order history list.
+// GET /checkout/my-orders — every booking a customer has placed, newest
+// first, for the profile page's order history list. (Shop With Us orders
+// have their own listing — see shopCheckout.service.js.)
 export async function listOrdersForUser(userId) {
   const orders = await prisma.order.findMany({
-    where: { userId },
+    where: { userId, kind: 'BOOKING' },
     orderBy: { createdAt: 'desc' },
     include: { items: true },
   });
@@ -35,7 +36,7 @@ export async function listOrdersForUser(userId) {
     id: o.id,
     orderNumber: o.orderNumber,
     status: o.status,
-    eventDate: o.eventDate.toISOString().slice(0, 10),
+    eventDate: o.eventDate?.toISOString().slice(0, 10),
     total: o.total,
     amountPaid: o.amountPaid,
     amountDue: o.amountDue,
@@ -46,11 +47,11 @@ export async function listOrdersForUser(userId) {
 }
 
 // GET /checkout/my-orders/:orderId — full detail for one of the customer's
-// own orders (line items, address, payment status), for the profile page's
-// order detail view.
+// own bookings (line items, address, payment status), for the profile
+// page's order detail view.
 export async function getOrderDetailForUser(userId, orderId) {
   const order = await prisma.order.findFirst({
-    where: { id: orderId, userId },
+    where: { id: orderId, userId, kind: 'BOOKING' },
     include: {
       items: true,
       payments: { orderBy: { createdAt: 'desc' } },
@@ -63,8 +64,8 @@ export async function getOrderDetailForUser(userId, orderId) {
     id: order.id,
     orderNumber: order.orderNumber,
     status: order.status,
-    eventDate: order.eventDate.toISOString().slice(0, 10),
-    cityName: order.city.name,
+    eventDate: order.eventDate?.toISOString().slice(0, 10),
+    cityName: order.city?.name,
     addressSnapshot: order.addressSnapshot,
     subtotal: order.subtotal,
     addOnTotal: order.addOnTotal,
@@ -115,6 +116,7 @@ async function priceCart(userId) {
     where: { userId },
     include: {
       items: {
+        where: { productId: { not: null } }, // decoration-booking lines only — Shop With Us lines are priced by shopCheckout.service.js
         include: {
           product: { include: { categories: true } },
           variant: true,
@@ -314,6 +316,7 @@ export async function createOrder(userId, { addressId, eventDate, timeSlotId, pa
   const order = await prisma.order.create({
     data: {
       orderNumber: generateOrderNumber(),
+      kind: 'BOOKING',
       userId,
       status: 'PENDING_PAYMENT',
       eventDate: eventDateObj,

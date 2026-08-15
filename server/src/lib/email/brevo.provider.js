@@ -6,7 +6,11 @@ import * as settings from '../../config/settings.service.js';
 // dormant until a real Brevo API key is added via the admin Settings page.
 export async function sendViaBrevo({ to, subject, html, text }) {
   const cfg = settings.getGroup('EMAIL');
-  if (!cfg.brevoApiKey) throw new Error('Brevo API key is not configured');
+  if (!cfg.brevoApiKey) {
+    const err = new Error('Brevo API key is not configured');
+    err.nonRetryable = true;
+    throw err;
+  }
 
   const res = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',

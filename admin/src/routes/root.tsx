@@ -19,6 +19,9 @@ import {
   IconMessages,
   IconQuote,
   IconSettings,
+  IconBuildingStore,
+  IconBox,
+  IconTruckDelivery,
 } from '@tabler/icons-react'
 import { useAuth } from '@/context/AuthContext'
 
@@ -38,29 +41,48 @@ const NAV = [
   { to: '/reviews', label: 'Reviews', icon: IconStar },
   { to: '/enquiries', label: 'Enquiries', icon: IconMessages },
   { to: '/testimonials', label: 'Testimonials', icon: IconQuote },
-  { to: '/settings', label: 'Settings', icon: IconSettings },
+]
+
+const SHOP_NAV = [
+  { to: '/shop/products', label: 'Shop Products', icon: IconBox },
+  { to: '/shop/categories', label: 'Shop Categories', icon: IconBuildingStore },
+  { to: '/shop/orders', label: 'Shop Orders', icon: IconTruckDelivery },
+  { to: '/shop/reviews', label: 'Shop Reviews', icon: IconStar },
 ]
 
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const location = useLocation()
+
+  function renderLink(item: (typeof NAV)[number]) {
+    const isActive = location.pathname === item.to
+    return (
+      <Link
+        key={item.to}
+        to={item.to}
+        onClick={onNavigate}
+        className={`flex items-center gap-2.5 rounded-md px-3 py-2 transition-colors ${
+          isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary'
+        }`}
+      >
+        <item.icon className="h-4 w-4 shrink-0" stroke={1.75} />
+        {item.label}
+      </Link>
+    )
+  }
+
   return (
     <nav className="flex flex-col gap-1 font-heading text-sm">
-      {NAV.map((item) => {
-        const isActive = location.pathname === item.to
-        return (
-          <Link
-            key={item.to}
-            to={item.to}
-            onClick={onNavigate}
-            className={`flex items-center gap-2.5 rounded-md px-3 py-2 transition-colors ${
-              isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary'
-            }`}
-          >
-            <item.icon className="h-4 w-4 shrink-0" stroke={1.75} />
-            {item.label}
-          </Link>
-        )
-      })}
+      {NAV.map(renderLink)}
+
+      <p className="mb-1 mt-4 px-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+        Shop With Us
+      </p>
+      {SHOP_NAV.map(renderLink)}
+
+      <p className="mb-1 mt-4 px-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+        System
+      </p>
+      {renderLink({ to: '/settings', label: 'Settings', icon: IconSettings })}
     </nav>
   )
 }

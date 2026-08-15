@@ -19,3 +19,7 @@ export const verifyPaymentSchema = z.object({
   razorpayPaymentId: z.string().min(1),
   razorpaySignature: z.string().min(1),
 });
+
+export const cancelPaidOrderSchema = z.object({
+  reason: z.string().min(1, 'Please tell us why you want to cancel this order'),
+});

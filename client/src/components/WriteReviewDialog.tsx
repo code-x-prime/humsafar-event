@@ -11,9 +11,10 @@ interface WriteReviewDialogProps {
   open: boolean;
   onClose: () => void;
   onSubmitted: () => void;
+  endpoint?: string;
 }
 
-export function WriteReviewDialog({ orderId, productId, productTitle, open, onClose, onSubmitted }: WriteReviewDialogProps) {
+export function WriteReviewDialog({ orderId, productId, productTitle, open, onClose, onSubmitted, endpoint = "/reviews" }: WriteReviewDialogProps) {
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
   const [title, setTitle] = useState("");
@@ -28,7 +29,7 @@ export function WriteReviewDialog({ orderId, productId, productTitle, open, onCl
     setSubmitting(true);
     setError(null);
     try {
-      await postJson("/reviews", { orderId, productId, rating, title: title || undefined, comment: comment || undefined });
+      await postJson(endpoint, { orderId, productId, rating, title: title || undefined, comment: comment || undefined });
       onSubmitted();
       onClose();
     } catch (err) {

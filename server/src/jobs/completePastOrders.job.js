@@ -10,7 +10,7 @@ export async function completePastOrders() {
   const endOfYesterday = nowIST().startOf('day').toDate();
 
   const result = await prisma.order.updateMany({
-    where: { status: 'CONFIRMED', eventDate: { lt: endOfYesterday } },
+    where: { kind: 'BOOKING', status: 'CONFIRMED', eventDate: { lt: endOfYesterday } },
     data: { status: 'COMPLETED' },
   });
 

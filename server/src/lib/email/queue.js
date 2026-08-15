@@ -25,6 +25,11 @@ export async function sendWithRetry({ to, template, provider, sender }) {
       lastError = err;
       logger.warn({ err, attempt, to, template }, 'Email send attempt failed');
 
+      // Config errors (missing API key / SMTP creds) will never succeed on
+      // retry — burning through the 1m/5m/15m backoff just delays the
+      // fallback provider in index.js for no benefit. Fail fast instead.
+      if (err.nonRetryable) break;
+
       if (attempt < RETRY_DELAYS_MS.length) {
         await sleep(RETRY_DELAYS_MS[attempt]);
       }

@@ -18,6 +18,11 @@ import reviewRoutes from './public/review.routes.js';
 import testimonialRoutes from './public/testimonial.routes.js';
 import enquiryRoutes from './public/enquiry.routes.js';
 import sitemapRoutes from './public/sitemap.routes.js';
+import shopCategoryRoutes from './public/shopCategory.routes.js';
+import shopProductRoutes from './public/shopProduct.routes.js';
+import shopAddressRoutes from './public/shopAddress.routes.js';
+import shopCheckoutRoutes from './public/shopCheckout.routes.js';
+import shopReviewRoutes from './public/shopReview.routes.js';
 import adminRoutes from './admin/index.js';
 
 const router = Router();
@@ -42,6 +47,11 @@ const publicRoutes = [
   { path: '/testimonials', route: testimonialRoutes },
   { path: '/enquiries', route: enquiryRoutes },
   { path: '/sitemap-data', route: sitemapRoutes },
+  { path: '/shop/categories', route: shopCategoryRoutes },
+  { path: '/shop/products', route: shopProductRoutes },
+  { path: '/shop/addresses', route: shopAddressRoutes },
+  { path: '/shop/checkout', route: shopCheckoutRoutes },
+  { path: '/shop/reviews', route: shopReviewRoutes },
 ];
 
 publicRoutes.forEach(({ path, route }) => router.use(path, route));

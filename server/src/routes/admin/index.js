@@ -33,6 +33,11 @@ import dashboardRoutes from './dashboard.routes.js';
 import auditLogRoutes from './auditLog.routes.js';
 import notificationRoutes from './notification.routes.js';
 import exportRoutes from './export.routes.js';
+import shopCategoryRoutes from './shopCategory.routes.js';
+import shopProductRoutes from './shopProduct.routes.js';
+import shopOrderRoutes from './shopOrder.routes.js';
+import shopReviewRoutes from './shopReview.routes.js';
+import shiprocketRoutes from './shiprocket.routes.js';
 
 const router = Router();
 
@@ -69,5 +74,10 @@ router.use('/dashboard', dashboardRoutes);
 router.use('/audit-logs', auditLogRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/export', exportRoutes);
+router.use('/shop-categories', shopCategoryRoutes);
+router.use('/shop-products', shopProductRoutes);
+router.use('/shop-orders', shopOrderRoutes);
+router.use('/shop-reviews', shopReviewRoutes);
+router.use('/shiprocket', shiprocketRoutes);
 
 export default router;

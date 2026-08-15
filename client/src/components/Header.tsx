@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { User, Headset, ChevronDown, Menu } from "lucide-react";
+import { User, Headset, ChevronDown, Menu, Store } from "lucide-react";
 import { IconShoppingCart } from "@tabler/icons-react";
 import { CitySelector } from "./CitySelector";
 import { HeaderSearch } from "./HeaderSearch";
@@ -73,6 +73,13 @@ export function Header() {
         </div>
 
         <div className="ml-auto flex items-center gap-3 text-(--ink-700) sm:gap-4">
+          <Link
+            href="/shop"
+            className="hidden items-center gap-1.5 rounded-full bg-(--coral-600) px-3.5 py-1.5 font-heading text-sm font-semibold text-white transition-colors hover:bg-(--coral-700,#9c2a48) lg:flex"
+          >
+            <Store className="h-4 w-4" />
+            Shop With Us
+          </Link>
           <Link
             href="/contact"
             className="hidden items-center gap-1.5 font-heading text-sm hover:text-accent lg:flex"
