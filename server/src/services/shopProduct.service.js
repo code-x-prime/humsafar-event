@@ -188,6 +188,10 @@ export async function listPublic(query) {
     where.categories = { some: { category: { slug: query.categorySlug } } };
   }
 
+  if (query.featured) {
+    where.isFeatured = true;
+  }
+
   const orderByMap = {
     latest: { createdAt: 'desc' },
     price_asc: { price: 'asc' },

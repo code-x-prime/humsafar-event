@@ -58,4 +58,5 @@ export const listPublicShopProductsQuerySchema = z.object({
   search: z.string().optional(),
   categorySlug: z.string().optional(),
   sort: z.enum(['latest', 'price_asc', 'price_desc', 'rating']).optional(),
+  featured: z.coerce.boolean().optional(),
 });
