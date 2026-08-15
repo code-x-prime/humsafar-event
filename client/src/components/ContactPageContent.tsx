@@ -142,7 +142,7 @@ export function ContactPageContent() {
               >
                 <span className={`flex h-11 w-11 items-center justify-center rounded-full ${c.iconBg}`}>
                   {c.image ? (
-                    <Image src={c.image} alt={c.label} width={28} height={28} className="h-7 w-7" />
+                    <Image src={c.image} alt={c.label} width={28} height={28} quality={90} className="h-7 w-7" />
                   ) : (
                     c.icon && <c.icon className={`h-5 w-5 ${c.iconColor}`} />
                   )}
@@ -169,7 +169,7 @@ export function ContactPageContent() {
                   </div>
                   <div className="flex items-center gap-3 py-3">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white">
-                      <Image src="/whatsapp.png" alt="WhatsApp" width={20} height={20} className="h-5 w-5" />
+                      <Image src="/whatsapp.png" alt="WhatsApp" width={20} height={20} quality={90} className="h-5 w-5" />
                     </span>
                     <div>
                       <dt className="font-heading text-[11px] uppercase tracking-wide text-(--ink-500)">WhatsApp</dt>

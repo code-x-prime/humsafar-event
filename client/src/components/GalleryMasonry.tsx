@@ -27,6 +27,7 @@ export function GalleryMasonry({ images }: { images: GalleryImage[] }) {
             alt={img.title || "Gallery photo"}
             width={600}
             height={800}
+            quality={90}
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className="w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />

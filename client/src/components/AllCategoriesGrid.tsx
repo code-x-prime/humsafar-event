@@ -49,6 +49,7 @@ function CategoryCard({ category }: { category: MenuCategory }) {
             src={category.image}
             alt={category.name}
             fill
+            quality={90}
             sizes="(max-width: 640px) 96px, 160px"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />

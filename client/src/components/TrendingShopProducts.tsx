@@ -53,6 +53,7 @@ export function TrendingShopProducts({ products }: { products: TrendingShopProdu
                           src={product.media[0].url}
                           alt={product.title}
                           fill
+                          quality={90}
                           sizes="(max-width: 640px) 208px, 240px"
                           className="object-cover transition-transform duration-300 group-hover:scale-105"
                         />

@@ -51,6 +51,7 @@ function ProductRow({ title, products }: { title: string; products: RelatedProdu
                         alt={product.title}
                         fill
                         sizes="(max-width: 640px) 208px, 240px"
+                        quality={90}
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                     ) : (

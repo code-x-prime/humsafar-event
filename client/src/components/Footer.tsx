@@ -83,7 +83,7 @@ export function Footer() {
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <div className="flex items-center gap-2">
-              <Image src="/logo-2.png" alt="Humsafar Events" width={44} height={44} className="h-11 w-11" />
+              <Image src="/logo-2.png" alt="Humsafar Events" width={44} height={44} quality={90} className="h-11 w-11" />
               <span className="font-display text-lg text-(--navy-800)">Humsafar Events</span>
             </div>
             <p className="mt-4 max-w-xs font-sans text-sm text-(--ink-500)">

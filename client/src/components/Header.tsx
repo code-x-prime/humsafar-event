@@ -53,7 +53,7 @@ export function Header() {
         </button>
 
         <Link href="/" className="flex shrink-0 items-center gap-2">
-          <Image src="/logo-2.png" alt="Humsafar Events" width={44} height={44} priority className="h-9 w-9 sm:h-12 sm:w-12" />
+          <Image src="/logo-2.png" alt="Humsafar Events" width={44} height={44} quality={90} priority className="h-9 w-9 sm:h-12 sm:w-12" />
           <span className="hidden flex-col sm:flex">
             <span className="font-display text-lg font-semibold leading-tight text-primary">
               Humsafar Events

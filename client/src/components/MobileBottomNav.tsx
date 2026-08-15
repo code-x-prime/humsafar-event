@@ -72,7 +72,7 @@ export function MobileBottomNav() {
           aria-label="Chat on WhatsApp"
         >
           <span className="flex h-13 w-13 items-center justify-center rounded-full bg-white shadow-lg ring-4 ring-background">
-            <Image src="/whatsapp.png" alt="WhatsApp" width={40} height={40} className="h-10 w-10" />
+            <Image src="/whatsapp.png" alt="WhatsApp" width={40} height={40} quality={90} className="h-10 w-10" />
           </span>
           <span className="font-sans text-[11px] font-medium text-[#25D366]">WhatsApp</span>
         </a>

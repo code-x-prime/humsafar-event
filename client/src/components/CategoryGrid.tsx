@@ -65,6 +65,7 @@ export function CategoryGrid({ categories }: { categories: HomeCategory[] }) {
                       alt={category.name}
                       fill
                       sizes="(max-width: 640px) 96px, 120px"
+                      quality={90}
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   ) : (

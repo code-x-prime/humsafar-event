@@ -89,6 +89,7 @@ function BannerSlide({ banner }: { banner: Banner }) {
               alt={banner.title || "Humsafar Events banner"}
               fill
               priority
+              quality={90}
               className="hidden object-cover sm:block"
             />
           )}
@@ -98,6 +99,7 @@ function BannerSlide({ banner }: { banner: Banner }) {
               alt={banner.title || "Humsafar Events banner"}
               fill
               priority
+              quality={90}
               className="object-cover sm:hidden"
             />
           )}

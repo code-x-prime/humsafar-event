@@ -224,7 +224,7 @@ export function FaqPageContent() {
               rel="noopener noreferrer"
               className="mt-2 flex items-center gap-2 rounded-full bg-[#25D366] px-6 py-2.5 font-heading text-sm font-semibold text-white hover:bg-[#20bd5a]"
             >
-              <Image src="/whatsapp.png" alt="" width={18} height={18} className="h-4.5 w-4.5" />
+              <Image src="/whatsapp.png" alt="" width={18} height={18} quality={90} className="h-4.5 w-4.5" />
               Chat on WhatsApp
             </a>
           </div>

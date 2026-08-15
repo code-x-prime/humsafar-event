@@ -58,6 +58,7 @@ export function HomeCategorySection({ section }: { section: HomeSection }) {
                           alt={product.title}
                           fill
                           sizes="(max-width: 640px) 208px, 240px"
+                          quality={90}
                           className="object-cover transition-transform duration-300 group-hover:scale-105"
                         />
                       ) : (

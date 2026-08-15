@@ -44,6 +44,7 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
                 src={images[activeImage].url}
                 alt={images[activeImage].alt || product.title}
                 fill
+                quality={90}
                 className="object-cover"
                 priority
               />
@@ -82,7 +83,7 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
                 className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-md border-2 ${i === activeImage ? "border-(--blue-600)" : "border-(--ink-100)"
                   }`}
               >
-                <Image src={img.url} alt="" fill className="object-cover" />
+                <Image src={img.url} alt="" fill quality={90} className="object-cover" />
               </button>
             ))}
           </div>
@@ -179,7 +180,7 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 rounded-(--radius-btn,12px) bg-[#25D366] px-6 py-3 font-heading text-sm font-semibold text-white hover:bg-[#20bd5a]"
             >
-              <Image src="/whatsapp.png" alt="" width={18} height={18} className="h-4.5 w-4.5" />
+              <Image src="/whatsapp.png" alt="" width={18} height={18} quality={90} className="h-4.5 w-4.5" />
               WhatsApp
             </a>
           )}
@@ -312,7 +313,7 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
             aria-label="Chat on WhatsApp"
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-[#25D366] shadow-md"
           >
-            <Image src="/whatsapp.png" alt="" width={26} height={26} className="h-6.5 w-6.5" />
+            <Image src="/whatsapp.png" alt="" width={26} height={26} quality={90} className="h-6.5 w-6.5" />
           </a>
         )}
 

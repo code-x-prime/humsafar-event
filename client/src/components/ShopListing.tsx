@@ -163,6 +163,7 @@ export function ShopListing({
                         src={product.media[0].url}
                         alt={product.title}
                         fill
+                        quality={90}
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                     ) : (

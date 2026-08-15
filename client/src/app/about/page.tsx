@@ -110,7 +110,7 @@ export default async function AboutPage() {
               rel="noopener noreferrer"
               className="flex items-center gap-2 rounded-full border border-(--ink-300) px-7 py-3 font-heading text-sm font-semibold text-(--navy-800) hover:border-(--orange-400)"
             >
-              <Image src="/whatsapp.png" alt="" width={18} height={18} className="h-4.5 w-4.5" />
+              <Image src="/whatsapp.png" alt="" width={18} height={18} quality={90} className="h-4.5 w-4.5" />
               Chat With Us
             </a>
           </div>
@@ -142,6 +142,7 @@ export default async function AboutPage() {
                 src="/logo-2.png"
                 alt="Humsafar Events"
                 fill
+                quality={90}
                 className="object-contain p-16 opacity-80"
               />
             </div>

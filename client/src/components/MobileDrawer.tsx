@@ -71,7 +71,7 @@ export function MobileDrawer({
             <X className="h-4 w-4" />
           </button>
           <div className="flex items-center gap-2">
-            <Image src="/logo-2.png" alt="Humsafar Events" width={40} height={40} className="h-10 w-10" />
+            <Image src="/logo-2.png" alt="Humsafar Events" width={40} height={40} quality={90} className="h-10 w-10" />
             <div>
               <p className="font-display text-lg text-white">Humsafar Events</p>
               <p className="font-heading text-[10px] uppercase tracking-[.14em] text-(--orange-300)">
@@ -128,7 +128,7 @@ export function MobileDrawer({
             className="flex items-center gap-3 rounded-(--radius-card,16px) bg-[#25D366]/10 px-4 py-3 hover:bg-[#25D366]/15"
           >
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white">
-              <Image src="/whatsapp.png" alt="WhatsApp" width={22} height={22} className="h-5.5 w-5.5" />
+              <Image src="/whatsapp.png" alt="WhatsApp" width={22} height={22} quality={90} className="h-5.5 w-5.5" />
             </span>
             <div>
               <p className="font-heading text-sm font-semibold text-(--navy-800)">WhatsApp Support</p>
