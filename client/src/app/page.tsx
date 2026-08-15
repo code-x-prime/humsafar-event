@@ -45,7 +45,7 @@ async function getTrendingShopProducts(): Promise<TrendingShopProduct[]> {
   const res = await fetch(`${API_BASE}/shop/products?featured=true&limit=10`, { cache: "no-store" });
   if (!res.ok) return [];
   const json = await res.json();
-  return json.success ? json.data.items : [];
+  return json.success ? json.data : [];
 }
 
 export default async function Home() {

@@ -20,7 +20,7 @@ function BookingItemCard({ item, updateQty, removeItem }: { item: CartItem; upda
       <div className="flex gap-3">
         <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-(--surface-alt,#F7F9FC)">
           {item.product.media[0] ? (
-            <Image src={item.product.media[0].url} alt={item.product.title} fill quality={90} className="object-cover" />
+            <Image src={item.product.media[0].url} alt={item.product.title} fill quality={90} sizes="64px" className="object-cover" />
           ) : (
             <div className="flex h-full items-center justify-center text-[10px] text-(--ink-500)">No image</div>
           )}
@@ -103,7 +103,7 @@ function ShopItemCard({ item, updateQty, removeItem }: { item: CartItem; updateQ
       <div className="flex gap-3">
         <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-(--surface-alt,#F7F9FC)">
           {item.shopProduct.media[0] ? (
-            <Image src={item.shopProduct.media[0].url} alt={item.shopProduct.title} fill quality={90} className="object-cover" />
+            <Image src={item.shopProduct.media[0].url} alt={item.shopProduct.title} fill quality={90} sizes="64px" className="object-cover" />
           ) : (
             <div className="flex h-full items-center justify-center text-[10px] text-(--ink-500)">No image</div>
           )}

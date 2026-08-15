@@ -138,7 +138,7 @@ export function CustomizeOrderDialog({ productId, productTitle, variantId, addOn
                     <div key={addOn.id} className="overflow-hidden rounded-xl border border-(--ink-100)">
                       <div className="relative aspect-square w-full bg-(--surface-alt,#F7F9FC)">
                         {addOn.image ? (
-                          <Image src={addOn.image} alt={addOn.name} fill quality={90} className="object-cover" />
+                          <Image src={addOn.image} alt={addOn.name} fill quality={90} sizes="(max-width: 640px) 50vw, 200px" className="object-cover" />
                         ) : (
                           <div className="flex h-full items-center justify-center font-sans text-xs text-(--ink-500)">
                             No image

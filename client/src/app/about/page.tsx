@@ -143,6 +143,7 @@ export default async function AboutPage() {
                 alt="Humsafar Events"
                 fill
                 quality={90}
+                sizes="(max-width: 1024px) 100vw, 50vw"
                 className="object-contain p-16 opacity-80"
               />
             </div>

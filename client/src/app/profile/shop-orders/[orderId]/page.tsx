@@ -152,7 +152,7 @@ export default function ShopOrderDetailPage() {
                       <div className="flex items-start gap-3">
                         {item.image && (
                           <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-(--surface-alt,#F7F9FC)">
-                            <Image src={item.image} alt={item.title} fill quality={90} className="object-cover" />
+                            <Image src={item.image} alt={item.title} fill quality={90} sizes="48px" className="object-cover" />
                           </div>
                         )}
                         <div className="flex-1">

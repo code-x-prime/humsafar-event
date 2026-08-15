@@ -136,6 +136,7 @@ export function ShopProductDetail({ product }: { product: ShopProductDetailData 
                       alt={img.alt || product.title}
                       fill
                       quality={90}
+                      sizes="(max-width: 1024px) 100vw, 600px"
                       className="object-cover"
                       priority={i === 0}
                     />
@@ -164,7 +165,7 @@ export function ShopProductDetail({ product }: { product: ShopProductDetailData 
                 onClick={() => galleryApi?.scrollTo(i)}
                 className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-md border-2 ${i === activeImage ? "border-(--blue-600)" : "border-(--ink-100)"}`}
               >
-                <Image src={img.url} alt="" fill quality={90} className="object-cover" />
+                <Image src={img.url} alt="" fill quality={90} sizes="64px" className="object-cover" />
               </button>
             ))}
           </div>

@@ -53,7 +53,7 @@ function CategoryTile({ category }: { category: SubCategory }) {
     <Link href={`/category/${category.slug}`} className="flex w-24 shrink-0 flex-col items-center gap-2 text-center sm:w-28">
       <div className="relative h-20 w-20 overflow-hidden rounded-2xl border border-(--ink-100) bg-white sm:h-24 sm:w-24">
         {category.image ? (
-          <Image src={category.image} alt={category.name} fill quality={90} className="object-cover" />
+          <Image src={category.image} alt={category.name} fill quality={90} sizes="96px" className="object-cover" />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-(--surface-alt,#F7F9FC) font-display text-lg font-semibold text-(--orange-600)">
             {category.name.charAt(0)}
@@ -205,6 +205,7 @@ export function CategoryListing({
                         alt={product.title}
                         fill
                         quality={90}
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                     ) : (
