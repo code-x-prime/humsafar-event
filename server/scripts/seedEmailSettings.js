@@ -18,7 +18,7 @@ async function main() {
   await loadSettings();
 
   await set('provider', 'SMTP', { group: 'EMAIL', isSecret: false });
-  await set('fromEmail', process.env.FROM_EMAIL || 'codeshorts007@gmail.com', { group: 'EMAIL', isSecret: false });
+  await set('fromEmail', process.env.FROM_EMAIL || 'humsafarevents010@gmail.com', { group: 'EMAIL', isSecret: false });
   await set('fromName', process.env.FROM_NAME || 'Humsafar Events', { group: 'EMAIL', isSecret: false });
   await set('smtpHost', process.env.SMTP_HOST || 'smtp-relay.brevo.com', { group: 'EMAIL', isSecret: false });
   await set('smtpPort', Number(process.env.SMTP_PORT) || 587, { group: 'EMAIL', isSecret: false });

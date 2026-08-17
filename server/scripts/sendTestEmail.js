@@ -4,7 +4,7 @@ import { sendMail } from '../src/lib/email/index.js';
 import { logger } from '../src/config/logger.js';
 import { disconnectDB } from '../src/config/db.js';
 
-const to = process.argv[2] || 'codeshorts007@gmail.com';
+const to = process.argv[2] || 'humsafarevents010@gmail.com';
 
 async function main() {
   await loadSettings();
