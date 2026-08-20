@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Star, Clock, CheckCircle2, XCircle, MapPin, ChevronRight } from "lucide-react";
+import { Star, Clock, CheckCircle2, XCircle, MapPin, ChevronRight, ZoomIn } from "lucide-react";
+import Lightbox from "yet-another-react-lightbox";
+import Zoom from "yet-another-react-lightbox/plugins/zoom";
+import "yet-another-react-lightbox/styles.css";
 import type { ProductDetailData } from "@/app/decoration/[slug]/page";
 import { CustomizeOrderDialog } from "./CustomizeOrderDialog";
 import { CitySelector } from "./CitySelector";
@@ -23,6 +26,7 @@ type Tab = (typeof TABS)[number];
 export function ProductDetail({ product }: { product: ProductDetailData }) {
   const [activeImage, setActiveImage] = useState(0);
   const [galleryApi, setGalleryApi] = useState<CarouselApi>();
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [activeVariant, setActiveVariant] = useState(0);
   const [activeTab, setActiveTab] = useState<Tab>("Included");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -57,7 +61,11 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
             <CarouselContent className="ml-0">
               {images.map((img, i) => (
                 <CarouselItem key={img.id} className="pl-0">
-                  <div className="relative aspect-square w-full overflow-hidden rounded-(--radius-card,16px) border border-(--ink-100) bg-white">
+                  <button
+                    type="button"
+                    onClick={() => setLightboxOpen(true)}
+                    className="group relative aspect-square w-full cursor-zoom-in overflow-hidden rounded-(--radius-card,16px) border border-(--ink-100) bg-white"
+                  >
                     <Image
                       src={img.url}
                       alt={img.alt || product.title}
@@ -67,7 +75,10 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
                       className="object-cover"
                       priority={i === 0}
                     />
-                  </div>
+                    <span className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white opacity-0 transition-opacity group-hover:opacity-100">
+                      <ZoomIn className="h-4 w-4" />
+                    </span>
+                  </button>
                 </CarouselItem>
               ))}
             </CarouselContent>
@@ -97,6 +108,18 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
               </button>
             ))}
           </div>
+        )}
+
+        {images && (
+          <Lightbox
+            open={lightboxOpen}
+            index={activeImage}
+            close={() => setLightboxOpen(false)}
+            slides={images.map((img) => ({ src: img.url, alt: img.alt || product.title }))}
+            plugins={[Zoom]}
+            zoom={{ maxZoomPixelRatio: 3, doubleTapDelay: 300, doubleClickDelay: 300 }}
+            on={{ view: ({ index }) => setActiveImage(index) }}
+          />
         )}
       </div>
 

@@ -1,0 +1,8 @@
+﻿
+> client@0.1.0 build
+> next build --turbopack
+
+   ▲ Next.js 15.5.23 (Turbopack)
+   - Environments: .env.local, .env.production
+
+   Creating an optimized production build ...

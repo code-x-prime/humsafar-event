@@ -5,7 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Star, ShoppingBag, Truck, CheckCircle2, ChevronRight } from "lucide-react";
+import { Star, ShoppingBag, Truck, CheckCircle2, ChevronRight, ZoomIn } from "lucide-react";
+import Lightbox from "yet-another-react-lightbox";
+import Zoom from "yet-another-react-lightbox/plugins/zoom";
+import "yet-another-react-lightbox/styles.css";
 import { useCart } from "@/context/CartContext";
 import { getJson } from "@/lib/api";
 import {
@@ -71,6 +74,7 @@ export function ShopProductDetail({ product }: { product: ShopProductDetailData 
   const { addShopItemToCart } = useCart();
   const [activeImage, setActiveImage] = useState(0);
   const [galleryApi, setGalleryApi] = useState<CarouselApi>();
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [adding, setAdding] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState<string | null>(null);
 
@@ -130,7 +134,11 @@ export function ShopProductDetail({ product }: { product: ShopProductDetailData 
             <CarouselContent className="ml-0">
               {images.map((img, i) => (
                 <CarouselItem key={img.id} className="pl-0">
-                  <div className="relative aspect-square w-full overflow-hidden rounded-(--radius-card,16px) border border-(--ink-100) bg-white">
+                  <button
+                    type="button"
+                    onClick={() => setLightboxOpen(true)}
+                    className="group relative aspect-square w-full cursor-zoom-in overflow-hidden rounded-(--radius-card,16px) border border-(--ink-100) bg-white"
+                  >
                     <Image
                       src={img.url}
                       alt={img.alt || product.title}
@@ -140,7 +148,10 @@ export function ShopProductDetail({ product }: { product: ShopProductDetailData 
                       className="object-cover"
                       priority={i === 0}
                     />
-                  </div>
+                    <span className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white opacity-0 transition-opacity group-hover:opacity-100">
+                      <ZoomIn className="h-4 w-4" />
+                    </span>
+                  </button>
                 </CarouselItem>
               ))}
             </CarouselContent>
@@ -169,6 +180,18 @@ export function ShopProductDetail({ product }: { product: ShopProductDetailData 
               </button>
             ))}
           </div>
+        )}
+
+        {images && (
+          <Lightbox
+            open={lightboxOpen}
+            index={activeImage}
+            close={() => setLightboxOpen(false)}
+            slides={images.map((img) => ({ src: img.url, alt: img.alt || product.title }))}
+            plugins={[Zoom]}
+            zoom={{ maxZoomPixelRatio: 3, doubleTapDelay: 300, doubleClickDelay: 300 }}
+            on={{ view: ({ index }) => setActiveImage(index) }}
+          />
         )}
       </div>
 
