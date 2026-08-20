@@ -16,6 +16,7 @@ interface CategoryNavItem {
   id: string;
   name: string;
   slug: string;
+  image?: string | null;
   children: { id: string; name: string; slug: string }[];
 }
 

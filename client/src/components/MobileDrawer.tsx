@@ -9,6 +9,7 @@ interface CategoryNavItem {
   id: string;
   name: string;
   slug: string;
+  image?: string | null;
   children: { id: string; name: string; slug: string }[];
 }
 
@@ -110,8 +111,14 @@ export function MobileDrawer({
                 onClick={onClose}
                 className="flex flex-col items-center gap-1.5 text-center"
               >
-                <span className="flex h-14 w-14 items-center justify-center rounded-full bg-(--orange-100) font-display text-lg font-semibold text-(--orange-600)">
-                  {cat.name.charAt(0)}
+                <span className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-(--orange-100)">
+                  {cat.image ? (
+                    <Image src={cat.image} alt={cat.name} fill quality={90} sizes="56px" className="object-cover" />
+                  ) : (
+                    <span className="font-display text-lg font-semibold text-(--orange-600)">
+                      {cat.name.charAt(0)}
+                    </span>
+                  )}
                 </span>
                 <span className="font-sans text-[11px] leading-tight text-(--ink-700)">{cat.name}</span>
               </Link>
