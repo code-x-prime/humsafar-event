@@ -60,8 +60,8 @@ export default function PrivacyPolicyPage() {
         <p className="mt-2">
           You can request a copy of the data we hold about you, or ask us to delete your account, by
           contacting{" "}
-          <a href="mailto:deepakjaat17@yahoo.com" className="font-medium text-(--blue-600) hover:underline">
-            deepakjaat17@yahoo.com
+          <a href="mailto:humsafarevent010@gmail.com" className="font-medium text-(--blue-600) hover:underline">
+            humsafarevent010@gmail.com
           </a>
           .
         </p>
@@ -75,8 +75,8 @@ export default function PrivacyPolicyPage() {
             +91 98998 99150
           </a>{" "}
           or{" "}
-          <a href="mailto:deepakjaat17@yahoo.com" className="font-medium text-(--blue-600) hover:underline">
-            deepakjaat17@yahoo.com
+          <a href="mailto:humsafarevent010@gmail.com" className="font-medium text-(--blue-600) hover:underline">
+            humsafarevent010@gmail.com
           </a>
           .
         </p>

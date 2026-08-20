@@ -96,9 +96,9 @@ export function Footer() {
                 <Phone className="h-4 w-4 text-(--orange-600)" />
                 +91 98998 99150
               </a>
-              <a href="mailto:deepakjaat17@yahoo.com" className="flex items-center gap-2 hover:text-(--orange-600)">
+              <a href="mailto:humsafarevent010@gmail.com" className="flex items-center gap-2 hover:text-(--orange-600)">
                 <Mail className="h-4 w-4 text-(--orange-600)" />
-                deepakjaat17@yahoo.com
+                humsafarevent010@gmail.com
               </a>
             </div>
 

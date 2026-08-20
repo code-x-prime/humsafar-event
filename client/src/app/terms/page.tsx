@@ -80,8 +80,8 @@ export default function TermsPage() {
             +91 98998 99150
           </a>{" "}
           or{" "}
-          <a href="mailto:deepakjaat17@yahoo.com" className="font-medium text-(--blue-600) hover:underline">
-            deepakjaat17@yahoo.com
+          <a href="mailto:humsafarevent010@gmail.com" className="font-medium text-(--blue-600) hover:underline">
+            humsafarevent010@gmail.com
           </a>
           .
         </p>

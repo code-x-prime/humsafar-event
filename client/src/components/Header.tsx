@@ -55,11 +55,11 @@ export function Header() {
 
         <Link href="/" className="flex shrink-0 items-center gap-2">
           <Image src="/logo-2.png" alt="Humsafar Events" width={44} height={44} quality={90} priority className="h-9 w-9 sm:h-12 sm:w-12" />
-          <span className="hidden flex-col sm:flex">
-            <span className="font-display text-lg font-semibold leading-tight text-primary">
+          <span className="flex flex-col">
+            <span className="font-display text-base font-semibold leading-tight text-primary sm:text-lg">
               Humsafar Events
             </span>
-            <span className="font-heading text-[10px] font-medium uppercase tracking-[.14em] text-(--orange-600)">
+            <span className="font-heading text-[8px] font-medium uppercase tracking-[.1em] text-(--orange-600) sm:text-[10px] sm:tracking-[.14em]">
               Together in Every Journey
             </span>
           </span>

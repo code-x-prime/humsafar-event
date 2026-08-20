@@ -42,8 +42,8 @@ export default function RefundPolicyPage() {
             +91 98998 99150
           </a>{" "}
           or email{" "}
-          <a href="mailto:deepakjaat17@yahoo.com" className="font-medium text-(--blue-600) hover:underline">
-            deepakjaat17@yahoo.com
+          <a href="mailto:humsafarevent010@gmail.com" className="font-medium text-(--blue-600) hover:underline">
+            humsafarevent010@gmail.com
           </a>{" "}
           with your order number, and we&apos;ll confirm your cancellation and refund amount right away.
         </p>

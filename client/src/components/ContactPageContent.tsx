@@ -10,7 +10,7 @@ import { postJson, ApiError } from "@/lib/api";
 const WHATSAPP_NUMBER = "919899899150";
 const PHONE_DISPLAY = "+91 98998 99150";
 const PHONE_TEL = "+919899899150";
-const EMAIL = "deepakjaat17@yahoo.com";
+const EMAIL = "humsafarevent010@gmail.com";
 
 const QUICK_CONTACT = [
   {
