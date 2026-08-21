@@ -53,7 +53,11 @@ export const ERROR_CODES = {
 
 export const RATE_LIMITS = {
   GLOBAL_WINDOW_MS: 15 * 60 * 1000,
-  GLOBAL_MAX: 300,
+  // A single storefront page load fires many API calls (menu, banners,
+  // settings, product lists, etc.), and shared/NAT'd IPs (office wifi, mobile
+  // carriers) pool many real users behind one address — 300/15min was too low
+  // and started throwing 429s on normal browsing traffic.
+  GLOBAL_MAX: 1800,
   OTP_WINDOW_MS: 10 * 60 * 1000,
   OTP_MAX: 5,
 };
