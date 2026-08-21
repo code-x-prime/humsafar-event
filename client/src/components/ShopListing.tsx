@@ -36,12 +36,31 @@ const SORT_OPTIONS = [
 
 type SortValue = (typeof SORT_OPTIONS)[number]["value"];
 
-const PRICE_RANGES = [
-  { label: "Under ₹500", min: 0, max: 500 },
-  { label: "₹500 – ₹1,500", min: 500, max: 1500 },
-  { label: "₹1,500 – ₹5,000", min: 1500, max: 5000 },
-  { label: "Above ₹5,000", min: 5000, max: Infinity },
-];
+// Builds 3 round-number price buckets from the actual min/max product price
+// in the current shop catalog, instead of one hardcoded range regardless of
+// what's actually being sold. The step size scales with the spread so a
+// ₹200–2,000 catalog gets buckets like ₹500/₹1,000, while a ₹5,000–50,000
+// catalog gets ₹20,000/₹35,000 etc.
+function buildPriceRanges(min: number, max: number): { label: string; min: number; max: number }[] {
+  if (!Number.isFinite(min) || !Number.isFinite(max) || max <= min) return [];
+
+  const spread = max - min;
+  const rawStep = spread / 3;
+  const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep || 1)));
+  const step = Math.max(Math.ceil(rawStep / magnitude) * magnitude, magnitude);
+
+  const round = (n: number) => Math.round(n / step) * step;
+  const b1 = round(min + step);
+  const b2 = round(min + step * 2);
+
+  const fmt = (n: number) => `₹${n.toLocaleString("en-IN")}`;
+
+  return [
+    { label: `Under ${fmt(b1)}`, min: 0, max: b1 },
+    { label: `${fmt(b1)} – ${fmt(b2)}`, min: b1, max: b2 },
+    { label: `Above ${fmt(b2)}`, min: b2, max: Infinity },
+  ];
+}
 
 function ProductCard({ product }: { product: ShopProductSummary }) {
   const discount =
@@ -122,7 +141,7 @@ export function ShopListing({ categories }: { categories: ShopCategorySummary[] 
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [category, setCategory] = useState<string | null>(null);
   const [sort, setSort] = useState<SortValue>("latest");
-  const [priceRange, setPriceRange] = useState<(typeof PRICE_RANGES)[number] | null>(null);
+  const [priceRange, setPriceRange] = useState<{ label: string; min: number; max: number } | null>(null);
   const [visibleCount, setVisibleCount] = useState(24);
 
   useEffect(() => {
@@ -167,6 +186,12 @@ export function ShopListing({ categories }: { categories: ShopCategorySummary[] 
 
   const visible = filtered.slice(0, visibleCount);
   const loading = allProducts === null && !error;
+
+  const priceRanges = useMemo(() => {
+    if (!allProducts || allProducts.length === 0) return [];
+    const prices = allProducts.map((p) => Number(p.price));
+    return buildPriceRanges(Math.min(...prices), Math.max(...prices));
+  }, [allProducts]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:py-10">
@@ -241,9 +266,10 @@ export function ShopListing({ categories }: { categories: ShopCategorySummary[] 
       </div>
 
       {/* Price filter */}
+      {priceRanges.length > 0 && (
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <span className="font-sans text-xs text-(--ink-500)">Price</span>
-        {PRICE_RANGES.map((range) => {
+        {priceRanges.map((range) => {
           const active = priceRange?.label === range.label;
           return (
             <button
@@ -260,6 +286,7 @@ export function ShopListing({ categories }: { categories: ShopCategorySummary[] 
           );
         })}
       </div>
+      )}
 
       {/* Grid */}
       <div className="mt-6">
