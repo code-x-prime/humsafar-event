@@ -77,9 +77,29 @@ function HeadingText({ title, highlightWord }: { title: string; highlightWord?: 
 
 function BannerSlide({ banner }: { banner: Banner }) {
   const hasImage = banner.desktopImageUrl || banner.mobileImageUrl;
+  // Empty-string fields from the admin form are falsy but not null — trim so
+  // an all-whitespace/empty value never renders overlay text or a dead button.
+  const title = banner.title?.trim() || null;
+  const subtitle = banner.subtitle?.trim() || null;
+  const ctaText = banner.ctaText?.trim() || null;
+  const ctaLink = banner.ctaLink?.trim() || null;
 
   return (
     <div className="relative aspect-square w-full overflow-hidden rounded-(--radius-card,16px) bg-(image:--brand-gradient) sm:aspect-3/1">
+      {/* When the banner has no visible text/CTA of its own (a pure image
+          banner, e.g. one where the CTA is baked into the artwork itself),
+          the whole image becomes the click target for ctaLink so it's not
+          just a static picture. */}
+      {ctaLink && !title && !subtitle && !ctaText && (
+        <Link
+          href={ctaLink}
+          aria-label="View more"
+          onPointerDownCapture={(e) => e.stopPropagation()}
+          onMouseDownCapture={(e) => e.stopPropagation()}
+          className="absolute inset-0 z-10"
+        />
+      )}
+
       {hasImage && (
         // Plain <img> (not next/image) — banners are admin-uploaded to arbitrary
         // R2/CDN URLs, which next/image's remotePatterns allow-list can't
@@ -91,13 +111,13 @@ function BannerSlide({ banner }: { banner: Banner }) {
           )}
           <img
             src={banner.desktopImageUrl || banner.mobileImageUrl!}
-            alt={banner.title || "Humsafar Events banner"}
+            alt={title || "Humsafar Events banner"}
             className="absolute inset-0 h-full w-full object-cover"
           />
         </picture>
       )}
 
-      {(banner.title || banner.subtitle || banner.ctaText) && (
+      {(title || subtitle || ctaText) && (
         <>
           {/* Dark scrim behind the text so it stays readable over bright/busy
               photos — mobile gets a bottom-up gradient (text sits at the
@@ -112,21 +132,21 @@ function BannerSlide({ banner }: { banner: Banner }) {
               </p>
             )}
 
-            {banner.title && (
+            {title && (
               <h1 className="mt-2 font-display text-xl font-semibold leading-tight text-white sm:mt-3 sm:text-4xl lg:text-5xl">
-                <HeadingText title={banner.title} highlightWord={banner.highlightWord} />
+                <HeadingText title={title} highlightWord={banner.highlightWord} />
               </h1>
             )}
 
-            {banner.subtitle && (
+            {subtitle && (
               <p className="mt-2.5 max-w-sm font-sans text-[11px] leading-relaxed text-white/85 sm:mt-4 sm:text-sm">
-                {banner.subtitle}
+                {subtitle}
               </p>
             )}
 
-            {banner.ctaText && banner.ctaLink && (
+            {ctaText && ctaLink && (
               <Link
-                href={banner.ctaLink}
+                href={ctaLink}
                 // Embla's drag/pointer tracking sits on the whole carousel
                 // container, and can swallow a click on this link if it reads
                 // any pointer movement as a drag — stopping propagation here
@@ -135,7 +155,7 @@ function BannerSlide({ banner }: { banner: Banner }) {
                 onMouseDownCapture={(e) => e.stopPropagation()}
                 className="relative z-10 mt-4 inline-block w-fit rounded-(--radius-btn,12px) bg-white px-5 py-2 font-heading text-xs font-semibold text-primary hover:bg-white/90 sm:mt-6 sm:px-6 sm:py-2.5 sm:text-sm"
               >
-                {banner.ctaText}
+                {ctaText}
               </Link>
             )}
 
