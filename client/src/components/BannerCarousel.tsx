@@ -127,7 +127,13 @@ function BannerSlide({ banner }: { banner: Banner }) {
             {banner.ctaText && banner.ctaLink && (
               <Link
                 href={banner.ctaLink}
-                className="mt-4 inline-block w-fit rounded-(--radius-btn,12px) bg-white px-5 py-2 font-heading text-xs font-semibold text-primary hover:bg-white/90 sm:mt-6 sm:px-6 sm:py-2.5 sm:text-sm"
+                // Embla's drag/pointer tracking sits on the whole carousel
+                // container, and can swallow a click on this link if it reads
+                // any pointer movement as a drag — stopping propagation here
+                // keeps embla from ever seeing (and cancelling) the click.
+                onPointerDownCapture={(e) => e.stopPropagation()}
+                onMouseDownCapture={(e) => e.stopPropagation()}
+                className="relative z-10 mt-4 inline-block w-fit rounded-(--radius-btn,12px) bg-white px-5 py-2 font-heading text-xs font-semibold text-primary hover:bg-white/90 sm:mt-6 sm:px-6 sm:py-2.5 sm:text-sm"
               >
                 {banner.ctaText}
               </Link>
