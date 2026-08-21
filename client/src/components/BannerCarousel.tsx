@@ -97,7 +97,7 @@ function BannerSlide({ banner }: { banner: Banner }) {
         </picture>
       )}
 
-      {banner.title && (
+      {(banner.title || banner.subtitle || banner.ctaText) && (
         <>
           {/* Dark scrim behind the text so it stays readable over bright/busy
               photos — mobile gets a bottom-up gradient (text sits at the
@@ -112,9 +112,11 @@ function BannerSlide({ banner }: { banner: Banner }) {
               </p>
             )}
 
-            <h1 className="mt-2 font-display text-xl font-semibold leading-tight text-white sm:mt-3 sm:text-4xl lg:text-5xl">
-              <HeadingText title={banner.title} highlightWord={banner.highlightWord} />
-            </h1>
+            {banner.title && (
+              <h1 className="mt-2 font-display text-xl font-semibold leading-tight text-white sm:mt-3 sm:text-4xl lg:text-5xl">
+                <HeadingText title={banner.title} highlightWord={banner.highlightWord} />
+              </h1>
+            )}
 
             {banner.subtitle && (
               <p className="mt-2.5 max-w-sm font-sans text-[11px] leading-relaxed text-white/85 sm:mt-4 sm:text-sm">
