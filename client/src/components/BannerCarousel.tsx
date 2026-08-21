@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import Autoplay from "embla-carousel-autoplay";
 import {
@@ -82,30 +81,20 @@ function BannerSlide({ banner }: { banner: Banner }) {
   return (
     <div className="relative aspect-square w-full overflow-hidden rounded-(--radius-card,16px) bg-(image:--brand-gradient) sm:aspect-3/1">
       {hasImage && (
-        <>
-          {banner.desktopImageUrl && (
-            <Image
-              src={banner.desktopImageUrl}
-              alt={banner.title || "Humsafar Events banner"}
-              fill
-              priority
-              quality={90}
-              sizes="100vw"
-              className="hidden object-cover sm:block"
-            />
+        // Plain <img> (not next/image) — banners are admin-uploaded to arbitrary
+        // R2/CDN URLs, which next/image's remotePatterns allow-list can't
+        // anticipate in advance, and a plain <picture> handles the mobile/desktop
+        // swap without needing two separately-allowlisted next/image instances.
+        <picture>
+          {banner.mobileImageUrl && (
+            <source media="(max-width: 639px)" srcSet={banner.mobileImageUrl} />
           )}
-          {(banner.mobileImageUrl || banner.desktopImageUrl) && (
-            <Image
-              src={banner.mobileImageUrl || banner.desktopImageUrl!}
-              alt={banner.title || "Humsafar Events banner"}
-              fill
-              priority
-              quality={90}
-              sizes="100vw"
-              className="object-cover sm:hidden"
-            />
-          )}
-        </>
+          <img
+            src={banner.desktopImageUrl || banner.mobileImageUrl!}
+            alt={banner.title || "Humsafar Events banner"}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        </picture>
       )}
 
       {banner.title && (
