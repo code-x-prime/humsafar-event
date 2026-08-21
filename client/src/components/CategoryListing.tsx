@@ -33,6 +33,7 @@ export interface CategoryDetail {
   parent: { name: string; slug: string } | null;
   children: SubCategory[];
   products: Product[];
+  priceRange: { min: string | null; max: string | null };
 }
 
 const SORT_OPTIONS = [
@@ -42,11 +43,30 @@ const SORT_OPTIONS = [
   { value: "price_desc", label: "High to Low", icon: ArrowDownUp },
 ];
 
-const PRICE_RANGES = [
-  { label: "₹1,000 – ₹6,000", min: "1000", max: "6000" },
-  { label: "₹6,000 – ₹11,000", min: "6000", max: "11000" },
-  { label: "Above ₹11,000", min: "11000", max: "" },
-];
+// Builds 3 round-number price buckets from a category's actual min/max
+// product price, instead of one hardcoded range for every category. The step
+// size scales with the spread so a ₹500–2,000 category gets buckets like
+// ₹500/₹1,000/₹1,500, while a ₹5,000–50,000 category gets ₹5,000/₹20,000 etc.
+function buildPriceRanges(min: number, max: number): { label: string; min: string; max: string }[] {
+  if (!Number.isFinite(min) || !Number.isFinite(max) || max <= min) return [];
+
+  const spread = max - min;
+  const rawStep = spread / 3;
+  const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep || 1)));
+  const step = Math.max(Math.ceil(rawStep / magnitude) * magnitude, magnitude);
+
+  const round = (n: number) => Math.round(n / step) * step;
+  const b1 = round(min + step);
+  const b2 = round(min + step * 2);
+
+  const fmt = (n: number) => `₹${n.toLocaleString("en-IN")}`;
+
+  return [
+    { label: `${fmt(min)} – ${fmt(b1)}`, min: String(min), max: String(b1) },
+    { label: `${fmt(b1)} – ${fmt(b2)}`, min: String(b1), max: String(b2) },
+    { label: `Above ${fmt(b2)}`, min: String(b2), max: "" },
+  ];
+}
 
 function CategoryTile({ category }: { category: SubCategory }) {
   return (
@@ -98,6 +118,11 @@ export function CategoryListing({
   }
 
   const isPriceActive = (min: string, max: string) => activeMinPrice === min && (activeMaxPrice || "") === max;
+
+  const priceRanges = buildPriceRanges(
+    Number(category.priceRange.min ?? NaN),
+    Number(category.priceRange.max ?? NaN)
+  );
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:py-10">
@@ -154,9 +179,10 @@ export function CategoryListing({
         </p>
       </div>
 
+      {priceRanges.length > 0 && (
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <span className="font-sans text-xs text-(--ink-500)">Price</span>
-        {PRICE_RANGES.map((range) => {
+        {priceRanges.map((range) => {
           const active = isPriceActive(range.min, range.max)
           return (
             <button
@@ -177,6 +203,7 @@ export function CategoryListing({
           );
         })}
       </div>
+      )}
 
       {/* Product grid */}
       <div className="mt-6">

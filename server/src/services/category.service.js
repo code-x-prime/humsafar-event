@@ -124,28 +124,43 @@ export async function getPublicBySlug(slug, { sort, minPrice, maxPrice } = {}) {
   if (minPrice !== undefined) priceFilter.gte = minPrice;
   if (maxPrice !== undefined) priceFilter.lte = maxPrice;
 
-  const products = await prisma.product.findMany({
-    where: {
-      isActive: true,
-      categories: { some: { categoryId: category.id } },
-      ...(Object.keys(priceFilter).length ? { price: priceFilter } : {}),
-    },
-    orderBy: SORT_OPTIONS[sort] || { position: 'asc' },
-    select: {
-      id: true,
-      title: true,
-      slug: true,
-      price: true,
-      mrp: true,
-      shortDescription: true,
-      avgRating: true,
-      reviewCount: true,
-      createdAt: true,
-      media: { where: { isPrimary: true }, take: 1, select: { url: true } },
-    },
-  });
+  const categoryProductWhere = { isActive: true, categories: { some: { categoryId: category.id } } };
 
-  return { ...category, products };
+  const [products, priceStats] = await Promise.all([
+    prisma.product.findMany({
+      where: {
+        ...categoryProductWhere,
+        ...(Object.keys(priceFilter).length ? { price: priceFilter } : {}),
+      },
+      orderBy: SORT_OPTIONS[sort] || { position: 'asc' },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        price: true,
+        mrp: true,
+        shortDescription: true,
+        avgRating: true,
+        reviewCount: true,
+        createdAt: true,
+        media: { where: { isPrimary: true }, take: 1, select: { url: true } },
+      },
+    }),
+    // Unfiltered min/max across ALL of the category's products, so the price
+    // filter buckets on the client reflect the full range regardless of which
+    // range (if any) is currently active.
+    prisma.product.aggregate({
+      where: categoryProductWhere,
+      _min: { price: true },
+      _max: { price: true },
+    }),
+  ]);
+
+  return {
+    ...category,
+    products,
+    priceRange: { min: priceStats._min.price, max: priceStats._max.price },
+  };
 }
 
 // GET /api/v1/categories/menu — active, showInMenu top-level categories with

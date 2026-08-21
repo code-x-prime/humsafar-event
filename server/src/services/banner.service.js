@@ -57,10 +57,10 @@ export async function create(data) {
 export async function update(id, data) {
   const existing = await getById(id);
 
-  if ('desktopImageR2Key' in data && data.desktopImageR2Key !== existing.desktopImageR2Key) {
+  if (data.desktopImageR2Key && data.desktopImageR2Key !== existing.desktopImageR2Key) {
     await safeDeleteR2Object(existing.desktopImageR2Key);
   }
-  if ('mobileImageR2Key' in data && data.mobileImageR2Key !== existing.mobileImageR2Key) {
+  if (data.mobileImageR2Key && data.mobileImageR2Key !== existing.mobileImageR2Key) {
     await safeDeleteR2Object(existing.mobileImageR2Key);
   }
 

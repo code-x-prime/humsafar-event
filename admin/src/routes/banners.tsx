@@ -20,7 +20,9 @@ interface Banner {
   ctaLink: string | null
   placement: (typeof PLACEMENTS)[number]
   desktopImageUrl: string | null
+  desktopImageR2Key: string | null
   mobileImageUrl: string | null
+  mobileImageR2Key: string | null
   position: number
   isActive: boolean
 }
@@ -46,10 +48,10 @@ function toBannerPayload(form: typeof EMPTY_FORM) {
     ctaText: form.ctaText,
     ctaLink: form.ctaLink,
     placement: form.placement,
-    desktopImageUrl: form.desktop?.url,
-    desktopImageR2Key: form.desktop?.r2Key,
-    mobileImageUrl: form.mobile?.url,
-    mobileImageR2Key: form.mobile?.r2Key,
+    desktopImageUrl: form.desktop?.url ?? null,
+    desktopImageR2Key: form.desktop?.r2Key || null,
+    mobileImageUrl: form.mobile?.url ?? null,
+    mobileImageR2Key: form.mobile?.r2Key || null,
   }
 }
 
@@ -103,8 +105,12 @@ export function BannersPage() {
       ctaText: banner.ctaText ?? '',
       ctaLink: banner.ctaLink ?? '',
       placement: banner.placement,
-      desktop: banner.desktopImageUrl ? { mediaId: '', r2Key: '', url: banner.desktopImageUrl } : null,
-      mobile: banner.mobileImageUrl ? { mediaId: '', r2Key: '', url: banner.mobileImageUrl } : null,
+      desktop: banner.desktopImageUrl
+        ? { mediaId: '', r2Key: banner.desktopImageR2Key ?? '', url: banner.desktopImageUrl }
+        : null,
+      mobile: banner.mobileImageUrl
+        ? { mediaId: '', r2Key: banner.mobileImageR2Key ?? '', url: banner.mobileImageUrl }
+        : null,
     })
     setSheetOpen(true)
   }
