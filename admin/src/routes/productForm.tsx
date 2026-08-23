@@ -223,6 +223,10 @@ function ListEditor({
               addItem()
             }
           }}
+          // Typing a value and clicking the form's Save button (instead of
+          // this row's own Add button) used to silently discard it — commit
+          // on blur too so nothing typed here is ever lost.
+          onBlur={addItem}
         />
         <Button type="button" variant="secondary" onClick={addItem}>
           Add

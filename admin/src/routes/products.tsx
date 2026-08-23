@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { api, ApiError } from '@/lib/api'
@@ -6,7 +6,10 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import { Switch } from '@/components/ui/switch'
+import { Pagination } from '@/components/Pagination'
 import { Pencil } from 'lucide-react'
+
+const PAGE_SIZE = 30
 
 interface Product {
   id: string
@@ -25,12 +28,24 @@ function errorMessage(err: unknown) {
 export function ProductsPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const page = Math.max(1, Number(searchParams.get('page')) || 1)
 
   const { data, isLoading } = useQuery({
-    queryKey: ['products'],
-    queryFn: () => api.get<Product[]>('/admin/products?limit=100'),
+    queryKey: ['products', page],
+    queryFn: () => api.get<Product[]>(`/admin/products?page=${page}&limit=${PAGE_SIZE}`),
   })
   const products = data?.data ?? []
+  const totalPages = (data?.meta as { totalPages?: number } | undefined)?.totalPages ?? 1
+
+  function goToPage(nextPage: number) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      if (nextPage <= 1) next.delete('page')
+      else next.set('page', String(nextPage))
+      return next
+    })
+  }
 
   const toggleMutation = useMutation({
     mutationFn: ({ id, field, value }: { id: string; field: string; value: boolean }) =>
@@ -138,6 +153,8 @@ export function ProductsPage() {
           </TableBody>
         </Table>
       </div>
+
+      <Pagination page={page} totalPages={totalPages} onPageChange={goToPage} />
     </div>
   )
 }
