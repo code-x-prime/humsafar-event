@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { Link } from 'react-router'
 import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts'
 import { api } from '@/lib/api'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
@@ -39,31 +40,41 @@ function StatCard({
   value,
   sub,
   isLoading,
+  to,
 }: {
   icon: React.ComponentType<{ className?: string }>
   label: string
   value: string
   sub?: string
   isLoading: boolean
+  to?: string
 }) {
-  return (
-    <Card>
-      <CardContent className="flex items-center gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <Icon className="h-5 w-5" />
-        </span>
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">{label}</p>
-          {isLoading ? (
-            <Skeleton className="mt-1 h-6 w-16" />
-          ) : (
-            <p className="font-display text-xl font-semibold text-foreground">{value}</p>
-          )}
-          {sub && !isLoading && <p className="text-xs text-muted-foreground">{sub}</p>}
-        </div>
-      </CardContent>
-    </Card>
+  const content = (
+    <CardContent className="flex items-center gap-3">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <Icon className="h-5 w-5" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-xs text-muted-foreground">{label}</p>
+        {isLoading ? (
+          <Skeleton className="mt-1 h-6 w-16" />
+        ) : (
+          <p className="font-display text-xl font-semibold text-foreground">{value}</p>
+        )}
+        {sub && !isLoading && <p className="text-xs text-muted-foreground">{sub}</p>}
+      </div>
+    </CardContent>
   )
+
+  if (to) {
+    return (
+      <Link to={to}>
+        <Card className="transition-colors hover:bg-muted/50">{content}</Card>
+      </Link>
+    )
+  }
+
+  return <Card>{content}</Card>
 }
 
 export function Dashboard() {
@@ -90,6 +101,7 @@ export function Dashboard() {
           label="Revenue (paid orders)"
           value={overview ? `₹${overview.revenue.toLocaleString('en-IN')}` : '—'}
           isLoading={overviewLoading}
+          to="/orders"
         />
         <StatCard
           icon={IconShoppingCart}
@@ -97,6 +109,7 @@ export function Dashboard() {
           value={overview ? String(overview.orders.total) : '—'}
           sub={overview ? `${overview.orders.pending} pending · ${overview.orders.completed} completed` : undefined}
           isLoading={overviewLoading}
+          to="/orders"
         />
         <StatCard
           icon={IconPackage}
@@ -104,24 +117,28 @@ export function Dashboard() {
           value={overview ? String(overview.products.total) : '—'}
           sub={overview ? `${overview.products.active} active` : undefined}
           isLoading={overviewLoading}
+          to="/products"
         />
         <StatCard
           icon={IconUsers}
           label="Customers"
           value={overview ? String(overview.users.total) : '—'}
           isLoading={overviewLoading}
+          to="/users"
         />
         <StatCard
           icon={IconMessages}
           label="New Enquiries"
           value={overview ? String(overview.enquiries.new) : '—'}
           isLoading={overviewLoading}
+          to="/enquiries"
         />
         <StatCard
           icon={IconStar}
           label="Reviews Awaiting Approval"
           value={overview ? String(overview.reviews.pending) : '—'}
           isLoading={overviewLoading}
+          to="/reviews"
         />
       </div>
 
