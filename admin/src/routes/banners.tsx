@@ -1,5 +1,20 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { api, ApiError } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,7 +23,7 @@ import { Switch } from '@/components/ui/switch'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger } from '@/components/ui/sheet'
 import { ImageDropzone, type UploadedImage } from '@/components/ImageDropzone'
-import { AlertCircle, Pencil } from 'lucide-react'
+import { AlertCircle, GripVertical, Pencil } from 'lucide-react'
 
 const PLACEMENTS = ['HOME_HERO', 'HOME_STRIP', 'CATEGORY_TOP', 'OFFER_POPUP'] as const
 
@@ -55,12 +70,75 @@ function toBannerPayload(form: typeof EMPTY_FORM) {
   }
 }
 
+function SortableBannerRow({
+  banner,
+  onEdit,
+  onToggle,
+  onDelete,
+}: {
+  banner: Banner
+  onEdit: () => void
+  onToggle: (value: boolean) => void
+  onDelete: () => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: banner.id,
+  })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <TableRow ref={setNodeRef} style={style}>
+      <TableCell className="font-medium">
+        <div className="flex items-center gap-2">
+          <button
+            {...attributes}
+            {...listeners}
+            className="cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing"
+            aria-label="Drag to reorder"
+          >
+            <GripVertical className="h-4 w-4" />
+          </button>
+          {banner.title || '—'}
+        </div>
+      </TableCell>
+      <TableCell>{banner.placement}</TableCell>
+      <TableCell>{banner.position}</TableCell>
+      <TableCell>
+        {banner.desktopImageUrl ? (
+          <img src={banner.desktopImageUrl} alt="" className="h-10 w-16 rounded object-cover" />
+        ) : (
+          <span className="text-muted-foreground">No image</span>
+        )}
+      </TableCell>
+      <TableCell>
+        <Switch checked={banner.isActive} onCheckedChange={onToggle} />
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={onEdit} aria-label="Edit banner">
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={onDelete}>
+            Delete
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  )
+}
+
 export function BannersPage() {
   const queryClient = useQueryClient()
   const [sheetOpen, setSheetOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [pageError, setPageError] = useState<string | null>(null)
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
   const { data, isLoading } = useQuery({
     queryKey: ['banners'],
@@ -135,7 +213,45 @@ export function BannersPage() {
     onError: (err) => setPageError(errorMessage(err)),
   })
 
-  const banners = data?.data ?? []
+  const reorderMutation = useMutation({
+    mutationFn: (items: { id: string; position: number }[]) =>
+      api.patch('/admin/banners/reorder', { items }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['banners'] }),
+    onError: (err) => {
+      setPageError(errorMessage(err))
+      queryClient.invalidateQueries({ queryKey: ['banners'] }) // revert optimistic order
+    },
+  })
+
+  const banners = [...(data?.data ?? [])].sort((a, b) => a.position - b.position)
+  // Drag-and-drop reorder only makes sense within a single placement (e.g.
+  // reordering HOME_HERO slides shouldn't touch HOME_STRIP's positions), so
+  // each placement gets its own sortable group.
+  const bannersByPlacement = banners.reduce<Record<string, Banner[]>>((acc, b) => {
+    acc[b.placement] = acc[b.placement] || []
+    acc[b.placement].push(b)
+    return acc
+  }, {})
+
+  function handleDragEnd(list: Banner[], event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const oldIndex = list.findIndex((b) => b.id === active.id)
+    const newIndex = list.findIndex((b) => b.id === over.id)
+    const reordered = arrayMove(list, oldIndex, newIndex)
+
+    const items = reordered.map((b, index) => ({ id: b.id, position: index }))
+
+    // Optimistic local reorder so the drag feels instant.
+    queryClient.setQueryData<{ data: Banner[] }>(['banners'], (old) => {
+      if (!old) return old
+      const positioned = new Map(items.map((i) => [i.id, i.position]))
+      return { ...old, data: old.data.map((b) => (positioned.has(b.id) ? { ...b, position: positioned.get(b.id)! } : b)) }
+    })
+
+    reorderMutation.mutate(items)
+  }
 
   return (
     <div>
@@ -143,7 +259,8 @@ export function BannersPage() {
         <div>
           <h1 className="font-display text-2xl font-semibold text-primary">Banners</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Homepage banner carousel. Desktop 1920×640, Mobile 1080×1080 recommended.
+            Homepage banner carousel. Desktop 1920×640, Mobile 1080×1080 recommended. Drag the grip
+            handle to reorder — the order here is the order shown on the site (within each placement).
           </p>
         </div>
 
@@ -286,36 +403,27 @@ export function BannersPage() {
                 </TableCell>
               </TableRow>
             )}
-            {banners.map((banner) => (
-              <TableRow key={banner.id}>
-                <TableCell className="font-medium">{banner.title || '—'}</TableCell>
-                <TableCell>{banner.placement}</TableCell>
-                <TableCell>{banner.position}</TableCell>
-                <TableCell>
-                  {banner.desktopImageUrl ? (
-                    <img src={banner.desktopImageUrl} alt="" className="h-10 w-16 rounded object-cover" />
-                  ) : (
-                    <span className="text-muted-foreground">No image</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Switch
-                    checked={banner.isActive}
-                    onCheckedChange={(value) => toggleMutation.mutate({ id: banner.id, value })}
-                  />
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => openEdit(banner)} aria-label="Edit banner">
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => removeMutation.mutate(banner.id)}>
-                      Delete
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
+            {!isLoading &&
+              Object.entries(bannersByPlacement).map(([placement, list]) => (
+                <DndContext
+                  key={placement}
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={(e) => handleDragEnd(list, e)}
+                >
+                  <SortableContext items={list.map((b) => b.id)} strategy={verticalListSortingStrategy}>
+                    {list.map((banner) => (
+                      <SortableBannerRow
+                        key={banner.id}
+                        banner={banner}
+                        onEdit={() => openEdit(banner)}
+                        onToggle={(value) => toggleMutation.mutate({ id: banner.id, value })}
+                        onDelete={() => removeMutation.mutate(banner.id)}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
+              ))}
           </TableBody>
         </Table>
       </div>
