@@ -79,7 +79,7 @@ function toCategoryPayload(form: typeof EMPTY_FORM, parentId?: string) {
 
 function SortableRow({
   category,
-  isChild,
+  depth,
   onEdit,
   onAddSub,
   onToggle,
@@ -87,7 +87,7 @@ function SortableRow({
   rowError,
 }: {
   category: Category
-  isChild: boolean
+  depth: number
   onEdit: () => void
   onAddSub?: () => void
   onToggle: (field: 'showInMenu' | 'showOnHome', value: boolean) => void
@@ -106,7 +106,7 @@ function SortableRow({
 
   return (
     <TableRow ref={setNodeRef} style={style}>
-      <TableCell className={isChild ? 'pl-10' : ''}>
+      <TableCell style={{ paddingLeft: depth > 0 ? `${1.5 + depth * 1.5}rem` : undefined }}>
         <div className="flex items-center gap-2">
           <button
             {...attributes}
@@ -116,7 +116,7 @@ function SortableRow({
           >
             <GripVertical className="h-4 w-4" />
           </button>
-          <span className={isChild ? 'text-muted-foreground' : 'font-medium'}>{category.name}</span>
+          <span className={depth > 0 ? 'text-muted-foreground' : 'font-medium'}>{category.name}</span>
         </div>
         {rowError && (
           <p className="mt-1 flex items-center gap-1 pl-6 text-xs text-destructive">
@@ -158,6 +158,75 @@ function SortableRow({
   )
 }
 
+// Recursively renders a category row followed by its children's rows (each
+// its own draggable/reorderable group), one level deeper each time — so a
+// 3rd-level category like a "Kids Theme" sub-theme shows up in the table
+// instead of only the first two levels.
+function CategoryRowTree({
+  category,
+  depth,
+  childrenByParent,
+  sensors,
+  onDragEnd,
+  onEdit,
+  onAddSub,
+  onToggle,
+  onDelete,
+  rowErrors,
+}: {
+  category: Category
+  depth: number
+  childrenByParent: Record<string, Category[]>
+  sensors: ReturnType<typeof useSensors>
+  onDragEnd: (list: Category[], event: DragEndEvent) => void
+  onEdit: (category: Category) => void
+  onAddSub: (category: Category) => void
+  onToggle: (id: string, field: 'showInMenu' | 'showOnHome', value: boolean) => void
+  onDelete: (id: string) => void
+  rowErrors: Record<string, string>
+}) {
+  const children = childrenByParent[category.id] ?? []
+
+  return (
+    <>
+      <SortableRow
+        category={category}
+        depth={depth}
+        onEdit={() => onEdit(category)}
+        onAddSub={() => onAddSub(category)}
+        onToggle={(field, value) => onToggle(category.id, field, value)}
+        onDelete={() => onDelete(category.id)}
+        rowError={rowErrors[category.id] || undefined}
+      />
+      {children.length > 0 && (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={(e) => onDragEnd(children, e)}
+        >
+          <SortableContext items={children.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+            {children.map((child) => (
+              <CategoryRowTree
+                key={child.id}
+                category={child}
+                depth={depth + 1}
+                childrenByParent={childrenByParent}
+                sensors={sensors}
+                onDragEnd={onDragEnd}
+                onEdit={onEdit}
+                onAddSub={onAddSub}
+                onToggle={onToggle}
+                onDelete={onDelete}
+                rowErrors={rowErrors}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
+      )}
+    </>
+  )
+}
+
 export function CategoriesPage() {
   const queryClient = useQueryClient()
   const [formMode, setFormMode] = useState<FormMode | null>(null)
@@ -168,7 +237,7 @@ export function CategoriesPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['categories'],
-    queryFn: () => api.get<Category[]>('/admin/categories?limit=100'),
+    queryFn: () => api.get<Category[]>('/admin/categories?limit=1000'),
   })
 
   const categories = data?.data ?? []
@@ -428,45 +497,21 @@ export function CategoriesPage() {
                 onDragEnd={(e) => handleDragEnd(topLevel, e)}
               >
                 <SortableContext items={topLevel.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-                  {topLevel.map((category) => {
-                    const children = childrenByParent[category.id] ?? []
-                    return (
-                      <>
-                        <SortableRow
-                          key={category.id}
-                          category={category}
-                          isChild={false}
-                          onEdit={() => openEdit(category)}
-                          onAddSub={() => openCreateSub(category)}
-                          onToggle={(field, value) => toggleMutation.mutate({ id: category.id, field, value })}
-                          onDelete={() => removeMutation.mutate(category.id)}
-                          rowError={rowErrors[category.id] || undefined}
-                        />
-                        {children.length > 0 && (
-                          <DndContext
-                            key={`${category.id}-children`}
-                            sensors={sensors}
-                            collisionDetection={closestCenter}
-                            onDragEnd={(e) => handleDragEnd(children, e)}
-                          >
-                            <SortableContext items={children.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-                              {children.map((child) => (
-                                <SortableRow
-                                  key={child.id}
-                                  category={child}
-                                  isChild
-                                  onEdit={() => openEdit(child)}
-                                  onToggle={(field, value) => toggleMutation.mutate({ id: child.id, field, value })}
-                                  onDelete={() => removeMutation.mutate(child.id)}
-                                  rowError={rowErrors[child.id] || undefined}
-                                />
-                              ))}
-                            </SortableContext>
-                          </DndContext>
-                        )}
-                      </>
-                    )
-                  })}
+                  {topLevel.map((category) => (
+                    <CategoryRowTree
+                      key={category.id}
+                      category={category}
+                      depth={0}
+                      childrenByParent={childrenByParent}
+                      sensors={sensors}
+                      onDragEnd={handleDragEnd}
+                      onEdit={openEdit}
+                      onAddSub={openCreateSub}
+                      onToggle={(id, field, value) => toggleMutation.mutate({ id, field, value })}
+                      onDelete={(id) => removeMutation.mutate(id)}
+                      rowErrors={rowErrors}
+                    />
+                  ))}
                 </SortableContext>
               </DndContext>
             )}
