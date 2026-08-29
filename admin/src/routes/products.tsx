@@ -147,7 +147,7 @@ export function ProductsPage() {
         )}
       </div>
 
-      <div className="mt-4 rounded-md border border-border">
+      <div className="mt-4 overflow-x-auto rounded-md border border-border">
         <Table>
           <TableHeader>
             <TableRow>

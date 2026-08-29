@@ -341,7 +341,7 @@ export function TestimonialsPage() {
         </SheetContent>
       </Sheet>
 
-      <div className="mt-6 rounded-md border border-border">
+      <div className="mt-6 overflow-x-auto rounded-md border border-border">
         <Table>
           <TableHeader>
             <TableRow>
