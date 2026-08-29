@@ -11,6 +11,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { getJson } from "@/lib/api";
+import { signalBannerReady } from "@/lib/siteLoaderSignal";
 
 interface Banner {
   id: string;
@@ -314,7 +315,8 @@ export function BannerCarousel({ placement = "HOME_HERO" }: { placement?: string
       .catch(() => {
         // API unreachable or errored — fall back to the default banner rather than breaking the homepage.
         setBanners(DEFAULT_BANNERS);
-      });
+      })
+      .finally(() => signalBannerReady());
   }, [placement]);
 
   if (banners === null) {

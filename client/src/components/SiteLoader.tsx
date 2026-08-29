@@ -2,48 +2,58 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { onBannerReady } from "@/lib/siteLoaderSignal";
 
-// Full-screen splash shown only for the very first paint of a fresh visit —
-// covers everything (header, banner, all content) until the window has
-// finished loading, then fades out once and never reappears for client-side
-// navigations within the same session (sessionStorage flag).
+// Full-screen splash shown on every page load (including reloads/direct URL
+// visits) — covers everything (header, banner, all content) until BOTH the
+// window has finished loading AND the homepage hero banner has its data
+// ready, then fades out once. Deliberately no sessionStorage skip: the user
+// wants this on every fresh load, not just the first visit ever.
 export function SiteLoader() {
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(true);
   const [fadingOut, setFadingOut] = useState(false);
 
   useEffect(() => {
-    let alreadyShown = false;
-    try {
-      alreadyShown = sessionStorage.getItem("humsafar-site-loaded") === "1";
-    } catch {
-      // Storage blocked (private mode, etc.) — just skip the splash rather than throw.
-    }
-    if (alreadyShown) return;
+    let windowLoaded = false;
+    let bannerReady = false;
+    let finished = false;
 
-    setVisible(true);
-
-    function finish() {
+    function maybeFinish() {
+      if (finished || !windowLoaded || !bannerReady) return;
+      finished = true;
       setFadingOut(true);
-      try {
-        sessionStorage.setItem("humsafar-site-loaded", "1");
-      } catch {
-        // Ignore — worst case the splash shows again next navigation.
-      }
       setTimeout(() => setVisible(false), 350);
     }
 
-    if (document.readyState === "complete") {
-      // Give the first paint a beat before removing the splash, so it
-      // doesn't just blink for a frame on a fast connection.
-      const t = setTimeout(finish, 400);
-      return () => clearTimeout(t);
+    function onWindowLoad() {
+      windowLoaded = true;
+      maybeFinish();
     }
 
-    window.addEventListener("load", finish);
-    // Safety net in case `load` never fires for some reason.
-    const fallback = setTimeout(finish, 4000);
+    if (document.readyState === "complete") {
+      onWindowLoad();
+    } else {
+      window.addEventListener("load", onWindowLoad);
+    }
+
+    const offBannerReady = onBannerReady(() => {
+      bannerReady = true;
+      maybeFinish();
+    });
+
+    // Pages other than the homepage never mount BannerCarousel, so
+    // `bannerReady` would otherwise never fire — treat "no ready signal
+    // shortly after mount" as "this page has no banner" and proceed. On the
+    // homepage the real signal (data fetched) normally arrives well before
+    // this fires; it's a floor, not the typical path.
+    const fallback = setTimeout(() => {
+      bannerReady = true;
+      maybeFinish();
+    }, 1200);
+
     return () => {
-      window.removeEventListener("load", finish);
+      window.removeEventListener("load", onWindowLoad);
+      offBannerReady();
       clearTimeout(fallback);
     };
   }, []);
