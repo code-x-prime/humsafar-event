@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import Autoplay from "embla-carousel-autoplay";
 import {
@@ -57,6 +58,140 @@ const DEFAULT_BANNERS: Banner[] = [
     mobileImageUrl: "/banners/mobile-2.png",
   },
 ];
+
+// Shown in place of the banner while its data is still loading, so the page
+// never flashes a hardcoded placeholder banner before swapping to the real
+// one — just the brand logo and a small loading animation.
+function BannerLoader() {
+  return (
+    <div className="relative flex aspect-square w-full flex-col items-center justify-center gap-4 overflow-hidden rounded-(--radius-card,16px) bg-(image:--brand-gradient) sm:aspect-3/1">
+      <Image src="/logo-2.png" alt="Humsafar Events" width={64} height={64} quality={90} className="h-14 w-14 sm:h-16 sm:w-16" />
+      <div className="banner-loader">
+        <div className="banner-loader__truck-wrapper">
+          <div className="banner-loader__truck-body">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 198 93" className="banner-loader__truck-svg">
+              <path
+                strokeWidth="3"
+                stroke="#ffffff"
+                fillOpacity="0.9"
+                fill="#F83D3D"
+                d="M135 22.5H177.264C178.295 22.5 179.22 23.133 179.594 24.0939L192.33 56.8443C192.442 57.1332 192.5 57.4404 192.5 57.7504V89C192.5 90.3807 191.381 91.5 190 91.5H135C133.619 91.5 132.5 90.3807 132.5 89V25C132.5 23.6193 133.619 22.5 135 22.5Z"
+              />
+              <path
+                strokeWidth="3"
+                stroke="#ffffff"
+                fillOpacity="0.9"
+                fill="#7D7C7C"
+                d="M146 33.5H181.741C182.779 33.5 183.709 34.1415 184.078 35.112L190.538 52.112C191.16 53.748 189.951 55.5 188.201 55.5H146C144.619 55.5 143.5 54.3807 143.5 53V36C143.5 34.6193 144.619 33.5 146 33.5Z"
+              />
+              <path
+                strokeWidth="2"
+                stroke="#ffffff"
+                fillOpacity="0.9"
+                fill="#282828"
+                d="M150 65C150 65.39 149.763 65.8656 149.127 66.2893C148.499 66.7083 147.573 67 146.5 67C145.427 67 144.501 66.7083 143.873 66.2893C143.237 65.8656 143 65.39 143 65C143 64.61 143.237 64.1344 143.873 63.7107C144.501 63.2917 145.427 63 146.5 63C147.573 63 148.499 63.2917 149.127 63.7107C149.763 64.1344 150 64.61 150 65Z"
+              />
+              <rect strokeWidth="2" stroke="#ffffff" fillOpacity="0.9" fill="#FFFCAB" rx="1" height="7" width="5" y="63" x="187" />
+              <rect strokeWidth="2" stroke="#ffffff" fillOpacity="0.9" fill="#282828" rx="1" height="11" width="4" y="81" x="193" />
+              <rect strokeWidth="3" stroke="#ffffff" fillOpacity="0.9" fill="#DFDFDF" rx="2.5" height="90" width="121" y="1.5" x="6.5" />
+              <rect strokeWidth="2" stroke="#ffffff" fillOpacity="0.9" fill="#DFDFDF" rx="2" height="4" width="6" y="84" x="1" />
+            </svg>
+          </div>
+          <div className="banner-loader__tires">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 30 30" className="banner-loader__tire-svg">
+              <circle strokeWidth="3" stroke="#ffffff" fillOpacity="0.9" fill="#282828" r="13.5" cy="15" cx="15" />
+              <circle fill="#DFDFDF" r="7" cy="15" cx="15" />
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 30 30" className="banner-loader__tire-svg">
+              <circle strokeWidth="3" stroke="#ffffff" fillOpacity="0.9" fill="#282828" r="13.5" cy="15" cx="15" />
+              <circle fill="#DFDFDF" r="7" cy="15" cx="15" />
+            </svg>
+          </div>
+          <div className="banner-loader__road" />
+        </div>
+      </div>
+      <style jsx>{`
+        .banner-loader {
+          width: fit-content;
+          height: fit-content;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .banner-loader__truck-wrapper {
+          width: 160px;
+          height: 80px;
+          display: flex;
+          flex-direction: column;
+          position: relative;
+          align-items: center;
+          justify-content: flex-end;
+          overflow-x: hidden;
+        }
+        .banner-loader__truck-body {
+          width: 104px;
+          height: fit-content;
+          margin-bottom: 5px;
+          animation: banner-loader-motion 1s linear infinite;
+        }
+        @keyframes banner-loader-motion {
+          0% { transform: translateY(0px); }
+          50% { transform: translateY(2.5px); }
+          100% { transform: translateY(0px); }
+        }
+        .banner-loader__tires {
+          width: 104px;
+          height: fit-content;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0px 8px 0px 12px;
+          position: absolute;
+          bottom: 0;
+        }
+        .banner-loader__tire-svg {
+          width: 19px;
+        }
+        .banner-loader__road {
+          width: 100%;
+          height: 1.5px;
+          background-color: rgba(255, 255, 255, 0.6);
+          position: relative;
+          bottom: 0;
+          align-self: flex-end;
+          border-radius: 3px;
+          overflow: hidden;
+        }
+        .banner-loader__road::before {
+          content: "";
+          position: absolute;
+          width: 16px;
+          height: 100%;
+          background-color: rgba(255, 255, 255, 0.6);
+          right: -50%;
+          border-radius: 3px;
+          animation: banner-loader-road 1.4s linear infinite;
+          border-left: 8px solid transparent;
+        }
+        .banner-loader__road::after {
+          content: "";
+          position: absolute;
+          width: 8px;
+          height: 100%;
+          background-color: rgba(255, 255, 255, 0.6);
+          right: -65%;
+          border-radius: 3px;
+          animation: banner-loader-road 1.4s linear infinite;
+          border-left: 3px solid transparent;
+        }
+        @keyframes banner-loader-road {
+          0% { transform: translateX(0px); }
+          100% { transform: translateX(-280px); }
+        }
+      `}</style>
+    </div>
+  );
+}
 
 // Renders the heading with `highlightWord` (if present in `title`) colored in
 // the brand accent instead of white, so a single meaningful word stands out.
@@ -170,17 +305,26 @@ function BannerSlide({ banner }: { banner: Banner }) {
 }
 
 export function BannerCarousel({ placement = "HOME_HERO" }: { placement?: string }) {
-  const [banners, setBanners] = useState<Banner[]>(DEFAULT_BANNERS);
+  const [banners, setBanners] = useState<Banner[] | null>(null);
 
   useEffect(() => {
     getJson<Banner[]>(`/banners?placement=${placement}`)
       .then((data) => {
-        if (data.length > 0) setBanners(data);
+        setBanners(data.length > 0 ? data : DEFAULT_BANNERS);
       })
       .catch(() => {
-        // API unreachable or errored — keep the default banner, don't break the homepage.
+        // API unreachable or errored — fall back to the default banner rather than breaking the homepage.
+        setBanners(DEFAULT_BANNERS);
       });
   }, [placement]);
+
+  if (banners === null) {
+    return (
+      <div className="mx-auto max-w-7xl px-4">
+        <BannerLoader />
+      </div>
+    );
+  }
 
   return (
     <Carousel
