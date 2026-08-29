@@ -165,16 +165,29 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
           </div>
         </div>
 
-        {selectedCity && (
-          <div className="mt-4 flex items-center justify-between gap-3 rounded-(--radius-card,16px) border border-(--orange-100) bg-(--orange-50) px-4 py-3">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 shrink-0 text-(--orange-600)" />
-              <div>
-                <p className="font-sans text-xs text-(--ink-500)">Serving in</p>
-                <p className="font-heading text-sm font-semibold text-(--navy-800)">{selectedCity.name}</p>
+        {product.cities.length > 0 && (
+          <div className="mt-4 rounded-(--radius-card,16px) border border-(--orange-100) bg-(--orange-50) px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 shrink-0 text-(--orange-600)" />
+                <div>
+                  <p className="font-sans text-xs text-(--ink-500)">
+                    {selectedCity ? "Serving in" : "Available in"}
+                  </p>
+                  <p className="font-heading text-sm font-semibold text-(--navy-800)">
+                    {selectedCity ? selectedCity.name : product.cities.map((c) => c.city.name).join(", ")}
+                  </p>
+                </div>
               </div>
+              <CitySelector />
             </div>
-            <CitySelector />
+
+            {selectedCity && !product.cities.some((c) => c.city.id === selectedCity.id) && (
+              <p className="mt-2 font-sans text-xs text-(--coral-600)">
+                Not available in {selectedCity.name} yet — currently serving{" "}
+                {product.cities.map((c) => c.city.name).join(", ")}.
+              </p>
+            )}
           </div>
         )}
 
