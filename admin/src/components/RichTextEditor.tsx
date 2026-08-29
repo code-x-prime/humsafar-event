@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
@@ -95,6 +95,23 @@ export function RichTextEditor({ label, value, onChange }: RichTextEditorProps) 
       },
     },
   })
+
+  // Tiptap's `content` option only seeds the editor once, at mount — it does
+  // NOT keep syncing if the `value` prop changes later (e.g. product edit
+  // page loads its data from the API asynchronously, after this editor has
+  // already mounted with an empty string). Without this, editing an existing
+  // product's description would always show a blank editor. Skip the sync
+  // while the editor itself has focus, so it doesn't clobber the offending
+  // keystroke while you're actively typing.
+  useEffect(() => {
+    if (!editor) return
+    if (editor.isFocused) return
+    const incoming = value || ''
+    if (incoming !== editor.getHTML()) {
+      editor.commands.setContent(incoming)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, editor])
 
   if (!editor) return null
 
