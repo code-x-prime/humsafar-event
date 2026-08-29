@@ -1,15 +1,22 @@
+import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { api, ApiError } from '@/lib/api'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import { Switch } from '@/components/ui/switch'
 import { Pagination } from '@/components/Pagination'
-import { Pencil } from 'lucide-react'
+import { Pencil, Search } from 'lucide-react'
 
 const PAGE_SIZE = 30
+const ACTIVE_OPTIONS = [
+  { value: '', label: 'All' },
+  { value: 'true', label: 'Active' },
+  { value: 'false', label: 'Inactive' },
+]
 
 interface ShopProduct {
   id: string
@@ -31,21 +38,45 @@ export function ShopProductsPage() {
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
   const page = Math.max(1, Number(searchParams.get('page')) || 1)
+  const search = searchParams.get('search') || ''
+  const isActive = searchParams.get('isActive') || ''
+  const isFeatured = searchParams.get('isFeatured') === 'true'
+
+  const [searchDraft, setSearchDraft] = useState(search)
+  useEffect(() => setSearchDraft(search), [search])
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchDraft !== search) updateParams({ search: searchDraft, page: null })
+    }, 300)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchDraft])
+
+  const query = new URLSearchParams({ page: String(page), limit: String(PAGE_SIZE) })
+  if (search) query.set('search', search)
+  if (isActive) query.set('isActive', isActive)
+  if (isFeatured) query.set('isFeatured', 'true')
 
   const { data, isLoading } = useQuery({
-    queryKey: ['shop-products', page],
-    queryFn: () => api.get<ShopProduct[]>(`/admin/shop-products?page=${page}&limit=${PAGE_SIZE}`),
+    queryKey: ['shop-products', page, search, isActive, isFeatured],
+    queryFn: () => api.get<ShopProduct[]>(`/admin/shop-products?${query.toString()}`),
   })
   const products = data?.data ?? []
   const totalPages = (data?.meta as { totalPages?: number } | undefined)?.totalPages ?? 1
 
-  function goToPage(nextPage: number) {
+  function updateParams(changes: Record<string, string | boolean | null>) {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev)
-      if (nextPage <= 1) next.delete('page')
-      else next.set('page', String(nextPage))
+      for (const [key, value] of Object.entries(changes)) {
+        if (value === null || value === '' || value === false) next.delete(key)
+        else next.set(key, String(value))
+      }
       return next
     })
+  }
+
+  function goToPage(nextPage: number) {
+    updateParams({ page: nextPage <= 1 ? null : String(nextPage) })
   }
 
   const toggleMutation = useMutation({
@@ -76,7 +107,43 @@ export function ShopProductsPage() {
         <Button onClick={() => navigate('/shop/products/new')}>Add Product</Button>
       </div>
 
-      <div className="mt-6 rounded-md border border-border">
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <div className="relative w-full max-w-xs">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={searchDraft}
+            onChange={(e) => setSearchDraft(e.target.value)}
+            placeholder="Search by title..."
+            className="pl-8"
+          />
+        </div>
+
+        <select
+          value={isActive}
+          onChange={(e) => updateParams({ isActive: e.target.value, page: null })}
+          className="h-8 rounded-md border border-input bg-background px-2.5 text-sm"
+        >
+          {ACTIVE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+
+        <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <Switch checked={isFeatured} onCheckedChange={(value) => updateParams({ isFeatured: value, page: null })} />
+          Featured only
+        </label>
+
+        {data && (
+          <p className="ml-auto text-sm text-muted-foreground">
+            {(data.meta as { total?: number } | undefined)?.total ?? products.length} product
+            {((data.meta as { total?: number } | undefined)?.total ?? products.length) === 1 ? '' : 's'}
+          </p>
+        )}
+      </div>
+
+      <div className="mt-4 rounded-md border border-border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -108,7 +175,7 @@ export function ShopProductsPage() {
             {!isLoading && products.length === 0 && (
               <TableRow>
                 <TableCell colSpan={8} className="text-muted-foreground">
-                  No shop products yet.
+                  {search || isActive || isFeatured ? 'No products match these filters.' : 'No shop products yet.'}
                 </TableCell>
               </TableRow>
             )}
