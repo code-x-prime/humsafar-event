@@ -23,6 +23,27 @@ import {
 const TABS = ["Included", "FAQs", "Delivery", "Care Info"] as const;
 type Tab = (typeof TABS)[number];
 
+const DEFAULT_CARE_INFO = [
+  "Avoid Direct Sunlight: Keep the balloons away from direct sunlight or excessive heat to prevent them from popping or deflating.",
+  "Indoor Placement Preferred: For longer-lasting decoration, place the balloons indoors in a cool and dry environment.",
+  "Avoid Sharp Objects: Keep balloons away from sharp objects, rough surfaces, and pets to prevent accidental popping.",
+  "Supervise Children: Balloons can be a choking hazard; keep an eye on young children around the decoration.",
+  "Longevity: Latex balloons typically last 8-12 hours when air-filled. We use paper tape for decoration which doesn't damage the wall if removed within 24 hours. (We don't use helium balloons.)",
+  "Handle with Care: While moving or rearranging decorations, handle the balloons gently to avoid damage.",
+  "Except balloons, everything is on a rental basis (stand, neon light, table, etc.) and will be taken back the very next day.",
+];
+
+const DEFAULT_DELIVERY_INFO = [
+  "The image displayed is indicative in nature.",
+  "Actual product may vary in shape, colour or design as per the availability.",
+  "Our balloon expert will come to your home at your chosen slot, and set up the balloons as shown in the images.",
+  "Please note that our decorator can wait for a maximum of 30 minutes at the location. If entry is delayed beyond this time due to any reason (including security clearance, customer unavailability, or venue restrictions), the decorator may leave the location.",
+  "You'll need to provide a stool to reach the ceiling.",
+  "We can decorate a hotel room if you gain permission from the hotel.",
+  "In case of a complaint, notice must be given within 2 hours of the delivery time of the experience.",
+  "No rescheduling or cancellation is possible after the decoration has been attempted.",
+];
+
 export function ProductDetail({ product }: { product: ProductDetailData }) {
   const [activeImage, setActiveImage] = useState(0);
   const [galleryApi, setGalleryApi] = useState<CarouselApi>();
@@ -314,25 +335,30 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
             )}
 
             {activeTab === "Delivery" && (
-              <p className="font-sans text-sm leading-6 text-(--ink-700)">
-                {product.deliveryInfo || "Delivery information will be shared during booking confirmation."}
-              </p>
+              product.deliveryInfo ? (
+                <p className="font-sans text-sm leading-6 text-(--ink-700)">{product.deliveryInfo}</p>
+              ) : (
+                <ol className="flex flex-col gap-2">
+                  {DEFAULT_DELIVERY_INFO.map((item, i) => (
+                    <li key={i} className="flex items-start gap-2 font-sans text-sm text-(--ink-700)">
+                      <span className="mt-0.5 font-heading text-xs font-semibold text-(--blue-600)">{i + 1}.</span>
+                      {item}
+                    </li>
+                  ))}
+                </ol>
+              )
             )}
 
             {activeTab === "Care Info" && (
               <div>
-                {product.careInfo.length === 0 ? (
-                  <p className="font-sans text-sm text-(--ink-500)">No care instructions added yet.</p>
-                ) : (
-                  <ol className="flex flex-col gap-2">
-                    {product.careInfo.map((item, i) => (
-                      <li key={i} className="flex items-start gap-2 font-sans text-sm text-(--ink-700)">
-                        <span className="mt-0.5 font-heading text-xs font-semibold text-(--blue-600)">{i + 1}.</span>
-                        {item}
-                      </li>
-                    ))}
-                  </ol>
-                )}
+                <ol className="flex flex-col gap-2">
+                  {(product.careInfo.length > 0 ? product.careInfo : DEFAULT_CARE_INFO).map((item, i) => (
+                    <li key={i} className="flex items-start gap-2 font-sans text-sm text-(--ink-700)">
+                      <span className="mt-0.5 font-heading text-xs font-semibold text-(--blue-600)">{i + 1}.</span>
+                      {item}
+                    </li>
+                  ))}
+                </ol>
               </div>
             )}
           </div>
