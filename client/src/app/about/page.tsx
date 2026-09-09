@@ -50,6 +50,7 @@ export const metadata: Metadata = {
   title: "About Us | Humsafar Events",
   description:
     "Humsafar Events brings premium birthday, anniversary and celebration decorations to your doorstep — trusted setup, on-time delivery, together in every journey.",
+  alternates: { canonical: "/about" },
 };
 
 const VALUES = [

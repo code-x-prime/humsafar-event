@@ -4,6 +4,7 @@ import { LegalPageLayout } from "@/components/LegalPageLayout";
 export const metadata: Metadata = {
   title: "Privacy Policy | Humsafar Events",
   description: "How Humsafar Events collects, uses, and protects your personal information.",
+  alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPolicyPage() {

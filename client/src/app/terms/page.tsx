@@ -5,6 +5,7 @@ import { LegalPageLayout } from "@/components/LegalPageLayout";
 export const metadata: Metadata = {
   title: "Terms & Conditions | Humsafar Events",
   description: "Terms and conditions for booking event decoration services with Humsafar Events.",
+  alternates: { canonical: "/terms" },
 };
 
 export default function TermsPage() {

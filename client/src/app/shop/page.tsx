@@ -8,6 +8,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v
 export const metadata: Metadata = {
   title: "Shop With Us | Humsafar Events",
   description: "Shop premium decoration products, delivered to your doorstep.",
+  alternates: { canonical: "/shop" },
 };
 
 async function getCategories(): Promise<ShopCategorySummary[]> {

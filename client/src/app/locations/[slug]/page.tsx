@@ -38,6 +38,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: `Event Decoration in ${city.name} — Humsafar Events`,
     description: `Book premium event and party decorations in ${city.name}. Same-day setup, trusted by hundreds of happy customers.`,
+    alternates: { canonical: `/locations/${city.slug}` },
   };
 }
 

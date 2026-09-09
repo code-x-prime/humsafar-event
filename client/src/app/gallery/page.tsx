@@ -13,6 +13,7 @@ async function getGalleryImages(): Promise<GalleryImage[]> {
 
 export const metadata = {
   title: "Gallery — Humsafar Events",
+  alternates: { canonical: "/gallery" },
 };
 
 export default async function GalleryPage() {

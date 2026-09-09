@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "Refund & Cancellation Policy | Humsafar Events",
   description:
     "Humsafar Events refund and cancellation policy — full refund if cancelled 24 hours before the event, 50% refund within 24 hours.",
+  alternates: { canonical: "/refund-policy" },
 };
 
 export default function RefundPolicyPage() {

@@ -13,6 +13,7 @@ async function getCategoryMenu(): Promise<MenuCategory[]> {
 
 export const metadata = {
   title: "All Categories — Humsafar Events",
+  alternates: { canonical: "/categories" },
 };
 
 export default async function CategoriesPage() {

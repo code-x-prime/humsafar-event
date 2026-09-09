@@ -57,6 +57,17 @@ async function getProduct(slug: string): Promise<ProductDetailData | null> {
   return json.success ? json.data : null;
 }
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const product = await getProduct(slug);
+  if (!product) return { title: "Decoration Not Found | Humsafar Events" };
+  return {
+    title: `${product.title} | Humsafar Events`,
+    description: product.shortDescription || undefined,
+    alternates: { canonical: `/decoration/${product.slug}` },
+  };
+}
+
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const product = await getProduct(slug);

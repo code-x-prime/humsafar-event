@@ -20,6 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: product.metaTitle || `${product.title} | Shop With Us`,
     description: product.metaDescription || product.shortDescription || undefined,
+    alternates: { canonical: `/shop/${product.slug}` },
   };
 }
 

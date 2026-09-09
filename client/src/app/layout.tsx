@@ -5,9 +5,15 @@ import "@fontsource-variable/plus-jakarta-sans";
 import "./globals.css";
 import { AppProviders } from "./providers";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://humsafarevent.com";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "Humsafar Events",
   description: "Together in Every Journey — event decoration booking, coming soon.",
+  alternates: {
+    canonical: "/",
+  },
   verification: {
     google: "VFxo9U_JIqdhfDBLf1RVwaN6rR2TXSfwf-WCtdwXYqM",
   },

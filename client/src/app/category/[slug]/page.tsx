@@ -22,6 +22,19 @@ async function getCategory(
   return json.success ? json.data : null;
 }
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const category = await getCategory(slug, {});
+  if (!category) return { title: "Category Not Found — Humsafar Events" };
+  return {
+    title: `${category.name} — Humsafar Events`,
+    description:
+      category.description ||
+      `Browse premium ${category.name.toLowerCase()} decoration packages from Humsafar Events.`,
+    alternates: { canonical: `/category/${category.slug}` },
+  };
+}
+
 export default async function CategoryPage({
   params,
   searchParams,
