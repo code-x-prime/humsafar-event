@@ -34,8 +34,6 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, router]);
 
-  if (WHATSAPP_ONLY && !isAuthenticated) return null;
-
   const [mode, setMode] = useState<Mode>("login");
   const [step, setStep] = useState<Step>("form");
 
@@ -220,6 +218,10 @@ export default function LoginPage() {
       setLoading(false);
     }
   }
+
+  // WhatsApp-only mode: the effect above redirects to "/"; render nothing
+  // meanwhile so the login form never flashes.
+  if (WHATSAPP_ONLY && !isAuthenticated) return null;
 
   return (
     <div className="flex min-h-screen flex-col">
