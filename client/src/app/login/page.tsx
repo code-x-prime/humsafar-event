@@ -9,6 +9,7 @@ import { Footer } from "@/components/Footer";
 import { OtpInput } from "@/components/OtpInput";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { WHATSAPP_ONLY } from "@/lib/flags";
 
 type Mode = "login" | "register";
 type Step = "form" | "otp" | "forgot" | "forgot-otp";
@@ -23,9 +24,17 @@ export default function LoginPage() {
 
   // Already signed in? There's nothing to do on this page — send them back
   // to their profile instead of showing the login/register form again.
+  // While WhatsApp-only mode is on, the login flow is disabled entirely —
+  // send any direct visit back to the home page.
   useEffect(() => {
-    if (isAuthenticated) router.replace("/profile");
+    if (WHATSAPP_ONLY && !isAuthenticated) {
+      router.replace("/");
+    } else if (isAuthenticated) {
+      router.replace("/profile");
+    }
   }, [isAuthenticated, router]);
+
+  if (WHATSAPP_ONLY && !isAuthenticated) return null;
 
   const [mode, setMode] = useState<Mode>("login");
   const [step, setStep] = useState<Step>("form");

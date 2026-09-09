@@ -11,6 +11,7 @@ import { MobileDrawer } from "./MobileDrawer";
 import { getJson } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { WHATSAPP_ONLY } from "@/lib/flags";
 
 interface CategoryNavItem {
   id: string;
@@ -96,15 +97,20 @@ export function Header() {
               </span>
             )}
           </Link>
-          <Link
-            href={isAuthenticated ? "/profile" : "/login"}
-            className="flex items-center gap-1.5 font-heading text-sm hover:text-accent"
-          >
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-(--coral-600) text-white">
-              <User className="h-4 w-4" />
-            </span>
-            <span className="hidden sm:inline">{isAuthenticated ? user?.name || "Profile" : "Sign In"}</span>
-          </Link>
+          {/* While WhatsApp-only mode is on, the login entry point is hidden
+              unless the visitor is already signed in (so an existing session
+              can still reach their profile). */}
+          {(!WHATSAPP_ONLY || isAuthenticated) && (
+            <Link
+              href={isAuthenticated ? "/profile" : "/login"}
+              className="flex items-center gap-1.5 font-heading text-sm hover:text-accent"
+            >
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-(--coral-600) text-white">
+                <User className="h-4 w-4" />
+              </span>
+              <span className="hidden sm:inline">{isAuthenticated ? user?.name || "Profile" : "Sign In"}</span>
+            </Link>
+          )}
         </div>
       </div>
 

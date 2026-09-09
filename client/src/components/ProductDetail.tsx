@@ -11,6 +11,7 @@ import { CustomizeOrderDialog } from "./CustomizeOrderDialog";
 import { CitySelector } from "./CitySelector";
 import { useCity } from "@/context/CityContext";
 import { getJson } from "@/lib/api";
+import { WHATSAPP_ONLY } from "@/lib/flags";
 import {
   Carousel,
   CarouselContent,
@@ -245,18 +246,20 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
               href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 rounded-(--radius-btn,12px) bg-[#25D366] px-6 py-3 font-heading text-sm font-semibold text-white hover:bg-[#20bd5a]"
+              className={`flex items-center justify-center gap-2 rounded-(--radius-btn,12px) bg-[#25D366] px-6 py-3 font-heading text-sm font-semibold text-white hover:bg-[#20bd5a] ${WHATSAPP_ONLY ? "flex-1" : ""}`}
             >
               <Image src="/whatsapp.png" alt="" width={18} height={18} quality={90} className="h-4.5 w-4.5" />
               WhatsApp
             </a>
           )}
-          <button
-            onClick={() => setDialogOpen(true)}
-            className="flex-1 rounded-(--radius-btn,12px) bg-primary px-10 py-3 font-heading text-base font-semibold text-primary-foreground"
-          >
-            Book Now
-          </button>
+          {!WHATSAPP_ONLY && (
+            <button
+              onClick={() => setDialogOpen(true)}
+              className="flex-1 rounded-(--radius-btn,12px) bg-primary px-10 py-3 font-heading text-base font-semibold text-primary-foreground"
+            >
+              Book Now
+            </button>
+          )}
         </div>
 
         <CustomizeOrderDialog
@@ -375,7 +378,9 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
         )}
       </div>
 
-      {/* Mobile-only fixed bottom action bar: WhatsApp circle + Book Now pill */}
+      {/* Mobile-only fixed bottom action bar: WhatsApp circle + Book Now pill.
+          In WhatsApp-only mode the Book Now pill is hidden and the WhatsApp
+          button stretches to fill the bar. */}
       <div className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-3 border-t border-(--ink-100) bg-background px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] lg:hidden">
         {whatsappNumber && (
           <a
@@ -383,19 +388,26 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Chat on WhatsApp"
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-[#25D366] shadow-md"
+            className={
+              WHATSAPP_ONLY
+                ? "flex h-12 flex-1 items-center justify-center gap-2 rounded-md bg-[#25D366] font-heading text-sm font-semibold text-white shadow-md"
+                : "flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-[#25D366] shadow-md"
+            }
           >
             <Image src="/whatsapp.png" alt="" width={26} height={26} quality={90} className="h-6.5 w-6.5" />
+            {WHATSAPP_ONLY && "Chat on WhatsApp"}
           </a>
         )}
 
-        <button
-          onClick={() => setDialogOpen(true)}
-          className="flex flex-1 items-center justify-center gap-2 rounded-md bg-primary py-3 font-heading text-sm font-semibold text-primary-foreground shadow-md"
-        >
-          Book Now
-          <ChevronRight className="h-4 w-4" />
-        </button>
+        {!WHATSAPP_ONLY && (
+          <button
+            onClick={() => setDialogOpen(true)}
+            className="flex flex-1 items-center justify-center gap-2 rounded-md bg-primary py-3 font-heading text-sm font-semibold text-primary-foreground shadow-md"
+          >
+            Book Now
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        )}
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { X, User, ChevronRight } from "lucide-react";
+import { WHATSAPP_ONLY } from "@/lib/flags";
 
 interface CategoryNavItem {
   id: string;
@@ -82,21 +83,23 @@ export function MobileDrawer({
           </div>
         </div>
 
-        {/* Sign in row */}
-        <Link
-          href="/login"
-          onClick={onClose}
-          className="flex items-center gap-3 border-b border-(--ink-100) px-5 py-4 hover:bg-(--surface-alt,#F7F9FC)"
-        >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--coral-100) text-(--coral-600)">
-            <User className="h-5 w-5" />
-          </span>
-          <div className="flex-1">
-            <p className="font-heading text-sm font-semibold text-(--navy-800)">Sign In / Register</p>
-            <p className="font-sans text-xs text-(--ink-500)">Track orders &amp; exclusive offers</p>
-          </div>
-          <ChevronRight className="h-4 w-4 text-(--ink-500)" />
-        </Link>
+        {/* Sign in row — hidden while WhatsApp-only mode is on */}
+        {!WHATSAPP_ONLY && (
+          <Link
+            href="/login"
+            onClick={onClose}
+            className="flex items-center gap-3 border-b border-(--ink-100) px-5 py-4 hover:bg-(--surface-alt,#F7F9FC)"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--coral-100) text-(--coral-600)">
+              <User className="h-5 w-5" />
+            </span>
+            <div className="flex-1">
+              <p className="font-heading text-sm font-semibold text-(--navy-800)">Sign In / Register</p>
+              <p className="font-sans text-xs text-(--ink-500)">Track orders &amp; exclusive offers</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-(--ink-500)" />
+          </Link>
+        )}
 
         {/* Categories grid */}
         <div className="px-5 py-5">
