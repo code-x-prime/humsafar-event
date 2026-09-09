@@ -104,6 +104,8 @@ export function MultiImageDropzone({ label, value, onChange, folder, max = 5 }: 
     } catch (err) {
       if (err instanceof ApiError && err.code === 'NOT_CONFIGURED') {
         setNotConfigured(true)
+      } else if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+        setError('Your session has expired. Please sign out and sign in again, then retry the upload.')
       } else {
         setError(err instanceof Error ? err.message : 'Upload failed')
       }

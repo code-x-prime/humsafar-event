@@ -52,7 +52,7 @@ function ProductRow({ title, products }: { title: string; products: RelatedShopP
                         fill
                         sizes="(max-width: 640px) 208px, 240px"
                         quality={90}
-                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        className="object-contain transition-transform duration-300 group-hover:scale-105"
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center font-sans text-xs text-(--ink-500)">
