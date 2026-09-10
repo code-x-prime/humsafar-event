@@ -23,6 +23,7 @@ import { Switch } from '@/components/ui/switch'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger } from '@/components/ui/sheet'
 import { ImageDropzone, type UploadedImage } from '@/components/ImageDropzone'
+import { LinkPicker } from '@/components/LinkPicker'
 import { AlertCircle, GripVertical, Pencil } from 'lucide-react'
 
 const PLACEMENTS = ['HOME_HERO', 'HOME_STRIP', 'CATEGORY_TOP', 'OFFER_POPUP'] as const
@@ -347,11 +348,10 @@ export function BannersPage() {
               </div>
               <div className="space-y-1">
                 <Label htmlFor="banner-cta-link">CTA Link</Label>
-                <Input
+                <LinkPicker
                   id="banner-cta-link"
-                  placeholder="/category/birthday"
                   value={form.ctaLink}
-                  onChange={(e) => setForm({ ...form, ctaLink: e.target.value })}
+                  onChange={(ctaLink) => setForm({ ...form, ctaLink })}
                 />
               </div>
 
