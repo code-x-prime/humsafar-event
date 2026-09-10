@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { onBannerReady } from "@/lib/siteLoaderSignal";
 
 // Full-screen splash shown on every page load (including reloads/direct URL
@@ -69,15 +68,16 @@ export function SiteLoader() {
     >
       {/* The logo art has a transparent background with navy text/ring, which
           all but vanishes on the dark loader background — sit it on a white
-          disc so it reads, and render it large enough for the fine detail. */}
+          disc so it reads, and render it large enough for the fine detail.
+          Plain <img> (not next/image) so it always loads even if the image
+          optimizer is misconfigured in the deployed environment. */}
       <div className="flex h-28 w-28 items-center justify-center rounded-full bg-white p-3 shadow-lg sm:h-32 sm:w-32">
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src="/logo-2.png"
           alt="Humsafar Events"
           width={128}
           height={128}
-          quality={90}
-          priority
           className="h-full w-full object-contain"
         />
       </div>
