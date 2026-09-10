@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query'
 import { Search, Link2, Pencil, Check } from 'lucide-react'
 import { api } from '@/lib/api'
 import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
 
 // A CTA-link chooser for the admin. The client site's routes are not obvious to
 // a non-developer admin, so instead of typing "/category/birthday" by hand they
