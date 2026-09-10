@@ -19,6 +19,8 @@ interface CustomizeOrderDialogProps {
   productId: string;
   productTitle: string;
   variantId?: string;
+  /** Free-text note carried onto the cart item — e.g. the customer's colour request. */
+  notes?: string;
   addOns: AddOn[];
   open: boolean;
   onClose: () => void;
@@ -26,7 +28,7 @@ interface CustomizeOrderDialogProps {
 
 const UNCATEGORIZED = "__uncategorized__";
 
-export function CustomizeOrderDialog({ productId, productTitle, variantId, addOns, open, onClose }: CustomizeOrderDialogProps) {
+export function CustomizeOrderDialog({ productId, productTitle, variantId, notes, addOns, open, onClose }: CustomizeOrderDialogProps) {
   const router = useRouter();
   const { addToCart } = useCart();
   const { selectedCity } = useCity();
@@ -74,6 +76,7 @@ export function CustomizeOrderDialog({ productId, productTitle, variantId, addOn
         addOnIds: skip ? [] : selectedAddOnIds,
         qty: 1,
         cityId: selectedCity?.id,
+        notes,
       });
       onClose();
       router.push("/cart");

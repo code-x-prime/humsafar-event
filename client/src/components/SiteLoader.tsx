@@ -67,7 +67,20 @@ export function SiteLoader() {
       }`}
       aria-hidden={fadingOut}
     >
-      <Image src="/logo-2.png" alt="Humsafar Events" width={80} height={80} quality={90} priority className="h-20 w-20" />
+      {/* The logo art has a transparent background with navy text/ring, which
+          all but vanishes on the dark loader background — sit it on a white
+          disc so it reads, and render it large enough for the fine detail. */}
+      <div className="flex h-28 w-28 items-center justify-center rounded-full bg-white p-3 shadow-lg sm:h-32 sm:w-32">
+        <Image
+          src="/logo-2.png"
+          alt="Humsafar Events"
+          width={128}
+          height={128}
+          quality={90}
+          priority
+          className="h-full w-full object-contain"
+        />
+      </div>
 
       <div className="site-loader">
         <div className="site-loader__truck-wrapper">

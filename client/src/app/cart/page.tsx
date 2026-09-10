@@ -42,6 +42,9 @@ function BookingItemCard({ item, updateQty, removeItem }: { item: CartItem; upda
               {item.variant.name}
             </p>
           )}
+          {item.notes && (
+            <p className="mt-0.5 font-sans text-xs text-(--ink-700)">{item.notes}</p>
+          )}
           <p className="mt-0.5 font-heading text-sm font-semibold text-primary">&#8377;{item.product.price}</p>
           <p className="font-sans text-xs text-(--ink-500)">&#8377;{item.product.price} per booking</p>
         </div>

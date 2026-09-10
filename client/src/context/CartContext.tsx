@@ -70,6 +70,7 @@ interface AddToCartInput {
   addOnIds?: string[];
   qty?: number;
   cityId?: string;
+  notes?: string;
 }
 
 interface CartContextValue {

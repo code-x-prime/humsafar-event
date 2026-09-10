@@ -50,6 +50,11 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
   const [galleryApi, setGalleryApi] = useState<CarouselApi>();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [activeVariant, setActiveVariant] = useState(0);
+  // Colour selection: either one of the product's variants, or a free-text
+  // "Custom" request the customer types in. customColor !== null means the
+  // Custom chip is active; customColorSaved is what they confirmed with Save.
+  const [customColor, setCustomColor] = useState<string | null>(null);
+  const [customColorDraft, setCustomColorDraft] = useState("");
   const [activeTab, setActiveTab] = useState<Tab>("Included");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState<string | null>(null);
@@ -71,8 +76,18 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
 
   const images = product.media.length > 0 ? product.media : null;
   const category = product.categories[0]?.category;
-  const whatsappMessage = `Hi! I'm interested in "${product.title}"${typeof window !== "undefined" ? ` — ${window.location.href}` : ""
-    }`;
+
+  // The colour the customer has chosen — either their typed Custom text, or the
+  // selected variant's name. Flows into the WhatsApp enquiry and the cart note.
+  const chosenColor =
+    customColor !== null
+      ? customColor
+      : product.variants[activeVariant]?.name || null;
+  const colorNote = chosenColor ? `Balloon colours: ${chosenColor}` : "";
+
+  const whatsappMessage = `Hi! I'm interested in "${product.title}"${
+    chosenColor ? `\nBalloon colours: ${chosenColor}` : ""
+  }${typeof window !== "undefined" ? `\n${window.location.href}` : ""}`;
 
   return (
     <div className="mt-4 grid grid-cols-1 gap-6 pb-20 lg:grid-cols-[1fr_1fr] lg:pb-0">
@@ -215,28 +230,82 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
 
         {product.variants.length > 0 && (
           <div className="mt-6">
-            <p className="font-heading text-sm font-semibold text-(--navy-800)">Choose Colors</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {product.variants.map((variant, i) => (
-                <button
-                  key={variant.id}
-                  onClick={() => setActiveVariant(i)}
-                  className={`flex items-center gap-2 rounded-full border px-3 py-1.5 font-sans text-xs transition-colors ${i === activeVariant
-                    ? "border-(--blue-600) bg-(--surface-alt,#F7F9FC) text-accent"
-                    : "border-(--ink-300) text-(--ink-700) hover:border-(--blue-600)"
-                    }`}
-                >
-                  {variant.swatches.length > 0 && (
-                    <span className="flex overflow-hidden rounded-full border border-(--ink-100)">
-                      {variant.swatches.slice(0, 2).map((color, ci) => (
-                        <span key={ci} className="h-3.5 w-3.5" style={{ backgroundColor: color }} />
-                      ))}
-                    </span>
-                  )}
-                  {variant.name}
-                </button>
-              ))}
+            <div className="flex items-center justify-between">
+              <p className="font-heading text-sm font-semibold text-(--navy-800)">Choose Colors</p>
+              <span className="font-sans text-xs text-(--ink-500)">Tap to select</span>
             </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {product.variants.map((variant, i) => {
+                const active = customColor === null && i === activeVariant;
+                return (
+                  <button
+                    key={variant.id}
+                    onClick={() => {
+                      setCustomColor(null);
+                      setActiveVariant(i);
+                    }}
+                    className={`flex items-center gap-2 rounded-full border px-3 py-1.5 font-sans text-xs transition-colors ${active
+                      ? "border-(--blue-600) bg-(--surface-alt,#F7F9FC) text-accent"
+                      : "border-(--ink-300) text-(--ink-700) hover:border-(--blue-600)"
+                      }`}
+                  >
+                    {variant.swatches.length > 0 && (
+                      <span className="flex overflow-hidden rounded-full border border-(--ink-100)">
+                        {variant.swatches.slice(0, 2).map((color, ci) => (
+                          <span key={ci} className="h-3.5 w-3.5" style={{ backgroundColor: color }} />
+                        ))}
+                      </span>
+                    )}
+                    {variant.name}
+                  </button>
+                );
+              })}
+
+              {/* Custom colour request — opens a text field the customer types
+                  into; the value rides along on the WhatsApp enquiry and the
+                  cart note so the decorator sees exactly what was asked for. */}
+              <button
+                onClick={() => setCustomColor((c) => (c === null ? "" : null))}
+                className={`flex items-center gap-1.5 rounded-full border border-dashed px-3 py-1.5 font-sans text-xs transition-colors ${customColor !== null
+                  ? "border-(--blue-600) bg-(--surface-alt,#F7F9FC) text-accent"
+                  : "border-(--ink-300) text-(--ink-700) hover:border-(--blue-600)"
+                  }`}
+              >
+                <span aria-hidden>✏️</span>
+                Custom
+                {customColor ? <span aria-hidden>✓</span> : null}
+              </button>
+            </div>
+
+            {customColor !== null && (
+              <div className="mt-3">
+                <div className="flex gap-2">
+                  <input
+                    value={customColorDraft}
+                    onChange={(e) => setCustomColorDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && customColorDraft.trim()) {
+                        setCustomColor(customColorDraft.trim());
+                      }
+                    }}
+                    placeholder="e.g. Pastel pink, gold & white"
+                    className="flex-1 rounded-(--radius-btn,12px) border border-(--ink-300) px-3 py-2 font-sans text-sm outline-none focus:border-(--blue-600)"
+                  />
+                  <button
+                    onClick={() => customColorDraft.trim() && setCustomColor(customColorDraft.trim())}
+                    disabled={!customColorDraft.trim()}
+                    className="rounded-(--radius-btn,12px) bg-primary px-4 py-2 font-heading text-sm font-semibold text-primary-foreground disabled:opacity-50"
+                  >
+                    ✓ Save
+                  </button>
+                </div>
+                <p className="mt-1.5 font-sans text-xs text-(--ink-500)">
+                  {customColor
+                    ? `Saved: "${customColor}" — we'll match it as closely as possible.`
+                    : "Type your colours and tap Save to confirm — we'll match them as closely as possible."}
+                </p>
+              </div>
+            )}
           </div>
         )}
 
@@ -249,7 +318,7 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
               className={`flex items-center justify-center gap-2 rounded-(--radius-btn,12px) bg-[#25D366] px-6 py-3 font-heading text-sm font-semibold text-white hover:bg-[#20bd5a] ${WHATSAPP_ONLY ? "flex-1" : ""}`}
             >
               <Image src="/whatsapp.png" alt="" width={18} height={18} quality={90} className="h-4.5 w-4.5" />
-              WhatsApp
+              {WHATSAPP_ONLY ? "Book Now" : "WhatsApp"}
             </a>
           )}
           {!WHATSAPP_ONLY && (
@@ -265,7 +334,8 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
         <CustomizeOrderDialog
           productId={product.id}
           productTitle={product.title}
-          variantId={product.variants[activeVariant]?.id}
+          variantId={customColor !== null ? undefined : product.variants[activeVariant]?.id}
+          notes={colorNote || undefined}
           addOns={product.addOns.map((a) => a.addOn)}
           open={dialogOpen}
           onClose={() => setDialogOpen(false)}
@@ -387,7 +457,7 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
             href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Chat on WhatsApp"
+            aria-label={WHATSAPP_ONLY ? "Book Now" : "Chat on WhatsApp"}
             className={
               WHATSAPP_ONLY
                 ? "flex h-12 flex-1 items-center justify-center gap-2 rounded-md bg-[#25D366] font-heading text-sm font-semibold text-white shadow-md"
@@ -395,7 +465,7 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
             }
           >
             <Image src="/whatsapp.png" alt="" width={26} height={26} quality={90} className="h-6.5 w-6.5" />
-            {WHATSAPP_ONLY && "Chat on WhatsApp"}
+            {WHATSAPP_ONLY && "Book Now"}
           </a>
         )}
 
