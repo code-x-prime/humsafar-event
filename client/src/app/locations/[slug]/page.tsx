@@ -15,6 +15,8 @@ interface CityData {
   region: string | null;
   isServiceable: boolean;
   comingSoon: boolean;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
 }
 
 async function getCity(slug: string): Promise<CityData | null> {
@@ -36,8 +38,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const city = await getCity(slug);
   if (!city) return { title: "City Not Found — Humsafar Events" };
   return {
-    title: `Event Decoration in ${city.name} — Humsafar Events`,
-    description: `Book premium event and party decorations in ${city.name}. Same-day setup, trusted by hundreds of happy customers.`,
+    title: city.metaTitle || `Event Decoration in ${city.name} — Humsafar Events`,
+    description:
+      city.metaDescription ||
+      `Book premium event and party decorations in ${city.name}. Same-day setup, trusted by hundreds of happy customers.`,
     alternates: { canonical: `/locations/${city.slug}` },
   };
 }

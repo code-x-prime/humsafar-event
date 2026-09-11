@@ -30,6 +30,9 @@ export interface CategoryDetail {
   slug: string;
   description: string | null;
   image: string | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  metaKeywords?: string | null;
   parent: { name: string; slug: string } | null;
   children: SubCategory[];
   products: Product[];

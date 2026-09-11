@@ -12,6 +12,9 @@ export interface ProductDetailData {
   slug: string;
   shortDescription: string | null;
   description: string | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  metaKeywords?: string | null;
   inclusions: string[];
   exclusions: string[];
   careInfo: string[];
@@ -62,8 +65,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const product = await getProduct(slug);
   if (!product) return { title: "Decoration Not Found | Humsafar Events" };
   return {
-    title: `${product.title} | Humsafar Events`,
-    description: product.shortDescription || undefined,
+    title: product.metaTitle || `${product.title} | Humsafar Events`,
+    description: product.metaDescription || product.shortDescription || undefined,
+    keywords: product.metaKeywords || undefined,
     alternates: { canonical: `/decoration/${product.slug}` },
   };
 }

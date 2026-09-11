@@ -9,8 +9,9 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://humsafarevent.com"
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "Humsafar Events",
-  description: "Together in Every Journey — event decoration booking, coming soon.",
+  title: "Event Management Company in Delhi NCR | Humsafar Events",
+  description:
+    "From private celebrations to corporate events, Humsafar Events handles planning, styling and on-ground execution across Delhi NCR. Discuss your event today.",
   alternates: {
     canonical: "/",
   },

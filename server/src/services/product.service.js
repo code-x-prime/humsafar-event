@@ -17,6 +17,31 @@ function slugify(name) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
 
+// Builds a sensible default keyword list from the product's own title and tags
+// so a product always has *some* meta keywords, even if the admin leaves the
+// SEO fields blank. Deduplicated case-insensitively, capped so nobody submits
+// (or auto-generates) an unreasonably long keywords string.
+function deriveMetaKeywords({ title, tags, categoryNames }) {
+  const words = [
+    ...(title ? title.split(/\s+/) : []),
+    ...(tags || []),
+    ...(categoryNames || []),
+  ]
+    .map((w) => w.trim())
+    .filter(Boolean);
+
+  const seen = new Set();
+  const unique = [];
+  for (const w of words) {
+    const key = w.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(w);
+  }
+
+  return unique.slice(0, 15).join(', ');
+}
+
 // Appends -2, -3, ... until the slug is free, so admins reusing a similar
 // title (or resubmitting) get a working product instead of a 409.
 async function uniqueSlug(base, excludeId) {
@@ -156,6 +181,7 @@ export async function create(data) {
   const slug = await uniqueSlug(rest.slug || slugify(rest.title));
   const metaTitle = rest.metaTitle || rest.title;
   const metaDescription = rest.metaDescription || rest.shortDescription || undefined;
+  const metaKeywords = rest.metaKeywords || deriveMetaKeywords({ title: rest.title, tags: rest.tags });
 
   const product = await prisma.product.create({
     data: {
@@ -163,6 +189,7 @@ export async function create(data) {
       slug,
       metaTitle,
       metaDescription,
+      metaKeywords,
       categories: categoryIds?.length
         ? { create: categoryIds.map((categoryId, position) => ({ categoryId, position })) }
         : undefined,
@@ -191,6 +218,15 @@ export async function update(id, data) {
 
   if (rest.slug) {
     rest.slug = await uniqueSlug(rest.slug, id);
+  }
+
+  // An empty string (not undefined — undefined means "leave unchanged") is how
+  // the admin's "auto-generate" toggle asks us to recompute the field instead
+  // of storing a blank value.
+  if (rest.metaTitle === '') rest.metaTitle = rest.title || undefined;
+  if (rest.metaDescription === '') rest.metaDescription = rest.shortDescription || undefined;
+  if (rest.metaKeywords === '') {
+    rest.metaKeywords = deriveMetaKeywords({ title: rest.title, tags: rest.tags }) || undefined;
   }
 
   if (categoryIds) {
@@ -252,6 +288,9 @@ export async function getPublicBySlug(slug) {
       slug: true,
       shortDescription: true,
       description: true,
+      metaTitle: true,
+      metaDescription: true,
+      metaKeywords: true,
       inclusions: true,
       exclusions: true,
       careInfo: true,

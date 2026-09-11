@@ -11,6 +11,7 @@ export const createCategorySchema = z.object({
   bannerMobile: z.string().optional(),
   metaTitle: z.string().optional(),
   metaDescription: z.string().optional(),
+  metaKeywords: z.string().optional(),
   isActive: z.boolean().optional(),
   showInMenu: z.boolean().optional(),
   showOnHome: z.boolean().optional(),

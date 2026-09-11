@@ -64,6 +64,7 @@ interface Product {
   isFeatured: boolean
   metaTitle: string | null
   metaDescription: string | null
+  metaKeywords: string | null
   categories: { category: Category }[]
   cities: { city: City }[]
   media: { id: string; url: string; r2Key: string }[]
@@ -87,6 +88,7 @@ const EMPTY_FORM = {
   deliveryInfo: '',
   metaTitle: '',
   metaDescription: '',
+  metaKeywords: '',
   autoMeta: true,
   categoryIds: [] as string[],
   cityIds: [] as string[],
@@ -147,6 +149,7 @@ function formFromProduct(p: Product): Form {
     deliveryInfo: p.deliveryInfo ?? '',
     metaTitle: p.metaTitle ?? '',
     metaDescription: p.metaDescription ?? '',
+    metaKeywords: p.metaKeywords ?? '',
     autoMeta: false,
     categoryIds: p.categories.map((c) => c.category.id),
     cityIds: p.cities.map((c) => c.city.id),
@@ -174,6 +177,9 @@ function toPayload(form: Form) {
     deliveryInfo: form.deliveryInfo || undefined,
     metaTitle: form.autoMeta ? form.title : form.metaTitle || undefined,
     metaDescription: form.autoMeta ? form.shortDescription || undefined : form.metaDescription || undefined,
+    // '' (not omitted) tells the server to auto-derive keywords from the
+    // title/tags — there's no keywords equivalent to compute client-side here.
+    metaKeywords: form.autoMeta ? '' : form.metaKeywords || undefined,
     categoryIds: form.categoryIds,
     cityIds: form.cityIds,
     addOnIds: form.addOnIds,
@@ -625,6 +631,19 @@ export function ProductFormPage() {
           <div className="space-y-1">
             <Label htmlFor="p-meta-desc" className="text-xs">Meta Description</Label>
             <Textarea id="p-meta-desc" rows={2} value={form.autoMeta ? form.shortDescription : form.metaDescription} disabled={form.autoMeta} onChange={(e) => setForm({ ...form, metaDescription: e.target.value })} />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="p-meta-keywords" className="text-xs">Meta Keywords</Label>
+            <Input
+              id="p-meta-keywords"
+              placeholder="comma, separated, keywords"
+              value={form.autoMeta ? '' : form.metaKeywords}
+              disabled={form.autoMeta}
+              onChange={(e) => setForm({ ...form, metaKeywords: e.target.value })}
+            />
+            {form.autoMeta && (
+              <p className="text-xs text-muted-foreground">Left blank on purpose — generated automatically when you save.</p>
+            )}
           </div>
         </Section>
 

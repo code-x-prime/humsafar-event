@@ -37,6 +37,7 @@ export const createProductSchema = z.object({
   tags: z.array(z.string()).optional(),
   metaTitle: z.string().optional(),
   metaDescription: z.string().optional(),
+  metaKeywords: z.string().optional(),
   isActive: z.boolean().optional(),
   isFeatured: z.boolean().optional(),
   position: z.coerce.number().int().optional(),

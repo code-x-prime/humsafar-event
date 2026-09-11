@@ -16,6 +16,32 @@ function slugify(name) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
 
+// Builds a default meta title/description/keywords from the category's own
+// name (and parent, for subcategories) and description, so a category always
+// has usable SEO fields even when the admin leaves them blank — matching the
+// same "auto-generate" behaviour the product form offers.
+function deriveMeta({ name, description, parentName }) {
+  const title = parentName ? `${name} | ${parentName} Decoration — Humsafar Events` : `${name} Decoration — Humsafar Events`;
+  const metaDescription =
+    description || `Explore ${name.toLowerCase()} decoration packages from Humsafar Events — themed setups, on-time delivery, trusted styling.`;
+
+  const words = [name, parentName, 'decoration', 'event decoration', 'Humsafar Events']
+    .filter(Boolean)
+    .flatMap((w) => w.split(/\s+/))
+    .map((w) => w.trim())
+    .filter(Boolean);
+  const seen = new Set();
+  const keywords = [];
+  for (const w of words) {
+    const key = w.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    keywords.push(w);
+  }
+
+  return { metaTitle: title, metaDescription, metaKeywords: keywords.slice(0, 15).join(', ') };
+}
+
 async function safeDeleteR2Object(r2Key) {
   if (!r2Key) return;
   try {
@@ -50,7 +76,19 @@ export async function getById(id) {
 
 export async function create(data) {
   const slug = data.slug || slugify(data.name);
-  return prisma.category.create({ data: { ...data, slug } });
+
+  let parentName;
+  if (data.parentId) {
+    const parent = await prisma.category.findUnique({ where: { id: data.parentId }, select: { name: true } });
+    parentName = parent?.name;
+  }
+
+  const auto = deriveMeta({ name: data.name, description: data.description, parentName });
+  const metaTitle = data.metaTitle || auto.metaTitle;
+  const metaDescription = data.metaDescription || auto.metaDescription;
+  const metaKeywords = data.metaKeywords || auto.metaKeywords;
+
+  return prisma.category.create({ data: { ...data, slug, metaTitle, metaDescription, metaKeywords } });
 }
 
 // If the update replaces imageR2Key with a different value (or clears it),
@@ -60,6 +98,26 @@ export async function update(id, data) {
 
   if ('imageR2Key' in data && data.imageR2Key !== existing.imageR2Key) {
     await safeDeleteR2Object(existing.imageR2Key);
+  }
+
+  // An empty string (not undefined — undefined means "leave unchanged") is how
+  // the admin's "auto-generate" toggle asks us to recompute the field instead
+  // of storing a blank value.
+  if (data.metaTitle === '' || data.metaDescription === '' || data.metaKeywords === '') {
+    let parentName;
+    const parentId = data.parentId !== undefined ? data.parentId : existing.parentId;
+    if (parentId) {
+      const parent = await prisma.category.findUnique({ where: { id: parentId }, select: { name: true } });
+      parentName = parent?.name;
+    }
+    const auto = deriveMeta({
+      name: data.name || existing.name,
+      description: data.description !== undefined ? data.description : existing.description,
+      parentName,
+    });
+    if (data.metaTitle === '') data.metaTitle = auto.metaTitle;
+    if (data.metaDescription === '') data.metaDescription = auto.metaDescription;
+    if (data.metaKeywords === '') data.metaKeywords = auto.metaKeywords;
   }
 
   return prisma.category.update({ where: { id }, data });
@@ -109,6 +167,9 @@ export async function getPublicBySlug(slug, { sort, minPrice, maxPrice } = {}) {
       slug: true,
       description: true,
       image: true,
+      metaTitle: true,
+      metaDescription: true,
+      metaKeywords: true,
       parent: { select: { name: true, slug: true } },
       children: {
         where: { isActive: true },

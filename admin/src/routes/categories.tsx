@@ -20,6 +20,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Textarea } from '@/components/ui/textarea'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet'
@@ -34,6 +36,9 @@ interface Category {
   description: string | null
   parentId: string | null
   image: string | null
+  metaTitle: string | null
+  metaDescription: string | null
+  metaKeywords: string | null
   isActive: boolean
   showInMenu: boolean
   showOnHome: boolean
@@ -47,6 +52,10 @@ const EMPTY_FORM = {
   name: '',
   description: '',
   image: null as UploadedImage | null,
+  metaTitle: '',
+  metaDescription: '',
+  metaKeywords: '',
+  autoMeta: true,
   showInMenu: true,
   showOnHome: false,
 }
@@ -60,6 +69,12 @@ function formFromCategory(category: Category) {
     name: category.name,
     description: category.description ?? '',
     image: category.image ? { mediaId: '', r2Key: '', url: category.image } : null,
+    metaTitle: category.metaTitle ?? '',
+    metaDescription: category.metaDescription ?? '',
+    metaKeywords: category.metaKeywords ?? '',
+    // Editing an existing category starts in manual mode — its saved meta
+    // fields are shown as-is rather than silently recomputed on next save.
+    autoMeta: false,
     showInMenu: category.showInMenu,
     showOnHome: category.showOnHome,
   }
@@ -72,6 +87,11 @@ function toCategoryPayload(form: typeof EMPTY_FORM, parentId?: string) {
     parentId: parentId || undefined,
     image: form.image?.url,
     imageR2Key: form.image?.r2Key || undefined,
+    // An empty string (not omitted) tells the server "recompute this from the
+    // name/description" — that's what auto-generate mode means here.
+    metaTitle: form.autoMeta ? '' : form.metaTitle,
+    metaDescription: form.autoMeta ? '' : form.metaDescription,
+    metaKeywords: form.autoMeta ? '' : form.metaKeywords,
     showInMenu: form.showInMenu,
     showOnHome: form.showOnHome,
   }
@@ -416,6 +436,53 @@ export function CategoriesPage() {
               onChange={(image) => setForm({ ...form, image })}
               folder="categories"
             />
+
+            <div className="space-y-2 rounded-md border border-border p-3">
+              <p className="text-sm font-medium">SEO</p>
+              <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Checkbox
+                  checked={form.autoMeta}
+                  onCheckedChange={(checked) => setForm({ ...form, autoMeta: checked === true })}
+                />
+                Auto-generate from name/description
+              </label>
+              <div className="space-y-1">
+                <Label htmlFor="cat-meta-title" className="text-xs">Meta Title</Label>
+                <Input
+                  id="cat-meta-title"
+                  placeholder={form.name ? `${form.name} Decoration — Humsafar Events` : 'e.g. Birthday Decoration — Humsafar Events'}
+                  value={form.autoMeta ? '' : form.metaTitle}
+                  disabled={form.autoMeta}
+                  onChange={(e) => setForm({ ...form, metaTitle: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="cat-meta-desc" className="text-xs">Meta Description</Label>
+                <Textarea
+                  id="cat-meta-desc"
+                  rows={2}
+                  placeholder="Shown as the description in Google search results."
+                  value={form.autoMeta ? '' : form.metaDescription}
+                  disabled={form.autoMeta}
+                  onChange={(e) => setForm({ ...form, metaDescription: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="cat-meta-keywords" className="text-xs">Meta Keywords</Label>
+                <Input
+                  id="cat-meta-keywords"
+                  placeholder="comma, separated, keywords"
+                  value={form.autoMeta ? '' : form.metaKeywords}
+                  disabled={form.autoMeta}
+                  onChange={(e) => setForm({ ...form, metaKeywords: e.target.value })}
+                />
+              </div>
+              {form.autoMeta && (
+                <p className="text-xs text-muted-foreground">
+                  Left blank on purpose — these will be generated automatically when you save.
+                </p>
+              )}
+            </div>
 
             <div className="flex items-center justify-between">
               <Label htmlFor="cat-show-menu">Show in menu</Label>

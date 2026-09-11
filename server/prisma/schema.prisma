@@ -235,6 +235,7 @@ model Category {
   bannerMobile    String?
   metaTitle       String?
   metaDescription String?
+  metaKeywords    String?
   isActive        Boolean  @default(true)
   showInMenu      Boolean  @default(true)
   showOnHome      Boolean  @default(false)
@@ -273,6 +274,7 @@ model Product {
   tags             String[] @default([])
   metaTitle        String?
   metaDescription  String?
+  metaKeywords     String?
   isActive         Boolean  @default(true)
   isFeatured       Boolean  @default(false)
   position         Int      @default(0)
@@ -499,6 +501,8 @@ model City {
   minOrderValue  Decimal   @default(0) @db.Decimal(10, 2)
   lat            Decimal?  @db.Decimal(9, 6)
   lng            Decimal?  @db.Decimal(9, 6)
+  metaTitle      String?
+  metaDescription String?
   deletedAt      DateTime?
 
   pincodes      Pincode[]

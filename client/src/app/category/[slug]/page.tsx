@@ -27,10 +27,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const category = await getCategory(slug, {});
   if (!category) return { title: "Category Not Found — Humsafar Events" };
   return {
-    title: `${category.name} — Humsafar Events`,
+    title: category.metaTitle || `${category.name} — Humsafar Events`,
     description:
+      category.metaDescription ||
       category.description ||
       `Browse premium ${category.name.toLowerCase()} decoration packages from Humsafar Events.`,
+    keywords: category.metaKeywords || undefined,
     alternates: { canonical: `/category/${category.slug}` },
   };
 }
