@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Phone, Mail, ShieldCheck, Truck, Headset } from "lucide-react";
 import { useCity } from "@/context/CityContext";
+import { SHOW_SOCIAL_LINKS } from "@/lib/flags";
 
 const TRUST_BADGES = [
   { icon: ShieldCheck, title: "Secure Payments", subtitle: "Safe & encrypted transactions" },
@@ -102,22 +103,24 @@ export function Footer() {
               </a>
             </div>
 
-            <div className="mt-5 flex gap-2">
-              {SOCIAL_LINKS.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={social.label}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-(--ink-300) text-(--ink-700) hover:border-(--orange-600) hover:text-(--orange-600)"
-                >
-                  <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                    <path d={social.path} />
-                  </svg>
-                </a>
-              ))}
-            </div>
+            {SHOW_SOCIAL_LINKS && (
+              <div className="mt-5 flex gap-2">
+                {SOCIAL_LINKS.map((social) => (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={social.label}
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-(--ink-300) text-(--ink-700) hover:border-(--orange-600) hover:text-(--orange-600)"
+                  >
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                      <path d={social.path} />
+                    </svg>
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>

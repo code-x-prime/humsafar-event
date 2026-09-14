@@ -9,3 +9,10 @@
 // NEXT_PUBLIC_WHATSAPP_ONLY=false and redeploy — no code change needed.
 export const WHATSAPP_ONLY =
   (process.env.NEXT_PUBLIC_WHATSAPP_ONLY || "true").toLowerCase() !== "false";
+
+// SHOW_SOCIAL_LINKS: the footer's Instagram/Facebook/etc. icons are hidden for
+// now (the accounts aren't ready to be linked from the live site yet).
+// Default is OFF (hidden). Set NEXT_PUBLIC_SHOW_SOCIAL_LINKS=true and redeploy
+// to bring them back — no code change needed.
+export const SHOW_SOCIAL_LINKS =
+  (process.env.NEXT_PUBLIC_SHOW_SOCIAL_LINKS || "false").toLowerCase() === "true";
