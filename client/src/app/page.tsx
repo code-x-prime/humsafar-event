@@ -8,6 +8,9 @@ import { HomeBannerRow, type HomeBanner } from "@/components/HomeBannerRow";
 import { TestimonialsCarousel, type Testimonial } from "@/components/TestimonialsCarousel";
 import { GalleryMasonry, type GalleryImage } from "@/components/GalleryMasonry";
 import { TrendingShopProducts, type TrendingShopProduct } from "@/components/TrendingShopProducts";
+import { BlogSection } from "@/components/BlogSection";
+import { HomeSeoContent } from "@/components/HomeSeoContent";
+import { getLatestBlogPosts } from "@/lib/wordpress";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
 
@@ -49,12 +52,13 @@ async function getTrendingShopProducts(): Promise<TrendingShopProduct[]> {
 }
 
 export default async function Home() {
-  const [feed, testimonials, categories, galleryImages, trendingProducts] = await Promise.all([
+  const [feed, testimonials, categories, galleryImages, trendingProducts, blogPosts] = await Promise.all([
     getHomeFeed(),
     getTestimonials(),
     getHomeCategories(),
     getHomeGalleryImages(),
     getTrendingShopProducts(),
+    getLatestBlogPosts(8),
   ]);
 
   return (
@@ -79,6 +83,10 @@ export default async function Home() {
         )}
 
         <TestimonialsCarousel testimonials={testimonials} />
+
+        <BlogSection posts={blogPosts} />
+
+        <HomeSeoContent />
 
         {galleryImages.length > 0 && (
           <section className="mx-auto max-w-7xl px-4 py-10 sm:py-14">

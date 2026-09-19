@@ -16,6 +16,9 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "**.r2.dev" },
       { protocol: "https", hostname: "**.r2.cloudflarestorage.com" },
+      // WordPress blog media (homepage "Latest Event Ideas & Inspiration" section).
+      { protocol: "https", hostname: "humsafarevent.com", pathname: "/blog/**" },
+      { protocol: "https", hostname: "www.humsafarevent.com", pathname: "/blog/**" },
       ...extraImageHosts,
     ],
     // Next.js's default quality (75) visibly softens photos — banners, gallery,
