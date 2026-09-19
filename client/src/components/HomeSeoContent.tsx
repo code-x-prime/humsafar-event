@@ -256,9 +256,9 @@ export function HomeSeoContent() {
         {/* Services */}
         <div className="mt-12">
           <Eyebrow>What We Do</Eyebrow>
-          <h2 className="mt-1 font-display text-xl font-semibold text-(--navy-800) sm:text-2xl">
+          <h3 className="mt-1 font-display text-xl font-semibold text-(--navy-800) sm:text-2xl">
             Our Event Management Services in Delhi NCR &amp; Across India
-          </h2>
+          </h3>
           <p className="mt-2 max-w-2xl font-sans text-sm leading-relaxed text-(--ink-500)">
             We don’t do copy-paste décor. We don’t force one theme on every event. And we don’t follow a boring
             fixed playbook. We create ideas at Humsafar Event based on your event, setting and atmosphere. We cater
@@ -287,9 +287,9 @@ export function HomeSeoContent() {
         {/* City coverage */}
         <div className="mt-12">
           <Eyebrow>Where We Work</Eyebrow>
-          <h2 className="mt-1 font-display text-xl font-semibold text-(--navy-800) sm:text-2xl">
+          <h3 className="mt-1 font-display text-xl font-semibold text-(--navy-800) sm:text-2xl">
             From Delhi NCR to Pan India, We Bring Celebrations to Life
-          </h2>
+          </h3>
           <p className="mt-2 max-w-2xl font-sans text-sm leading-relaxed text-(--ink-500)">
             Good events shouldn’t stop at one pin code. Delhi NCR is our main area, with strong coverage in the key
             celebration spots. We are also expanding event decoration and planning into Chandigarh, Rajasthan, and
@@ -301,9 +301,9 @@ export function HomeSeoContent() {
         {/* How it works */}
         <div className="mt-12">
           <Eyebrow>How Booking Works</Eyebrow>
-          <h2 className="mt-1 font-display text-xl font-semibold text-(--navy-800) sm:text-2xl">
+          <h3 className="mt-1 font-display text-xl font-semibold text-(--navy-800) sm:text-2xl">
             How to Get Started With Humsafar Event for Event Planning
-          </h2>
+          </h3>
           <p className="mt-2 max-w-2xl font-sans text-sm leading-relaxed text-(--ink-500)">
             Planning an event shouldn’t mean 10 vendor calls and 20+ screenshots floating in WhatsApp. We keep
             things simple and focused on turning your idea into something that can actually happen.
@@ -315,7 +315,7 @@ export function HomeSeoContent() {
                   {i + 1}
                 </span>
                 <div>
-                  <h3 className="font-heading text-sm font-semibold text-(--navy-800)">{step.title}</h3>
+                  <h4 className="font-heading text-sm font-semibold text-(--navy-800)">{step.title}</h4>
                   <p className="mt-1 font-sans text-sm leading-relaxed text-(--ink-500)">{step.body}</p>
                 </div>
               </li>
@@ -326,9 +326,9 @@ export function HomeSeoContent() {
         {/* Why choose us */}
         <div className="mt-12">
           <Eyebrow>Why Humsafar Event</Eyebrow>
-          <h2 className="mt-1 font-display text-xl font-semibold text-(--navy-800) sm:text-2xl">
+          <h3 className="mt-1 font-display text-xl font-semibold text-(--navy-800) sm:text-2xl">
             Why Choose Humsafar Event as the Best Event Management Company in Delhi NCR?
-          </h2>
+          </h3>
           <p className="mt-2 max-w-2xl font-sans text-sm leading-relaxed text-(--ink-500)">
             Humsafar Event is the best event management company in Delhi NCR for people who want their celebration
             to feel planned, polished, and personal, not pulled from a generic catalogue. We mix creative event
