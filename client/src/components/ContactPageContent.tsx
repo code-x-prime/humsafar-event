@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { PartyPopper, Phone, Mail, Clock, MapPin, Send, ChevronDown, Tag, User, Loader2, MessageCircle, Instagram, Facebook } from "lucide-react";
+import { PartyPopper, Phone, Mail, Clock, MapPin, Send, ChevronDown, Tag, User, Loader2, MessageCircle } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { postJson, ApiError } from "@/lib/api";
@@ -13,16 +13,25 @@ const PHONE_DISPLAY = "+91 98998 99150";
 const PHONE_TEL = "+919899899150";
 const EMAIL = "humsafarevent010@gmail.com";
 
+// lucide-react has no brand glyphs (Instagram/Facebook/Pinterest) — same
+// inline SVG paths used in Footer.tsx's social icons.
 const SOCIAL_LINKS = [
-  { label: "Instagram", href: "https://www.instagram.com/humsafareventofficial", Icon: Instagram },
-  { label: "Facebook", href: "https://www.facebook.com/share/1CCEGWwnN3/", Icon: Facebook },
+  {
+    label: "Instagram",
+    href: "https://www.instagram.com/humsafareventofficial",
+    path: "M12 2c2.7 0 3.06.01 4.12.06 1.06.05 1.79.22 2.43.47.66.26 1.22.6 1.77 1.15.55.55.9 1.11 1.15 1.77.25.64.42 1.37.47 2.43.05 1.06.06 1.42.06 4.12s-.01 3.06-.06 4.12c-.05 1.06-.22 1.79-.47 2.43a4.9 4.9 0 0 1-1.15 1.77 4.9 4.9 0 0 1-1.77 1.15c-.64.25-1.37.42-2.43.47-1.06.05-1.42.06-4.12.06s-3.06-.01-4.12-.06c-1.06-.05-1.79-.22-2.43-.47a4.9 4.9 0 0 1-1.77-1.15 4.9 4.9 0 0 1-1.15-1.77c-.25-.64-.42-1.37-.47-2.43C2.01 15.06 2 14.7 2 12s.01-3.06.06-4.12c.05-1.06.22-1.79.47-2.43.26-.66.6-1.22 1.15-1.77.55-.55 1.11-.9 1.77-1.15.64-.25 1.37-.42 2.43-.47C8.94 2.01 9.3 2 12 2zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 8.2a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4zm5.2-8.4a1.2 1.2 0 1 1-2.4 0 1.2 1.2 0 0 1 2.4 0z",
+  },
+  {
+    label: "Facebook",
+    href: "https://www.facebook.com/share/1CCEGWwnN3/",
+    path: "M13.5 21v-7.5H16l.4-3H13.5V8.4c0-.87.24-1.46 1.5-1.46H16.5V4.34C16.24 4.3 15.36 4.22 14.34 4.22c-2.13 0-3.6 1.3-3.6 3.7v2.58H8.25v3h2.49V21h2.76z",
+  },
   {
     label: "Pinterest",
     href: "https://pin.it/4ZEAmoHtv",
-    // lucide-react has no Pinterest glyph — inline path, same as the footer's.
     path: "M12 2C6.48 2 2 6.48 2 12c0 4.24 2.63 7.86 6.35 9.32-.09-.79-.16-2.01.03-2.87.18-.79 1.16-5.02 1.16-5.02s-.3-.6-.3-1.48c0-1.38.8-2.42 1.8-2.42.85 0 1.26.64 1.26 1.4 0 .86-.54 2.14-.83 3.33-.24.99.5 1.8 1.48 1.8 1.77 0 3.14-1.87 3.14-4.56 0-2.38-1.71-4.05-4.16-4.05-2.83 0-4.5 2.12-4.5 4.31 0 .86.33 1.78.74 2.28a.3.3 0 0 1 .07.28c-.08.32-.25 1-.29 1.14-.05.19-.15.23-.35.14-1.3-.6-2.11-2.5-2.11-4.02 0-3.27 2.38-6.28 6.86-6.28 3.6 0 6.4 2.57 6.4 6 0 3.58-2.26 6.46-5.39 6.46-1.05 0-2.04-.55-2.38-1.19l-.65 2.47c-.23.9-.87 2.02-1.29 2.71.98.3 2.01.46 3.08.46 5.52 0 10-4.48 10-10S17.52 2 12 2z",
   },
-] as const;
+];
 
 const QUICK_CONTACT = [
   {
@@ -150,13 +159,9 @@ export function ContactPageContent() {
                     aria-label={social.label}
                     className="flex h-9 w-9 items-center justify-center rounded-full border border-(--ink-300) text-(--ink-700) hover:border-(--orange-600) hover:text-(--orange-600)"
                   >
-                    {"Icon" in social ? (
-                      <social.Icon className="h-4 w-4" />
-                    ) : (
-                      <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                        <path d={social.path} />
-                      </svg>
-                    )}
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                      <path d={social.path} />
+                    </svg>
                   </a>
                 ))}
               </div>
