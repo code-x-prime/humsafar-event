@@ -2,15 +2,27 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { PartyPopper, Phone, Mail, Clock, MapPin, Send, ChevronDown, Tag, User, Loader2, MessageCircle } from "lucide-react";
+import { PartyPopper, Phone, Mail, Clock, MapPin, Send, ChevronDown, Tag, User, Loader2, MessageCircle, Instagram, Facebook } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { postJson, ApiError } from "@/lib/api";
+import { SHOW_SOCIAL_LINKS } from "@/lib/flags";
 
 const WHATSAPP_NUMBER = "919899899150";
 const PHONE_DISPLAY = "+91 98998 99150";
 const PHONE_TEL = "+919899899150";
 const EMAIL = "humsafarevent010@gmail.com";
+
+const SOCIAL_LINKS = [
+  { label: "Instagram", href: "https://www.instagram.com/humsafareventofficial", Icon: Instagram },
+  { label: "Facebook", href: "https://www.facebook.com/share/1CCEGWwnN3/", Icon: Facebook },
+  {
+    label: "Pinterest",
+    href: "https://pin.it/4ZEAmoHtv",
+    // lucide-react has no Pinterest glyph — inline path, same as the footer's.
+    path: "M12 2C6.48 2 2 6.48 2 12c0 4.24 2.63 7.86 6.35 9.32-.09-.79-.16-2.01.03-2.87.18-.79 1.16-5.02 1.16-5.02s-.3-.6-.3-1.48c0-1.38.8-2.42 1.8-2.42.85 0 1.26.64 1.26 1.4 0 .86-.54 2.14-.83 3.33-.24.99.5 1.8 1.48 1.8 1.77 0 3.14-1.87 3.14-4.56 0-2.38-1.71-4.05-4.16-4.05-2.83 0-4.5 2.12-4.5 4.31 0 .86.33 1.78.74 2.28a.3.3 0 0 1 .07.28c-.08.32-.25 1-.29 1.14-.05.19-.15.23-.35.14-1.3-.6-2.11-2.5-2.11-4.02 0-3.27 2.38-6.28 6.86-6.28 3.6 0 6.4 2.57 6.4 6 0 3.58-2.26 6.46-5.39 6.46-1.05 0-2.04-.55-2.38-1.19l-.65 2.47c-.23.9-.87 2.02-1.29 2.71.98.3 2.01.46 3.08.46 5.52 0 10-4.48 10-10S17.52 2 12 2z",
+  },
+] as const;
 
 const QUICK_CONTACT = [
   {
@@ -126,6 +138,29 @@ export function ContactPageContent() {
             <p className="mx-auto mt-3 max-w-xl font-sans text-sm text-(--ink-500) sm:text-base">
               Questions about a booking, a custom theme, or delivery? Our team typically replies within a few hours.
             </p>
+
+            {SHOW_SOCIAL_LINKS && (
+              <div className="mt-5 flex items-center justify-center gap-2">
+                {SOCIAL_LINKS.map((social) => (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={social.label}
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-(--ink-300) text-(--ink-700) hover:border-(--orange-600) hover:text-(--orange-600)"
+                  >
+                    {"Icon" in social ? (
+                      <social.Icon className="h-4 w-4" />
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                        <path d={social.path} />
+                      </svg>
+                    )}
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
