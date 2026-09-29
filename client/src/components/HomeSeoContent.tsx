@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown, ShieldCheck, Truck, Headset } from "lucide-react";
+import { whatsappLink } from "@/lib/whatsapp";
 
 const WHATSAPP_NUMBER = "919899899150";
 
@@ -364,7 +365,7 @@ export function HomeSeoContent() {
             take it from idea to ready.
           </p>
           <a
-            href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hi! I'd like to enquire about event decorations.")}`}
+            href={whatsappLink(WHATSAPP_NUMBER)}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-2 flex items-center gap-2 rounded-full bg-[#25D366] px-6 py-2.5 font-heading text-sm font-semibold text-white hover:bg-[#20bd5a]"

@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { X, User, ChevronRight } from "lucide-react";
 import { WHATSAPP_ONLY } from "@/lib/flags";
+import { whatsappLink } from "@/lib/whatsapp";
 
 interface CategoryNavItem {
   id: string;
@@ -132,7 +133,7 @@ export function MobileDrawer({
         {/* WhatsApp support card */}
         <div className="px-5 pb-4">
           <a
-            href={`https://wa.me/${whatsappNumber}`}
+            href={whatsappLink(whatsappNumber)}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-3 rounded-(--radius-card,16px) bg-[#25D366]/10 px-4 py-3 hover:bg-[#25D366]/15"

@@ -12,6 +12,7 @@ import {
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { TestimonialsCarousel, type Testimonial } from "@/components/TestimonialsCarousel";
+import { whatsappLink } from "@/lib/whatsapp";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
 const WHATSAPP_NUMBER = "919899899150";
@@ -106,7 +107,7 @@ export default async function AboutPage() {
               Explore Decorations
             </Link>
             <a
-              href={`https://wa.me/${WHATSAPP_NUMBER}`}
+              href={whatsappLink(WHATSAPP_NUMBER)}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 rounded-full border border-(--ink-300) px-7 py-3 font-heading text-sm font-semibold text-(--navy-800) hover:border-(--orange-400)"

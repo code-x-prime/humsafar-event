@@ -7,6 +7,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { postJson, ApiError } from "@/lib/api";
 import { SHOW_SOCIAL_LINKS } from "@/lib/flags";
+import { whatsappLink } from "@/lib/whatsapp";
 
 const WHATSAPP_NUMBER = "919899899150";
 const PHONE_DISPLAY = "+91 98998 99150";
@@ -39,7 +40,7 @@ const QUICK_CONTACT = [
     image: "/whatsapp.png",
     label: "WhatsApp",
     sub: "Chat instantly",
-    href: `https://wa.me/${WHATSAPP_NUMBER}`,
+    href: whatsappLink(WHATSAPP_NUMBER),
     iconBg: "bg-white",
     iconColor: "",
   },

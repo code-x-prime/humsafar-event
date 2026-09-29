@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Home, LayoutGrid, Phone, Headset } from "lucide-react";
+import { whatsappLink } from "@/lib/whatsapp";
 
 const WHATSAPP_NUMBER = "919899899150";
 const PHONE_TEL = "+919899899150";
@@ -65,7 +66,7 @@ export function MobileBottomNav() {
 
         {/* Floating WhatsApp button */}
         <a
-          href={`https://wa.me/${WHATSAPP_NUMBER}`}
+          href={whatsappLink(WHATSAPP_NUMBER)}
           target="_blank"
           rel="noopener noreferrer"
           className="relative -mt-7 flex flex-col items-center gap-1 px-2"
