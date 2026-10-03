@@ -14,6 +14,7 @@ router.post('/orders', validate(createShopOrderSchema), asyncHandler(shopCheckou
 router.get('/orders/:orderId', asyncHandler(shopCheckoutController.getOrder));
 router.get('/my-orders', asyncHandler(shopCheckoutController.listMyOrders));
 router.get('/my-orders/:orderId', asyncHandler(shopCheckoutController.getMyOrderDetail));
+router.get('/my-orders/:orderId/invoice', asyncHandler(shopCheckoutController.getInvoice));
 router.post('/orders/:orderId/verify', validate(verifyShopPaymentSchema), asyncHandler(shopCheckoutController.verifyPayment));
 router.post('/orders/:orderId/cancel', asyncHandler(shopCheckoutController.cancelOrder));
 router.post('/orders/:orderId/cancel-paid', validate(cancelPaidShopOrderSchema), asyncHandler(shopCheckoutController.cancelPaidOrder));

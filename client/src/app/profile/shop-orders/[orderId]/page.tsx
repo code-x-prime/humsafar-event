@@ -3,10 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowLeft, MapPin, CreditCard, Star, Truck, XCircle } from "lucide-react";
+import { ArrowLeft, MapPin, CreditCard, Star, Truck, XCircle, FileText, Loader2 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { getJson, postJson, ApiError } from "@/lib/api";
+import { openHtmlDocument } from "@/lib/openDocument";
 import { WriteReviewDialog } from "@/components/WriteReviewDialog";
 
 interface ShopOrderDetail {
@@ -36,6 +37,18 @@ interface ReviewableItem {
   productId: string;
 }
 
+const SHIPMENT_STATUS_LABELS: Record<string, string> = {
+  PENDING: "Getting ready to ship",
+  AWB_ASSIGNED: "Courier assigned",
+  PICKUP_SCHEDULED: "Pickup scheduled",
+  IN_TRANSIT: "On its way",
+  OUT_FOR_DELIVERY: "Out for delivery",
+  DELIVERED: "Delivered",
+  RTO: "Returning to us",
+  CANCELLED: "Shipment cancelled",
+  FAILED: "Getting ready to ship",
+};
+
 const SHOP_STATUS_STYLES: Record<string, string> = {
   PENDING_PAYMENT: "bg-(--surface-alt,#F7F9FC) text-(--ink-500)",
   CONFIRMED: "bg-(--blue-600)/10 text-(--blue-600)",
@@ -56,6 +69,8 @@ export default function ShopOrderDetailPage() {
   const [cancelReason, setCancelReason] = useState("");
   const [showCancelForm, setShowCancelForm] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
+  const [invoiceLoading, setInvoiceLoading] = useState(false);
+  const [invoiceError, setInvoiceError] = useState<string | null>(null);
 
   const loadReviewable = useCallback(() => {
     getJson<ReviewableItem[]>("/shop/reviews/reviewable")
@@ -79,6 +94,19 @@ export default function ShopOrderDetailPage() {
   }
 
   const canCancel = order && ["PENDING_PAYMENT", "CONFIRMED", "SHIPPED"].includes(order.status);
+
+  // Opens the invoice in a new tab, where it can be printed or saved as a PDF.
+  async function handleInvoice() {
+    setInvoiceLoading(true);
+    setInvoiceError(null);
+    try {
+      await openHtmlDocument(async () => (await getJson<{ html: string }>(`/shop/checkout/my-orders/${orderId}/invoice`)).html);
+    } catch (err) {
+      setInvoiceError(err instanceof Error ? err.message : "Could not open the invoice. Please try again.");
+    } finally {
+      setInvoiceLoading(false);
+    }
+  }
 
   async function handleCancel() {
     if (!cancelReason.trim()) {
@@ -120,11 +148,30 @@ export default function ShopOrderDetailPage() {
                 </span>
               </div>
 
+              {Number(order.amountPaid) > 0 && (
+                <div className="mt-3">
+                  <button
+                    onClick={handleInvoice}
+                    disabled={invoiceLoading}
+                    className="flex items-center gap-2 rounded-full border border-(--ink-300) bg-white px-4 py-2 font-heading text-xs font-semibold text-(--navy-800) hover:border-(--orange-600) disabled:opacity-60"
+                  >
+                    {invoiceLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText className="h-3.5 w-3.5" />}
+                    Download Invoice
+                  </button>
+                  {invoiceError && <p className="mt-1.5 font-sans text-xs text-(--coral-600)">{invoiceError}</p>}
+                </div>
+              )}
+
               {order.shipment && (
                 <div className="mt-4 rounded-2xl border border-(--ink-100) bg-white p-5">
-                  <div className="flex items-center gap-2">
-                    <Truck className="h-4 w-4 text-(--coral-600)" />
-                    <p className="font-heading text-sm font-semibold text-(--navy-800)">Shipment</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Truck className="h-4 w-4 text-(--coral-600)" />
+                      <p className="font-heading text-sm font-semibold text-(--navy-800)">Shipment</p>
+                    </div>
+                    <span className="font-sans text-xs font-semibold text-(--navy-800)">
+                      {SHIPMENT_STATUS_LABELS[order.shipment.status] || "In progress"}
+                    </span>
                   </div>
                   {order.shipment.awbCode ? (
                     <div className="mt-2 font-sans text-sm text-(--ink-700)">

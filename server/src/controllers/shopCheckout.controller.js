@@ -1,5 +1,6 @@
 import * as shopCheckoutService from '../services/shopCheckout.service.js';
 import * as paymentCheckoutService from '../services/payment.checkout.service.js';
+import { buildShopInvoice } from '../services/shopInvoice.service.js';
 import { success } from '../utils/apiResponse.js';
 import * as settings from '../config/settings.service.js';
 
@@ -36,6 +37,11 @@ export const listMyOrders = async (req, res) => {
 export const getMyOrderDetail = async (req, res) => {
   const order = await shopCheckoutService.getOrderDetailForUser(req.user.sub, req.params.orderId);
   return success(res, { data: order, message: 'Order fetched' });
+};
+
+export const getInvoice = async (req, res) => {
+  const data = await buildShopInvoice(req.params.orderId, { userId: req.user.sub });
+  return success(res, { data, message: 'Invoice ready' });
 };
 
 // Payment verification and cancellation are order-kind-agnostic now that

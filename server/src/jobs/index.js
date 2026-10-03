@@ -5,6 +5,7 @@ import { completePastOrders } from './completePastOrders.job.js';
 import { sendReviewReminders } from './sendReviewReminders.job.js';
 import { cleanupReviewUploads } from './cleanupReviewUploads.job.js';
 import { releaseAbandonedOrders } from './releaseAbandonedOrders.job.js';
+import { syncShipmentTracking } from './syncShipmentTracking.job.js';
 
 // eventReminder and balanceReminder jobs are still deferred — no data/UI
 // exists yet for those flows.
@@ -33,6 +34,12 @@ export function startJobs() {
   tasks.push(
     cron.schedule('*/10 * * * *', () => {
       releaseAbandonedOrders().catch((err) => logger.error({ err }, 'releaseAbandonedOrders job failed'));
+    })
+  );
+
+  tasks.push(
+    cron.schedule('0 */3 * * *', () => {
+      syncShipmentTracking().catch((err) => logger.error({ err }, 'syncShipmentTracking job failed'));
     })
   );
 

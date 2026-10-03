@@ -17,6 +17,21 @@ export const assign = async (req, res) => {
   return success(res, { data: shipment, message: 'Courier assigned' });
 };
 
+// POST /admin/shop-orders/shipments/:shipmentId/label — returns a fresh link to
+// the shipping label PDF (the sticker that goes on the parcel).
+export const label = async (req, res) => {
+  const url = await shopShipmentService.getLabel(req.params.shipmentId);
+  return success(res, { data: { url }, message: 'Label ready' });
+};
+
+// POST /admin/shop-orders/shipments/:shipmentId/pickup — asks the courier to
+// collect the parcel (retry for when the automatic request didn't go through).
+export const pickup = async (req, res) => {
+  const shipment = await shopShipmentService.schedulePickup(req.params.shipmentId);
+  req.auditContext = { entity: 'ShopShipment', entityId: shipment.id, after: shipment };
+  return success(res, { data: shipment, message: 'Pickup requested' });
+};
+
 export const refreshTracking = async (req, res) => {
   const shipment = await shopShipmentService.refreshTracking(req.params.shipmentId);
   return success(res, { data: shipment, message: 'Tracking updated' });

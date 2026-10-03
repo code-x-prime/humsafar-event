@@ -25,13 +25,16 @@ export function isConfigured() {
 // automatically once expired rather than logging in on every API call.
 let cachedToken = null;
 let cachedTokenExpiresAt = 0;
-let cachedEmail = null;
+// Keyed by email AND password, so changing the password in Settings takes effect
+// straight away instead of the old (still valid) token being reused for days.
+let cachedCredentials = null;
 
 async function getToken() {
   const cfg = getConfig();
   if (!cfg) throw notConfiguredError();
 
-  if (cachedToken && cachedEmail === cfg.shiprocketEmail && Date.now() < cachedTokenExpiresAt) {
+  const credentials = `${cfg.shiprocketEmail}:${cfg.shiprocketPassword}`;
+  if (cachedToken && cachedCredentials === credentials && Date.now() < cachedTokenExpiresAt) {
     return cachedToken;
   }
 
@@ -50,7 +53,7 @@ async function getToken() {
   }
 
   cachedToken = json.token;
-  cachedEmail = cfg.shiprocketEmail;
+  cachedCredentials = credentials;
   cachedTokenExpiresAt = Date.now() + 9 * 24 * 60 * 60 * 1000; // refresh a day early
   return cachedToken;
 }

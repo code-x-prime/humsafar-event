@@ -1,9 +1,20 @@
 import * as shopOrderService from '../services/shopOrder.service.js';
+import { buildShopInvoice } from '../services/shopInvoice.service.js';
 import { success } from '../utils/apiResponse.js';
 
 export const list = async (req, res) => {
   const { items, meta } = await shopOrderService.list(req.validatedQuery || req.query);
   return success(res, { data: items, message: 'Shop orders fetched', meta });
+};
+
+export const counts = async (req, res) => {
+  const data = await shopOrderService.counts();
+  return success(res, { data, message: 'Shop order counts fetched' });
+};
+
+export const invoice = async (req, res) => {
+  const data = await buildShopInvoice(req.params.id);
+  return success(res, { data, message: 'Invoice ready' });
 };
 
 export const getById = async (req, res) => {

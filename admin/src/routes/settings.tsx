@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { api } from '@/lib/api'
+import { toast } from 'sonner'
+import { api, ApiError } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -73,9 +74,14 @@ const GROUPS = [
     key: 'shipping',
     label: 'Shipping (Shop With Us)',
     icon: Truck,
-    description: 'Shiprocket account, pickup warehouse address, and shop tax rate — used only by Shop With Us orders.',
+    description: 'Shiprocket account, pickup warehouse address, shop tax rate and invoice details — used only by Shop With Us orders.',
     fields: [
-      { name: 'shiprocketEmail', label: 'Shiprocket Email', secret: false },
+      {
+        name: 'shiprocketEmail',
+        label: 'Shiprocket Email',
+        hint: 'Use a Shiprocket API user (Shiprocket → Settings → API → Create API User) — your normal login email often does not work with the API',
+        secret: false,
+      },
       { name: 'shiprocketPassword', label: 'Shiprocket Password', secret: true },
       {
         name: 'shipmentMode',
@@ -95,6 +101,8 @@ const GROUPS = [
       { name: 'warehouseState', label: 'Warehouse State', secret: false },
       { name: 'warehousePincode', label: 'Warehouse Pincode', secret: false },
       { name: 'shopTaxPercent', label: 'Tax / GST %', hint: 'A percentage added to every Shop With Us order, e.g. enter 18 for 18% GST', secret: false },
+      { name: 'businessName', label: 'Business Name (on invoice)', hint: 'Printed at the top of every invoice, e.g. Humsafar Events', secret: false },
+      { name: 'gstin', label: 'GSTIN (optional)', hint: 'If filled, invoices say "Tax Invoice" and split GST into CGST + SGST (same state) or IGST (other states). The warehouse address above is used as the seller address.', secret: false },
     ],
   },
 ] as const
@@ -121,6 +129,15 @@ function SettingsGroupCard({ group }: { group: (typeof GROUPS)[number] }) {
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     },
+    onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Could not save these settings. Please try again.'),
+  })
+
+  // Checks the SAVED Shiprocket email/password by logging in to Shiprocket, so a
+  // wrong password is found here instead of when the first order tries to ship.
+  const testMutation = useMutation({
+    mutationFn: () => api.get('/admin/shiprocket/test-connection'),
+    onSuccess: () => toast.success('Shiprocket connected successfully'),
+    onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Could not connect to Shiprocket'),
   })
 
   return (
@@ -190,6 +207,11 @@ function SettingsGroupCard({ group }: { group: (typeof GROUPS)[number] }) {
         </CardContent>
 
         <CardFooter className="justify-end gap-2 bg-transparent px-(--card-spacing) pt-4">
+          {group.key === 'shipping' && (
+            <Button type="button" variant="outline" disabled={isLoading || testMutation.isPending} onClick={() => testMutation.mutate()}>
+              {testMutation.isPending ? 'Testing...' : 'Test Shiprocket Login (save first)'}
+            </Button>
+          )}
           <Button type="submit" disabled={isLoading || saveMutation.isPending} className="min-w-24">
             {saveMutation.isPending ? (
               'Saving...'

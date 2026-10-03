@@ -1,0 +1,30 @@
+<div style="font-family: 'Jost', 'Inter', Arial, sans-serif; max-width: 480px; margin: 0 auto;">
+  <div style="background: #0E2A4D; padding: 24px; text-align: center;">
+    <span style="font-family: 'Playfair Display', Georgia, serif; color: #ffffff; font-size: 22px;">
+      Humsafar Events — Shop With Us
+    </span>
+  </div>
+  <div style="padding: 32px 24px; background: #ffffff; color: #0B1620;">
+    <p style="font-size: 16px; margin: 0 0 4px;">Hi {{customerName}},</p>
+    <p style="font-size: 15px; margin: 0 0 20px;">
+      Your order <strong>{{orderNumber}}</strong> has been delivered. We hope you love it!
+    </p>
+
+    {{#if orderUrl}}
+    <p style="text-align: center; margin: 0 0 20px;">
+      <a href="{{orderUrl}}" style="display: inline-block; background: #E0623D; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-size: 14px; font-weight: 600;">
+        View Order &amp; Download Invoice
+      </a>
+    </p>
+    {{/if}}
+
+    <p style="font-size: 13px; color: #6B7A88; margin-top: 24px;">
+      Something not right with your delivery? Reply to this email or reach us on WhatsApp and we'll sort it out.
+    </p>
+  </div>
+  <div style="background: #081C36; padding: 16px 24px; text-align: center;">
+    <p style="font-size: 12px; color: #D6E0EE; margin: 0;">
+      Humsafar Events &middot; Together in Every Journey
+    </p>
+  </div>
+</div>
