@@ -278,6 +278,16 @@ export async function remove(id) {
   return product;
 }
 
+// What the "Customize Your Order" dialog needs to know about an add-on.
+const PUBLIC_ADDON_SELECT = {
+  id: true,
+  name: true,
+  price: true,
+  image: true,
+  position: true,
+  category: { select: { id: true, name: true, position: true } },
+};
+
 // GET /api/v1/products/:slug — a product's full public detail page.
 export async function getPublicBySlug(slug) {
   const product = await prisma.product.findFirst({
@@ -320,17 +330,7 @@ export async function getPublicBySlug(slug) {
       },
       addOns: {
         where: { addOn: { isActive: true } },
-        select: {
-          addOn: {
-            select: {
-              id: true,
-              name: true,
-              price: true,
-              image: true,
-              category: { select: { id: true, name: true, position: true } },
-            },
-          },
-        },
+        select: { addOn: { select: PUBLIC_ADDON_SELECT } },
       },
       reviews: {
         where: { status: 'APPROVED' },
@@ -352,6 +352,18 @@ export async function getPublicBySlug(slug) {
   });
 
   if (!product) throw apiError(404, ERROR_CODES.NOT_FOUND, 'Product not found');
+
+  // Add-ons switched on for every product are offered here as well, so they
+  // show up without being assigned to each product one by one. An add-on that
+  // is both assigned and global is only listed once.
+  const sharedAddOns = await prisma.addOn.findMany({
+    where: { isActive: true, showOnAllProducts: true },
+    select: PUBLIC_ADDON_SELECT,
+  });
+  const addOnsById = new Map(product.addOns.map((a) => [a.addOn.id, a.addOn]));
+  for (const addOn of sharedAddOns) addOnsById.set(addOn.id, addOn);
+  product.addOns = [...addOnsById.values()].sort((a, b) => a.position - b.position).map((addOn) => ({ addOn }));
+
   return product;
 }
 

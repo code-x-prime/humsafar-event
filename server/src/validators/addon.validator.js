@@ -7,6 +7,7 @@ export const createAddOnSchema = z.object({
   imageR2Key: z.string().optional(),
   categoryId: z.string().optional(),
   isActive: z.boolean().optional(),
+  showOnAllProducts: z.boolean().optional(),
   position: z.coerce.number().int().optional(),
 });
 
@@ -23,8 +24,13 @@ export const listAddOnsQuerySchema = z.object({
 });
 
 export const toggleAddOnSchema = z.object({
-  field: z.enum(['isActive']),
+  field: z.enum(['isActive', 'showOnAllProducts']),
   value: z.boolean(),
+});
+
+// One click to show every active add-on on every product (or to undo that).
+export const bulkVisibilitySchema = z.object({
+  showOnAllProducts: z.boolean(),
 });
 
 export const createAddOnCategorySchema = z.object({

@@ -459,6 +459,9 @@ model AddOn {
   imageR2Key String?
   categoryId String?
   isActive   Boolean @default(true)
+  // When true the add-on is offered on every product, with no need to assign it
+  // to each one; otherwise it only shows on the products it is assigned to.
+  showOnAllProducts Boolean @default(false)
   position   Int     @default(0)
 
   category AddOnCategory? @relation(fields: [categoryId], references: [id])

@@ -27,6 +27,7 @@ interface AddOn {
   imageR2Key: string | null
   categoryId: string | null
   isActive: boolean
+  showOnAllProducts: boolean
   category: AddOnCategory | null
   _count?: { products: number }
 }
@@ -37,6 +38,9 @@ const EMPTY_FORM = {
   categoryId: '',
   image: null as UploadedImage | null,
   isActive: true,
+  // On by default so a new extra shows up right away; switch it off to limit
+  // the extra to products it is assigned to in the product editor.
+  showOnAllProducts: true,
 }
 
 function errorMessage(err: unknown) {
@@ -50,6 +54,7 @@ function formFromAddOn(addOn: AddOn) {
     categoryId: addOn.categoryId || '',
     image: addOn.image ? { mediaId: '', r2Key: addOn.imageR2Key || '', url: addOn.image } : null,
     isActive: addOn.isActive,
+    showOnAllProducts: addOn.showOnAllProducts,
   }
 }
 
@@ -61,6 +66,7 @@ function toPayload(form: typeof EMPTY_FORM) {
     image: form.image?.url,
     imageR2Key: form.image?.r2Key || undefined,
     isActive: form.isActive,
+    showOnAllProducts: form.showOnAllProducts,
   }
 }
 
@@ -181,11 +187,28 @@ export function AddOnsPage() {
   })
 
   const toggleMutation = useMutation({
-    mutationFn: ({ id, value }: { id: string; value: boolean }) =>
-      api.patch(`/admin/addons/${id}/toggle`, { field: 'isActive', value }),
+    mutationFn: ({ id, field, value }: { id: string; field: 'isActive' | 'showOnAllProducts'; value: boolean }) =>
+      api.patch(`/admin/addons/${id}/toggle`, { field, value }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['addons'] }),
     onError: (err) => toast.error(errorMessage(err)),
   })
+
+  const bulkVisibilityMutation = useMutation({
+    mutationFn: (showOnAllProducts: boolean) => api.patch('/admin/addons/bulk-visibility', { showOnAllProducts }),
+    onSuccess: (_data, showOnAllProducts) => {
+      queryClient.invalidateQueries({ queryKey: ['addons'] })
+      toast.success(
+        showOnAllProducts ? 'All active add-ons now show on every product' : 'Add-ons now show only on their assigned products'
+      )
+    },
+    onError: (err) => toast.error(errorMessage(err)),
+  })
+
+  function showEverywhere() {
+    if (window.confirm('Show every active add-on on every product? Customers will see all of them in "Customize Your Order".')) {
+      bulkVisibilityMutation.mutate(true)
+    }
+  }
 
   const removeMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/admin/addons/${id}`),
@@ -215,10 +238,14 @@ export function AddOnsPage() {
           <h1 className="font-display text-2xl font-semibold text-primary">Add-ons</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Extras customers can add when booking (Cake, Flower Bouquets, Balloon Gate, etc.) — shown in the
-            &quot;Customize Your Order&quot; dialog. Assign these to individual products from the product editor.
+            &quot;Customize Your Order&quot; dialog. Switch on &quot;All products&quot; to offer an extra on every
+            product, or leave it off and assign it to individual products from the product editor.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" onClick={showEverywhere} disabled={bulkVisibilityMutation.isPending}>
+            Show all on every product
+          </Button>
           <Button variant="secondary" onClick={() => setShowCategoryManager((v) => !v)}>
             Manage Categories
           </Button>
@@ -291,6 +318,20 @@ export function AddOnsPage() {
               <Switch id="a-active" checked={form.isActive} onCheckedChange={(v) => setForm({ ...form, isActive: v })} />
             </div>
 
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <Label htmlFor="a-all">Show on every product</Label>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Off = only on products you assign it to in the product editor.
+                </p>
+              </div>
+              <Switch
+                id="a-all"
+                checked={form.showOnAllProducts}
+                onCheckedChange={(v) => setForm({ ...form, showOnAllProducts: v })}
+              />
+            </div>
+
             <SheetFooter>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? 'Saving...' : 'Save'}
@@ -308,7 +349,8 @@ export function AddOnsPage() {
               <TableHead>Name</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Price</TableHead>
-              <TableHead>Used in</TableHead>
+              <TableHead>Assigned to</TableHead>
+              <TableHead>All products</TableHead>
               <TableHead>Active</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -323,13 +365,14 @@ export function AddOnsPage() {
                   <TableCell><Skeleton className="h-4 w-16" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-12" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-9 rounded-full" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-9 rounded-full" /></TableCell>
                   <TableCell><Skeleton className="ml-auto h-8 w-24" /></TableCell>
                 </TableRow>
               ))}
 
             {!isLoading && addOns.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-muted-foreground">
+                <TableCell colSpan={8} className="text-muted-foreground">
                   No add-ons yet.
                 </TableCell>
               </TableRow>
@@ -351,8 +394,15 @@ export function AddOnsPage() {
                   <TableCell className="text-sm text-muted-foreground">{addOn._count?.products ?? 0} product(s)</TableCell>
                   <TableCell>
                     <Switch
+                      checked={addOn.showOnAllProducts}
+                      onCheckedChange={(value) => toggleMutation.mutate({ id: addOn.id, field: 'showOnAllProducts', value })}
+                      aria-label={`Show ${addOn.name} on every product`}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Switch
                       checked={addOn.isActive}
-                      onCheckedChange={(value) => toggleMutation.mutate({ id: addOn.id, value })}
+                      onCheckedChange={(value) => toggleMutation.mutate({ id: addOn.id, field: 'isActive', value })}
                     />
                   </TableCell>
                   <TableCell className="text-right">

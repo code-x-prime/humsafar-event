@@ -39,6 +39,7 @@ interface AddOnOption {
   id: string
   name: string
   price: string
+  showOnAllProducts?: boolean
   category: { id: string; name: string } | null
 }
 
@@ -573,6 +574,11 @@ export function ProductFormPage() {
                     />
                     {a.name}
                     {a.category && <span className="text-xs text-muted-foreground">({a.category.name})</span>}
+                    {a.showOnAllProducts && (
+                      <span className="rounded-full bg-green-500/10 px-1.5 py-0.5 text-[10px] font-medium text-green-600">
+                        on all products
+                      </span>
+                    )}
                   </span>
                   <span className="text-xs text-muted-foreground">&#8377;{a.price}</span>
                 </label>

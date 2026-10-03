@@ -8,6 +8,7 @@ import {
   listAddOnsQuerySchema,
   toggleAddOnSchema,
   reorderAddOnsSchema,
+  bulkVisibilitySchema,
 } from '../../validators/addon.validator.js';
 
 const router = Router();
@@ -18,6 +19,7 @@ router
   .post(validate(createAddOnSchema), asyncHandler(addOnController.create));
 
 router.patch('/reorder', validate(reorderAddOnsSchema), asyncHandler(addOnController.reorder));
+router.patch('/bulk-visibility', validate(bulkVisibilitySchema), asyncHandler(addOnController.bulkVisibility));
 
 router
   .route('/:id')

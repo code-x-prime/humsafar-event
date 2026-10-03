@@ -40,3 +40,9 @@ export const reorder = async (req, res) => {
   req.auditContext = { entity: 'AddOn', entityId: 'bulk-reorder' };
   return success(res, { message: 'Add-ons reordered successfully' });
 };
+
+export const bulkVisibility = async (req, res) => {
+  const count = await addOnService.setShowOnAllProducts(req.body.showOnAllProducts);
+  req.auditContext = { entity: 'AddOn', entityId: 'bulk-visibility' };
+  return success(res, { data: { count }, message: `${count} add-on(s) updated` });
+};

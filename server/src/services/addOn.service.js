@@ -56,3 +56,15 @@ export async function reorder(items) {
     items.map(({ id, position }) => prisma.addOn.update({ where: { id }, data: { position } }))
   );
 }
+
+// Flips "show on every product" for all add-ons at once. Turning it on only
+// touches active add-ons (inactive ones stay hidden either way); turning it off
+// clears it everywhere, so each add-on falls back to the products it is
+// explicitly assigned to.
+export async function setShowOnAllProducts(value) {
+  const result = await prisma.addOn.updateMany({
+    where: value ? { isActive: true } : {},
+    data: { showOnAllProducts: value },
+  });
+  return result.count;
+}
