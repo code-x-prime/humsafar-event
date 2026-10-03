@@ -254,6 +254,13 @@ export function ReviewsManager({ config }: { config: ReviewsManagerConfig }) {
   })
 
   const reviews = data?.data ?? []
+
+  // Awaiting-approval count for the Pending tab, so new submissions are noticed.
+  const { data: pendingData } = useQuery({
+    queryKey: [config.queryKey, 'pending-count'],
+    queryFn: () => api.get<Review[]>(`${config.reviewsPath}?limit=1&status=PENDING`),
+  })
+  const pendingCount = (pendingData?.meta as { total?: number } | undefined)?.total ?? 0
   const refresh = () => queryClient.invalidateQueries({ queryKey: [config.queryKey] })
 
   // Quick one-click actions on a card: show/hide, save a reply.
@@ -388,6 +395,9 @@ export function ReviewsManager({ config }: { config: ReviewsManagerConfig }) {
               }`}
             >
               {f.label}
+              {f.value === 'PENDING' && pendingCount > 0 && (
+                <span className="ml-1.5 rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">{pendingCount}</span>
+              )}
             </button>
           ))}
         </div>
@@ -428,7 +438,13 @@ export function ReviewsManager({ config }: { config: ReviewsManagerConfig }) {
                         {STATUS_LABEL[review.status]}
                       </span>
                       <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${SOURCE_STYLES[review.source]}`}>
-                        {review.source === 'ADMIN' ? 'Added by admin' : review.orderId ? 'Customer · Verified order' : 'Customer'}
+                        {review.source === 'ADMIN'
+                          ? 'Added by admin'
+                          : !review.user
+                            ? 'Guest (not logged in)'
+                            : review.orderId
+                              ? 'Customer · Verified order'
+                              : 'Customer'}
                       </span>
                     </div>
                     <p className="mt-1 text-sm font-medium">{review.product.title}</p>

@@ -4,7 +4,8 @@ import { useState } from "react";
 import Lightbox from "yet-another-react-lightbox";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import "yet-another-react-lightbox/styles.css";
-import { MapPin, Star } from "lucide-react";
+import { MapPin, Pencil, Star } from "lucide-react";
+import { OpenReviewDialog } from "@/components/OpenReviewDialog";
 
 // Shared by the decoration and Shop With Us product pages — both return reviews
 // in this shape, so one component renders the rating summary and review list.
@@ -18,7 +19,8 @@ export interface PublicReview {
   // Set on reviews an admin added by hand; they win over the owning user's name.
   reviewerName?: string | null;
   reviewerCity?: string | null;
-  user: { name: string | null };
+  // Null for reviews left by a guest or added by an admin.
+  user: { name: string | null } | null;
   media: { url: string; type: string }[];
 }
 
@@ -45,15 +47,21 @@ export function ReviewsSection({
   reviews,
   avgRating,
   reviewCount,
+  productId,
+  endpoint,
 }: {
   reviews: PublicReview[];
   avgRating: string;
   reviewCount: number;
+  productId: string;
+  // "/reviews/open" for decoration products, "/shop/reviews/open" for Shop With Us.
+  endpoint: string;
 }) {
   const [visible, setVisible] = useState(PAGE_SIZE);
   const [lightbox, setLightbox] = useState<{ slides: { src: string }[]; index: number } | null>(null);
+  const [writing, setWriting] = useState(false);
 
-  if (reviews.length === 0) return null;
+  const hasReviews = reviews.length > 0;
 
   // Bars are computed from the reviews actually loaded — never fabricated.
   const starCounts = [5, 4, 3, 2, 1].map((star) => ({
@@ -61,7 +69,7 @@ export function ReviewsSection({
     count: reviews.filter((r) => r.rating === star).length,
   }));
   const total = Math.max(reviewCount, reviews.length);
-  const average = Number(avgRating) || reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+  const average = hasReviews ? Number(avgRating) || reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0;
 
   return (
     <section
@@ -69,13 +77,31 @@ export function ReviewsSection({
       aria-label="Customer reviews"
       className="mt-8 rounded-(--radius-card,16px) border border-(--ink-100) bg-white p-4 sm:p-6"
     >
-      <div className="flex items-center gap-2.5">
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-(--orange-50,#FFF4E8)">
-          <Star className="h-4.5 w-4.5 text-(--orange-500)" />
-        </span>
-        <h2 className="font-display text-lg font-semibold text-(--navy-800)">Customer reviews</h2>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-(--orange-50,#FFF4E8)">
+            <Star className="h-4.5 w-4.5 text-(--orange-500)" />
+          </span>
+          <h2 className="font-display text-lg font-semibold text-(--navy-800)">Customer reviews</h2>
+        </div>
+        <button
+          type="button"
+          onClick={() => setWriting(true)}
+          className="flex shrink-0 items-center gap-1.5 font-heading text-sm font-semibold text-accent hover:underline"
+        >
+          <Pencil className="h-3.5 w-3.5" />
+          Write review
+        </button>
       </div>
 
+      {!hasReviews && (
+        <p className="mt-4 rounded-2xl border border-dashed border-(--ink-300) px-4 py-8 text-center font-sans text-sm text-(--ink-500)">
+          No reviews yet — be the first to share your experience.
+        </p>
+      )}
+
+      {hasReviews && (
+        <>
       <div className="mt-4 flex flex-col gap-5 rounded-2xl border border-(--success,#15803D)/15 bg-(--success,#15803D)/5 p-4 sm:flex-row sm:items-center sm:gap-8 sm:p-5">
         <div className="shrink-0">
           <div className="flex items-center gap-2">
@@ -126,7 +152,7 @@ export function ReviewsSection({
 
       <div className="mt-2">
         {reviews.slice(0, visible).map((review) => {
-          const name = review.reviewerName || review.user.name || "Verified Customer";
+          const name = review.reviewerName || review.user?.name || "Verified Customer";
           const images = review.media.slice(0, 5);
           const goodRating = review.rating >= 4;
 
@@ -205,6 +231,10 @@ export function ReviewsSection({
           Show more reviews ({reviews.length - visible})
         </button>
       )}
+        </>
+      )}
+
+      <OpenReviewDialog open={writing} onClose={() => setWriting(false)} productId={productId} endpoint={endpoint} />
 
       {lightbox && (
         <Lightbox

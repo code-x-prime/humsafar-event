@@ -274,7 +274,13 @@ export function ShopProductDetail({ product }: { product: ShopProductDetailData 
           </div>
         )}
 
-        <ReviewsSection reviews={product.reviews} avgRating={product.avgRating} reviewCount={product.reviewCount} />
+        <ReviewsSection
+          reviews={product.reviews}
+          avgRating={product.avgRating}
+          reviewCount={product.reviewCount}
+          productId={product.id}
+          endpoint="/shop/reviews/open"
+        />
       </div>
 
       {/* Mobile-only fixed bottom action bar: WhatsApp circle + Add to Cart pill.

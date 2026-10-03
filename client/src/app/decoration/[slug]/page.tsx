@@ -47,7 +47,7 @@ export interface ProductDetailData {
     createdAt: string;
     reviewerName?: string | null;
     reviewerCity?: string | null;
-    user: { name: string | null };
+    user: { name: string | null } | null;
     media: { url: string; type: string }[];
   }[];
 }
@@ -99,7 +99,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           )}
 
           <ProductDetail product={product} />
-          <ProductReviews reviews={product.reviews} avgRating={product.avgRating} reviewCount={product.reviewCount} />
+          <ProductReviews
+            reviews={product.reviews}
+            avgRating={product.avgRating}
+            reviewCount={product.reviewCount}
+            productId={product.id}
+          />
           <RelatedProducts slug={product.slug} />
         </div>
       </main>

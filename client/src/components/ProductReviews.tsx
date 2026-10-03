@@ -7,10 +7,20 @@ export function ProductReviews({
   reviews,
   avgRating,
   reviewCount,
+  productId,
 }: {
   reviews: ProductDetailData["reviews"];
   avgRating: string;
   reviewCount: number;
+  productId: string;
 }) {
-  return <ReviewsSection reviews={reviews} avgRating={avgRating} reviewCount={reviewCount} />;
+  return (
+    <ReviewsSection
+      reviews={reviews}
+      avgRating={avgRating}
+      reviewCount={reviewCount}
+      productId={productId}
+      endpoint="/reviews/open"
+    />
+  );
 }

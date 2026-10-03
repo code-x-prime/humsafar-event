@@ -60,6 +60,10 @@ export const RATE_LIMITS = {
   GLOBAL_MAX: 1800,
   OTP_WINDOW_MS: 10 * 60 * 1000,
   OTP_MAX: 5,
+  // Open (guest-capable) review submissions — each still waits for admin
+  // approval, this just stops one address flooding the moderation queue.
+  REVIEW_WINDOW_MS: 60 * 60 * 1000,
+  REVIEW_MAX: 5,
 };
 
 export const PAGINATION = {

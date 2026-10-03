@@ -91,3 +91,56 @@ export async function getReviewableItems(userId) {
 
   return reviewable;
 }
+
+// A review straight from the product page. Anyone can write one — logged in or
+// not, with or without a purchase — but it is always saved as PENDING, so it
+// only appears on the site once an admin approves it. A logged-in customer is
+// limited to one review per product, and gets the "verified" order link when
+// they really did complete a booking for it.
+export async function submitOpenReview(userId, { productId, reviewerName, reviewerCity, rating, title, comment }) {
+  const product = await prisma.product.findFirst({
+    where: { id: productId, isActive: true },
+    select: { id: true, title: true },
+  });
+  if (!product) throw apiError(404, ERROR_CODES.NOT_FOUND, 'Product not found');
+
+  let orderId = null;
+  if (userId) {
+    const existing = await prisma.review.findFirst({ where: { productId, userId, source: 'CUSTOMER' }, select: { id: true } });
+    if (existing) throw apiError(409, ERROR_CODES.CONFLICT, 'You have already reviewed this product');
+
+    const order = await prisma.order.findFirst({
+      where: { userId, kind: 'BOOKING', status: 'COMPLETED', items: { some: { productId } } },
+      select: { id: true },
+    });
+    orderId = order?.id ?? null;
+  }
+
+  const review = await prisma.review.create({
+    data: {
+      productId,
+      userId: userId || null,
+      orderId,
+      reviewerName,
+      reviewerCity: reviewerCity || null,
+      rating,
+      title: title || null,
+      comment,
+      status: 'PENDING',
+      source: 'CUSTOMER',
+    },
+    select: { id: true },
+  });
+
+  const notifyEmail = settings.get('orderNotifyEmail');
+  if (notifyEmail) {
+    sendMail({
+      to: notifyEmail,
+      template: 'review-submitted-admin',
+      subject: `New review submitted — ${product.title}`,
+      data: { productTitle: product.title, customerName: reviewerName, rating, title: title || null, comment },
+    }).catch((err) => logger.error({ err, reviewId: review.id }, 'Failed to email admin about new review'));
+  }
+
+  return review;
+}

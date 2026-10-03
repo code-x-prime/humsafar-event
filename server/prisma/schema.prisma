@@ -835,7 +835,9 @@ model Review {
   id         String       @id @default(cuid())
   orderId    String? // verified purchase only
   productId  String
-  userId     String
+  // Null for a guest review (submitted without logging in) — the reviewer's
+  // name/city then live only in reviewerName/reviewerCity.
+  userId     String?
   rating     Int
   title      String?
   comment    String?
@@ -850,7 +852,7 @@ model Review {
   createdAt  DateTime     @default(now())
 
   product Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
-  user    User          @relation(fields: [userId], references: [id])
+  user    User?         @relation(fields: [userId], references: [id])
   media   ReviewMedia[]
 
   @@index([productId, status])
@@ -1084,7 +1086,8 @@ model ShopProductReview {
   id         String           @id @default(cuid())
   orderId    String? // verified purchase only
   productId  String
-  userId     String
+  // Null for a guest review (submitted without logging in).
+  userId     String?
   rating     Int
   title      String?
   comment    String?
@@ -1097,7 +1100,7 @@ model ShopProductReview {
   createdAt  DateTime         @default(now())
 
   product ShopProduct              @relation(fields: [productId], references: [id], onDelete: Cascade)
-  user    User                     @relation(fields: [userId], references: [id])
+  user    User?                    @relation(fields: [userId], references: [id])
   media   ShopProductReviewMedia[]
 
   @@index([productId, status])
