@@ -45,6 +45,8 @@ export interface ProductDetailData {
     comment: string | null;
     adminReply: string | null;
     createdAt: string;
+    reviewerName?: string | null;
+    reviewerCity?: string | null;
     user: { name: string | null };
     media: { url: string; type: string }[];
   }[];

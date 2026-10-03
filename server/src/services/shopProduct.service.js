@@ -216,7 +216,7 @@ export async function getPublicBySlug(slug) {
       reviews: {
         where: { status: 'APPROVED' },
         orderBy: { createdAt: 'desc' },
-        take: 20,
+        take: 50,
         select: {
           id: true,
           rating: true,
@@ -224,6 +224,8 @@ export async function getPublicBySlug(slug) {
           comment: true,
           createdAt: true,
           adminReply: true,
+          reviewerName: true,
+          reviewerCity: true,
           user: { select: { name: true } },
           media: { select: { url: true, type: true } },
         },

@@ -342,6 +342,8 @@ export async function getPublicBySlug(slug) {
           comment: true,
           adminReply: true,
           createdAt: true,
+          reviewerName: true,
+          reviewerCity: true,
           user: { select: { name: true } },
           media: { select: { url: true, type: true } },
         },

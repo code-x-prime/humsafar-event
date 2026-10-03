@@ -11,6 +11,12 @@ export const getById = async (req, res) => {
   return success(res, { data: review, message: 'Shop review fetched' });
 };
 
+export const create = async (req, res) => {
+  const review = await shopReviewService.create(req.body, req.user?.sub);
+  req.auditContext = { entity: 'ShopProductReview', entityId: review.id, after: review };
+  return success(res, { status: 201, data: review, message: 'Shop review created successfully' });
+};
+
 export const update = async (req, res) => {
   const review = await shopReviewService.update(req.params.id, req.body);
   req.auditContext = { entity: 'ShopProductReview', entityId: review.id, after: review };

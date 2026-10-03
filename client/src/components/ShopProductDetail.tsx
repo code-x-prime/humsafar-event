@@ -12,6 +12,7 @@ import "yet-another-react-lightbox/styles.css";
 import { useCart } from "@/context/CartContext";
 import { getJson } from "@/lib/api";
 import { WHATSAPP_ONLY } from "@/lib/flags";
+import { ReviewsSection, type PublicReview } from "@/components/ReviewsSection";
 import {
   Carousel,
   CarouselContent,
@@ -27,17 +28,6 @@ interface ShopProductMedia {
   alt: string | null;
   type: "IMAGE" | "VIDEO";
   isPrimary: boolean;
-}
-
-interface ShopReview {
-  id: string;
-  rating: number;
-  title: string | null;
-  comment: string | null;
-  createdAt: string;
-  adminReply: string | null;
-  user: { name: string | null };
-  media: { url: string; type: string }[];
 }
 
 export interface ShopProductDetailData {
@@ -57,17 +47,7 @@ export interface ShopProductDetailData {
   metaDescription: string | null;
   media: ShopProductMedia[];
   categories: { category: { id: string; name: string; slug: string } }[];
-  reviews: ShopReview[];
-}
-
-function StarRow({ rating, size = "h-4 w-4" }: { rating: number; size?: string }) {
-  return (
-    <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((n) => (
-        <Star key={n} className={`${size} ${n <= rating ? "fill-(--orange-500) text-(--orange-500)" : "text-(--ink-300)"}`} />
-      ))}
-    </div>
-  );
+  reviews: PublicReview[];
 }
 
 export function ShopProductDetail({ product }: { product: ShopProductDetailData }) {
@@ -294,32 +274,7 @@ export function ShopProductDetail({ product }: { product: ShopProductDetailData 
           </div>
         )}
 
-        {/* Reviews */}
-        <div className="mt-8 rounded-(--radius-card,16px) border border-(--ink-100) bg-white p-5">
-          <h2 className="font-display text-lg font-semibold text-(--navy-800)">Reviews</h2>
-          {product.reviews.length === 0 ? (
-            <p className="mt-2 font-sans text-sm text-(--ink-500)">No reviews yet.</p>
-          ) : (
-            <div className="mt-3 flex flex-col gap-4">
-              {product.reviews.map((review) => (
-                <div key={review.id} className="border-t border-(--ink-100) pt-4 first:border-t-0 first:pt-0">
-                  <div className="flex items-center gap-2">
-                    <StarRow rating={review.rating} size="h-3.5 w-3.5" />
-                    <span className="font-heading text-xs font-semibold text-(--navy-800)">{review.user.name || "Customer"}</span>
-                  </div>
-                  {review.title && <p className="mt-1.5 font-heading text-sm font-semibold text-(--navy-800)">{review.title}</p>}
-                  {review.comment && <p className="mt-1 font-sans text-sm text-(--ink-700)">{review.comment}</p>}
-                  {review.adminReply && (
-                    <div className="mt-2 rounded-lg bg-(--surface-alt,#F7F9FC) p-2.5 font-sans text-xs text-(--ink-700)">
-                      <span className="font-semibold">Reply from Humsafar Events: </span>
-                      {review.adminReply}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <ReviewsSection reviews={product.reviews} avgRating={product.avgRating} reviewCount={product.reviewCount} />
       </div>
 
       {/* Mobile-only fixed bottom action bar: WhatsApp circle + Add to Cart pill.

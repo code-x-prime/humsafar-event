@@ -88,6 +88,13 @@ enum ReviewStatus {
   REJECTED
 }
 
+// Where a review came from: a real customer submitting it after an order, or an
+// admin adding it by hand (e.g. feedback collected offline).
+enum ReviewSource {
+  CUSTOMER
+  ADMIN
+}
+
 enum EnquirySource {
   CONTACT
   POPUP
@@ -835,6 +842,11 @@ model Review {
   status     ReviewStatus @default(PENDING)
   adminReply String?
   isFeatured Boolean      @default(false)
+  // Admin-added reviews are owned by the admin's user row, so the name/city
+  // shown on the site come from these fields instead of the owning user.
+  source       ReviewSource @default(CUSTOMER)
+  reviewerName String?
+  reviewerCity String?
   createdAt  DateTime     @default(now())
 
   product Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -1079,6 +1091,9 @@ model ShopProductReview {
   status     ShopReviewStatus @default(PENDING)
   adminReply String?
   isFeatured Boolean          @default(false)
+  source       ReviewSource @default(CUSTOMER)
+  reviewerName String?
+  reviewerCity String?
   createdAt  DateTime         @default(now())
 
   product ShopProduct              @relation(fields: [productId], references: [id], onDelete: Cascade)

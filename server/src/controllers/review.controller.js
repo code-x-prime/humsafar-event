@@ -12,7 +12,7 @@ export const getById = async (req, res) => {
 };
 
 export const create = async (req, res) => {
-  const review = await reviewService.create(req.body);
+  const review = await reviewService.create(req.body, req.user?.sub);
   req.auditContext = { entity: 'Review', entityId: review.id, after: review };
   return success(res, { status: 201, data: review, message: 'Review created successfully' });
 };
