@@ -1,6 +1,7 @@
 import { prisma } from '../config/db.js';
 import { ERROR_CODES } from '../config/constants.js';
-import { nowUTC } from '../utils/datetime.js';
+import { generateUniqueOrderNumber } from '../utils/orderNumber.js';
+import { cancelStalePendingOrders } from './payment.checkout.service.js';
 import { createRazorpayOrder } from '../lib/razorpay.js';
 import * as settings from '../config/settings.service.js';
 
@@ -9,13 +10,6 @@ function apiError(status, code, message) {
   err.status = status;
   err.code = code;
   return err;
-}
-
-function generateOrderNumber() {
-  const now = nowUTC();
-  const yyyymm = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
-  const rand = Math.floor(10000 + Math.random() * 90000);
-  return `HS-${yyyymm}-${rand}`;
 }
 
 export async function getOrderForUser(userId, orderId) {
@@ -28,8 +22,15 @@ export async function getOrderForUser(userId, orderId) {
 }
 
 export async function listOrdersForUser(userId) {
+  // Only orders that were actually placed: an attempt abandoned before paying
+  // (still PENDING_PAYMENT, or cancelled without any money taken) never became
+  // an order and shouldn't be listed as one.
   const orders = await prisma.order.findMany({
-    where: { userId, kind: 'SHOP' },
+    where: {
+      userId,
+      kind: 'SHOP',
+      NOT: [{ status: 'PENDING_PAYMENT' }, { status: 'CANCELLED', amountPaid: 0 }],
+    },
     orderBy: { createdAt: 'desc' },
     include: { items: true, shipment: { select: { status: true, awbCode: true, trackingUrl: true, courierName: true } } },
   });
@@ -170,10 +171,11 @@ export async function previewOrder(userId) {
   };
 }
 
-// POST /shop/checkout/orders — prices the cart fresh, creates the unified
-// Order (kind=SHOP) + OrderItems with a full product snapshot, and opens a
-// Razorpay order for the total. Nothing is marked paid or shipped here —
-// that happens once payment.checkout.service.js verifies a real payment.
+// POST /shop/checkout/orders — prices the cart fresh, opens a Razorpay order
+// for the total, then creates the unified Order (kind=SHOP) + OrderItems with
+// a full product snapshot and its Payment row. Nothing is marked paid or
+// shipped here — that happens once payment.checkout.service.js verifies a
+// real payment.
 export async function createOrder(userId, { addressId, customerNote }) {
   const address = await prisma.shopAddress.findFirst({ where: { id: addressId, userId } });
   if (!address) throw apiError(404, ERROR_CODES.NOT_FOUND, 'Address not found');
@@ -183,11 +185,34 @@ export async function createOrder(userId, { addressId, customerNote }) {
   const taxPercent = Number(settings.get('shopTaxPercent', 0)) || 0;
   const taxAmount = Math.round(subtotal * (taxPercent / 100) * 100) / 100;
   const shippingCharge = 0;
-  const total = subtotal + taxAmount + shippingCharge;
+  const total = Math.round((subtotal + taxAmount + shippingCharge) * 100) / 100;
+
+  // Razorpay can't charge less than ₹1.
+  if (total < 1) {
+    throw apiError(422, ERROR_CODES.VALIDATION_ERROR, 'This order total is too low to pay online — please contact us to complete the order');
+  }
+
+  // An earlier unpaid attempt by this customer is replaced by this one, so
+  // abandoned checkouts don't pile up in their history.
+  await cancelStalePendingOrders(userId, 'SHOP');
+
+  const orderNumber = await generateUniqueOrderNumber('HS');
+
+  // The Razorpay order is opened before the Order row is written, so a gateway
+  // failure leaves nothing behind — no unpaid order in the customer's history.
+  let razorpayOrder;
+  try {
+    razorpayOrder = await createRazorpayOrder({ amountRupees: total, receipt: orderNumber, notes: { orderNumber, userId } });
+  } catch (err) {
+    if (err.code === ERROR_CODES.NOT_CONFIGURED) {
+      throw apiError(503, ERROR_CODES.NOT_CONFIGURED, "Online payment isn't available right now — please contact us on WhatsApp to complete your order.");
+    }
+    throw err;
+  }
 
   const order = await prisma.order.create({
     data: {
-      orderNumber: generateOrderNumber(),
+      orderNumber,
       kind: 'SHOP',
       userId,
       status: 'PENDING_PAYMENT',
@@ -220,31 +245,12 @@ export async function createOrder(userId, { addressId, customerNote }) {
           },
         })),
       },
+      payments: {
+        create: { razorpayOrderId: razorpayOrder.id, amount: total, status: 'CREATED' },
+      },
     },
     include: { items: true },
   });
-
-  let razorpayOrder = null;
-  try {
-    razorpayOrder = await createRazorpayOrder({
-      amountRupees: total,
-      receipt: order.orderNumber,
-      notes: { orderId: order.id, userId },
-    });
-  } catch (err) {
-    if (err.code !== ERROR_CODES.NOT_CONFIGURED) throw err;
-  }
-
-  if (razorpayOrder) {
-    await prisma.payment.create({
-      data: {
-        orderId: order.id,
-        razorpayOrderId: razorpayOrder.id,
-        amount: total,
-        status: 'CREATED',
-      },
-    });
-  }
 
   return { order, razorpayOrder, amountDueNow: total };
 }

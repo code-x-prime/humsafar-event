@@ -1,7 +1,9 @@
 import { prisma } from '../config/db.js';
 import { ERROR_CODES } from '../config/constants.js';
-import { nowUTC } from '../utils/datetime.js';
+import { nowIST } from '../utils/datetime.js';
+import { generateUniqueOrderNumber } from '../utils/orderNumber.js';
 import { validateCoupon, getEligibleCoupons } from './couponValidation.service.js';
+import { cancelStalePendingOrders } from './payment.checkout.service.js';
 import { createRazorpayOrder } from '../lib/razorpay.js';
 
 const SLOT_HOLD_MINUTES = 15;
@@ -26,8 +28,15 @@ export async function getOrderForUser(userId, orderId) {
 // first, for the profile page's order history list. (Shop With Us orders
 // have their own listing — see shopCheckout.service.js.)
 export async function listOrdersForUser(userId) {
+  // Only bookings that were actually placed: an attempt that was abandoned
+  // before paying (still PENDING_PAYMENT, or cancelled without any money
+  // taken) never became a booking and shouldn't be listed as one.
   const orders = await prisma.order.findMany({
-    where: { userId, kind: 'BOOKING' },
+    where: {
+      userId,
+      kind: 'BOOKING',
+      NOT: [{ status: 'PENDING_PAYMENT' }, { status: 'CANCELLED', amountPaid: 0 }],
+    },
     orderBy: { createdAt: 'desc' },
     include: { items: true },
   });
@@ -100,12 +109,9 @@ export async function getOrderDetailForUser(userId, orderId) {
   };
 }
 
-function generateOrderNumber() {
-  const now = nowUTC();
-  const yyyymm = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
-  const rand = Math.floor(10000 + Math.random() * 90000);
-  return `HE-${yyyymm}-${rand}`;
-}
+// Money amounts are carried as plain numbers; rounding to paise after each
+// calculation keeps floating-point noise (0.1 + 0.2) out of what is charged.
+const round2 = (n) => Math.round(n * 100) / 100;
 
 // Builds the priced line items + totals from the user's current cart —
 // shared by the "review my order" preview and the actual order-create step
@@ -137,6 +143,15 @@ async function priceCart(userId) {
   const addOnIds = [...new Set(cart.items.flatMap((item) => item.addOnIds))];
   const addOns = addOnIds.length ? await prisma.addOn.findMany({ where: { id: { in: addOnIds } } }) : [];
   const addOnsById = new Map(addOns.map((a) => [a.id, a]));
+
+  // An add-on that was switched off or deleted after the customer added it
+  // must not be silently dropped (the price would change under them) or
+  // silently charged — tell them so they can remove it.
+  for (const item of cart.items) {
+    if (item.addOnIds.some((id) => !addOnsById.get(id)?.isActive)) {
+      throw apiError(422, ERROR_CODES.VALIDATION_ERROR, `An add-on for "${item.product.title}" is no longer available — please remove it from your cart and try again`);
+    }
+  }
 
   const lineItems = cart.items.map((item) => {
     const itemAddOns = item.addOnIds.map((id) => addOnsById.get(id)).filter(Boolean);
@@ -234,6 +249,31 @@ export async function listEligibleCoupons(userId, { cityId } = {}) {
   return getEligibleCoupons(userId, { subtotal, productSubtotal: subtotal - addOnTotal, categoryIds, cityId });
 }
 
+// Checks that a booking can actually be taken for this date, city and slot —
+// the booking page only offers valid choices, but the server can't assume the
+// request came from that page. Rejects past dates, inactive or wrong-city
+// slots, and dates the admin has blacked out.
+async function assertBookable({ cityId, timeSlotId, eventDate }) {
+  const today = nowIST().startOf('day').toDate();
+  if (eventDate < today) {
+    throw apiError(422, ERROR_CODES.VALIDATION_ERROR, 'Cannot book a date in the past');
+  }
+
+  const blackout = await prisma.slotBlackout.findFirst({
+    where: {
+      date: eventDate,
+      AND: [
+        { OR: [{ cityId }, { cityId: null }] },
+        // A blackout with no slot closes the whole day; one with a slot closes only that slot.
+        { OR: timeSlotId ? [{ timeSlotId: null }, { timeSlotId }] : [{ timeSlotId: null }] },
+      ],
+    },
+  });
+  if (blackout) {
+    throw apiError(409, ERROR_CODES.CONFLICT, 'We are not taking bookings for that date or time — please pick another one');
+  }
+}
+
 // Reserves slot capacity for the duration of checkout so two customers can't
 // both "confirm" the last slot at the same time — released on failure/expiry,
 // converted to a real booking once payment succeeds.
@@ -241,9 +281,11 @@ async function holdSlot({ cityId, timeSlotId, eventDate }) {
   if (!timeSlotId) return null;
 
   const slot = await prisma.timeSlot.findUnique({ where: { id: timeSlotId } });
-  if (!slot) throw apiError(404, ERROR_CODES.NOT_FOUND, 'Time slot not found');
+  if (!slot || !slot.isActive || (slot.cityId && slot.cityId !== cityId)) {
+    throw apiError(404, ERROR_CODES.NOT_FOUND, 'That time slot is not available');
+  }
 
-  return prisma.$transaction(async (tx) => {
+  const hold = await prisma.$transaction(async (tx) => {
     const [booking, activeHolds] = await Promise.all([
       tx.slotBooking.findUnique({ where: { date_timeSlotId_cityId: { date: eventDate, timeSlotId, cityId } } }),
       tx.slotHold.count({ where: { date: eventDate, timeSlotId, cityId, status: 'ACTIVE', expiresAt: { gt: new Date() } } }),
@@ -264,14 +306,19 @@ async function holdSlot({ cityId, timeSlotId, eventDate }) {
       },
     });
   });
+
+  return { hold, slot };
 }
 
 // POST /checkout/orders — the real thing: prices the cart fresh, holds the
-// slot, creates the Order + OrderItems (with a full pricing/product/add-on
-// snapshot so later catalog edits never change what a past order shows), and
-// opens a Razorpay order for the amount actually due right now (full price,
-// or the product's advance amount for ADVANCE mode). Nothing is marked paid
-// here — that only happens once payment.service.js verifies a real payment.
+// slot, opens the Razorpay order, and only then creates the Order + OrderItems
+// (with a full pricing/product/add-on snapshot so later catalog edits never
+// change what a past order shows) together with its Payment row. The order
+// is written last so a payment-gateway failure leaves nothing behind — no
+// unpaid order in the customer's history, no slot stuck on hold. The amount
+// charged is the amount due right now (full price, or the product's advance
+// amount for ADVANCE mode). Nothing is marked paid here — that only happens
+// once a real payment is verified (payment.checkout.service.js).
 export async function createOrder(userId, { addressId, eventDate, timeSlotId, paymentMode = 'FULL', couponCode, customerNote }) {
   const address = await prisma.address.findFirst({ where: { id: addressId, userId } });
   if (!address) throw apiError(404, ERROR_CODES.NOT_FOUND, 'Address not found');
@@ -281,8 +328,10 @@ export async function createOrder(userId, { addressId, eventDate, timeSlotId, pa
     throw apiError(422, ERROR_CODES.VALIDATION_ERROR, 'Invalid event date');
   }
 
-  const { cart, lineItems, subtotal, addOnTotal, categoryIds } = await priceCart(userId);
+  const { lineItems, subtotal, addOnTotal, categoryIds } = await priceCart(userId);
   const productSubtotal = subtotal - addOnTotal;
+
+  await assertBookable({ cityId: address.cityId, timeSlotId, eventDate: eventDateObj });
 
   let discount = 0;
   let appliedCouponCode = null;
@@ -295,104 +344,110 @@ export async function createOrder(userId, { addressId, eventDate, timeSlotId, pa
   const city = await prisma.city.findUnique({ where: { id: address.cityId } });
   const deliveryCharge = Number(city?.deliveryCharge || 0);
 
-  const slotHold = await holdSlot({ cityId: address.cityId, timeSlotId, eventDate: eventDateObj });
-  const surgeCharge = slotHold
-    ? Number((await prisma.timeSlot.findUnique({ where: { id: timeSlotId } }))?.surgeCharge || 0)
-    : 0;
+  // Earlier unpaid attempts by this customer go first, so their slot holds
+  // can't block the slot they are about to book again.
+  await cancelStalePendingOrders(userId, 'BOOKING');
 
-  const total = Math.max(0, subtotal - discount) + deliveryCharge + surgeCharge;
+  const held = await holdSlot({ cityId: address.cityId, timeSlotId, eventDate: eventDateObj });
+  const slotHold = held?.hold ?? null;
+  const surgeCharge = Number(held?.slot.surgeCharge || 0);
 
-  const productWithAdvance = lineItems.find((li) => li.product.advancePercent || li.product.advanceAmount)?.product;
-  let amountDueNow = total;
-  if (paymentMode === 'ADVANCE') {
-    amountDueNow = computeAdvanceDueNow({
-      productSubtotal,
-      discount,
-      addOnAndFeesTotal: addOnTotal + deliveryCharge + surgeCharge,
-      productWithAdvance,
-    });
-  }
-
-  const order = await prisma.order.create({
-    data: {
-      orderNumber: generateOrderNumber(),
-      kind: 'BOOKING',
-      userId,
-      status: 'PENDING_PAYMENT',
-      eventDate: eventDateObj,
-      timeSlotId: timeSlotId || undefined,
-      cityId: address.cityId,
-      addressSnapshot: {
-        fullName: address.fullName,
-        phone: address.phone,
-        line1: address.line1,
-        line2: address.line2,
-        landmark: address.landmark,
-        pincode: address.pincode,
-        cityName: city?.name,
-      },
-      subtotal,
-      addOnTotal: lineItems.reduce((sum, li) => sum + li.addOns.reduce((s, a) => s + Number(a.price), 0) * li.cartItem.qty, 0),
-      deliveryCharge,
-      surgeCharge,
-      couponCode: appliedCouponCode || undefined,
-      discount,
-      total,
-      amountDue: amountDueNow,
-      paymentMode,
-      source: 'WEB',
-      customerNote: customerNote || undefined,
-      items: {
-        create: lineItems.map((li) => ({
-          productId: li.product.id,
-          qty: li.cartItem.qty,
-          unitPrice: li.unitPrice,
-          subtotal: li.subtotal,
-          productSnapshot: {
-            title: li.product.title,
-            slug: li.product.slug,
-            price: li.product.price,
-            variant: li.variant ? { id: li.variant.id, name: li.variant.name, swatches: li.variant.swatches } : null,
-          },
-          addOnsSnapshot: li.addOns.map((a) => ({ id: a.id, name: a.name, price: a.price })),
-        })),
-      },
-    },
-    include: { items: true },
-  });
-
-  if (slotHold) {
-    await prisma.slotHold.update({ where: { id: slotHold.id }, data: { orderId: order.id } });
-  }
-
-  let razorpayOrder = null;
   try {
-    razorpayOrder = await createRazorpayOrder({
-      amountRupees: amountDueNow,
-      receipt: order.orderNumber,
-      notes: { orderId: order.id, userId },
-    });
-  } catch (err) {
-    // Razorpay not configured (or briefly down) — the order still exists in
-    // PENDING_PAYMENT so the customer can retry payment once it's fixed,
-    // rather than losing their cart/slot hold entirely.
-    if (err.code !== ERROR_CODES.NOT_CONFIGURED) throw err;
-  }
+    const total = round2(Math.max(0, subtotal - discount) + deliveryCharge + surgeCharge);
 
-  if (razorpayOrder) {
-    await prisma.payment.create({
+    const productWithAdvance = lineItems.find((li) => li.product.advancePercent || li.product.advanceAmount)?.product;
+    let amountDueNow = total;
+    if (paymentMode === 'ADVANCE') {
+      amountDueNow = round2(
+        computeAdvanceDueNow({
+          productSubtotal,
+          discount,
+          addOnAndFeesTotal: addOnTotal + deliveryCharge + surgeCharge,
+          productWithAdvance,
+        })
+      );
+    }
+
+    // Razorpay can't charge less than ₹1 — a coupon that wipes out the whole
+    // price would otherwise fail with an unhelpful gateway error.
+    if (amountDueNow < 1) {
+      throw apiError(422, ERROR_CODES.VALIDATION_ERROR, 'This order total is too low to pay online — please contact us to complete the booking');
+    }
+
+    const orderNumber = await generateUniqueOrderNumber('HE');
+
+    let razorpayOrder;
+    try {
+      razorpayOrder = await createRazorpayOrder({ amountRupees: amountDueNow, receipt: orderNumber, notes: { orderNumber, userId } });
+    } catch (err) {
+      if (err.code === ERROR_CODES.NOT_CONFIGURED) {
+        throw apiError(503, ERROR_CODES.NOT_CONFIGURED, "Online payment isn't available right now — please contact us on WhatsApp to complete your booking.");
+      }
+      throw err;
+    }
+
+    const order = await prisma.order.create({
       data: {
-        orderId: order.id,
-        razorpayOrderId: razorpayOrder.id,
-        amount: amountDueNow,
-        status: 'CREATED',
+        orderNumber,
+        kind: 'BOOKING',
+        userId,
+        status: 'PENDING_PAYMENT',
+        eventDate: eventDateObj,
+        timeSlotId: timeSlotId || undefined,
+        cityId: address.cityId,
+        addressSnapshot: {
+          fullName: address.fullName,
+          phone: address.phone,
+          line1: address.line1,
+          line2: address.line2,
+          landmark: address.landmark,
+          pincode: address.pincode,
+          cityName: city?.name,
+        },
+        subtotal,
+        addOnTotal: lineItems.reduce((sum, li) => sum + li.addOns.reduce((s, a) => s + Number(a.price), 0) * li.cartItem.qty, 0),
+        deliveryCharge,
+        surgeCharge,
+        couponCode: appliedCouponCode || undefined,
+        discount,
+        total,
+        amountDue: amountDueNow,
+        paymentMode,
+        source: 'WEB',
+        customerNote: customerNote || undefined,
+        items: {
+          create: lineItems.map((li) => ({
+            productId: li.product.id,
+            qty: li.cartItem.qty,
+            unitPrice: li.unitPrice,
+            subtotal: li.subtotal,
+            productSnapshot: {
+              title: li.product.title,
+              slug: li.product.slug,
+              price: li.product.price,
+              variant: li.variant ? { id: li.variant.id, name: li.variant.name, swatches: li.variant.swatches } : null,
+            },
+            addOnsSnapshot: li.addOns.map((a) => ({ id: a.id, name: a.name, price: a.price })),
+          })),
+        },
+        payments: {
+          create: { razorpayOrderId: razorpayOrder.id, amount: amountDueNow, status: 'CREATED' },
+        },
       },
+      include: { items: true },
     });
-  }
 
-  return {
-    order,
-    razorpayOrder,
-    amountDueNow,
-  };
+    if (slotHold) {
+      await prisma.slotHold.update({ where: { id: slotHold.id }, data: { orderId: order.id } });
+    }
+
+    return { order, razorpayOrder, amountDueNow };
+  } catch (err) {
+    // Nothing was created (or only part of it) — free the slot straight away
+    // instead of leaving it held for the full 15 minutes.
+    if (slotHold) {
+      await prisma.slotHold.update({ where: { id: slotHold.id }, data: { status: 'RELEASED' } }).catch(() => {});
+    }
+    throw err;
+  }
 }

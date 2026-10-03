@@ -4,9 +4,10 @@ import { expireSlotHolds } from './expireSlotHolds.job.js';
 import { completePastOrders } from './completePastOrders.job.js';
 import { sendReviewReminders } from './sendReviewReminders.job.js';
 import { cleanupReviewUploads } from './cleanupReviewUploads.job.js';
+import { releaseAbandonedOrders } from './releaseAbandonedOrders.job.js';
 
-// releaseAbandonedOrders, eventReminder, and balanceReminder jobs are still
-// deferred — no data/UI exists yet for those flows.
+// eventReminder and balanceReminder jobs are still deferred — no data/UI
+// exists yet for those flows.
 
 const tasks = [];
 
@@ -26,6 +27,12 @@ export function startJobs() {
   tasks.push(
     cron.schedule('*/15 * * * *', () => {
       sendReviewReminders().catch((err) => logger.error({ err }, 'sendReviewReminders job failed'));
+    })
+  );
+
+  tasks.push(
+    cron.schedule('*/10 * * * *', () => {
+      releaseAbandonedOrders().catch((err) => logger.error({ err }, 'releaseAbandonedOrders job failed'));
     })
   );
 

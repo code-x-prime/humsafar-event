@@ -1,8 +1,15 @@
-import { verifyWebhookSignature } from '../lib/razorpay.js';
+import { verifyWebhookSignature, hasWebhookSecret } from '../lib/razorpay.js';
 import * as paymentCheckoutService from '../services/payment.checkout.service.js';
 import { logger } from '../config/logger.js';
 
 export const handleWebhook = async (req, res) => {
+  if (!hasWebhookSecret()) {
+    // Not the sender's fault, so say exactly what to fix — otherwise this just
+    // looks like "invalid signature" and nobody notices payments aren't syncing.
+    logger.error('Razorpay webhook received but no Webhook Secret is saved in Settings → Payment — rejecting it');
+    return res.status(400).json({ success: false, message: 'Webhook secret is not configured' });
+  }
+
   const signature = req.headers['x-razorpay-signature'];
   const isValid = signature && req.rawBody && verifyWebhookSignature(req.rawBody, signature);
 

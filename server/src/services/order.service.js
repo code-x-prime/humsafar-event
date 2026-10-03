@@ -74,13 +74,14 @@ export async function updateStatus(id, status, cancelReason) {
     // cancelling their own unpaid order — an admin cancellation shouldn't
     // leave the slot permanently blocked.
     await prisma.slotHold.updateMany({ where: { orderId: id, status: 'ACTIVE' }, data: { status: 'RELEASED' } });
-    if (order.timeSlotId) {
-      await prisma.slotBooking
-        .update({
-          where: { date_timeSlotId_cityId: { date: order.eventDate, timeSlotId: order.timeSlotId, cityId: order.cityId } },
-          data: { bookedCount: { decrement: 1 } },
-        })
-        .catch(() => {}); // no booking row yet (order was never paid) — nothing to decrement
+    // Only an order that was actually confirmed took a place in the slot. An
+    // unpaid one never did, so decrementing for it would free somebody else's
+    // booking on the same slot.
+    if (order.timeSlotId && ['CONFIRMED', 'ASSIGNED', 'IN_PROGRESS'].includes(existing.status)) {
+      await prisma.slotBooking.updateMany({
+        where: { date: order.eventDate, timeSlotId: order.timeSlotId, cityId: order.cityId, bookedCount: { gt: 0 } },
+        data: { bookedCount: { decrement: 1 } },
+      });
     }
 
     if (order.user?.email) {

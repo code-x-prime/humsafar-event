@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import Razorpay from 'razorpay';
 import * as settings from '../config/settings.service.js';
 import { ERROR_CODES } from '../config/constants.js';
+import { logger } from '../config/logger.js';
 
 function notConfiguredError() {
   const err = new Error('Razorpay is not configured. Add credentials in Settings → Payment.');
@@ -35,20 +36,48 @@ export function isConfigured() {
   return getConfig() !== null;
 }
 
+// True once a webhook secret is saved in Settings → Payment. Without it every
+// webhook delivery is rejected, so a customer who pays and then closes the tab
+// before the browser reports back would never get their order confirmed.
+export function hasWebhookSecret() {
+  return Boolean(getConfig()?.webhookSecret);
+}
+
 export async function testConnection() {
   getClient();
   return { ok: true };
 }
 
+// Constant-time comparison of two hex signatures, so how long the check takes
+// can't be used to guess a valid signature one character at a time.
+function signaturesMatch(expected, received) {
+  if (typeof received !== 'string') return false;
+  const a = Buffer.from(expected);
+  const b = Buffer.from(received);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
 // amountRupees is the human amount (e.g. 4699.5) — Razorpay wants paise.
 export async function createRazorpayOrder({ amountRupees, receipt, notes }) {
   const rzp = getClient();
-  return rzp.orders.create({
-    amount: Math.round(amountRupees * 100),
-    currency: 'INR',
-    receipt,
-    notes,
-  });
+
+  try {
+    return await rzp.orders.create({
+      amount: Math.round(amountRupees * 100),
+      currency: 'INR',
+      receipt,
+      notes,
+    });
+  } catch (cause) {
+    // The Razorpay SDK rejects with a plain object, not an Error, which the API
+    // would otherwise report as a vague 500. Keep the real reason in the log and
+    // give the customer something they can act on.
+    logger.error({ cause }, 'Razorpay order creation failed');
+    const err = new Error('The payment gateway is not responding right now. Please try again in a moment.');
+    err.status = 502;
+    err.code = ERROR_CODES.INTERNAL_ERROR;
+    throw err;
+  }
 }
 
 // Verifies the signature Razorpay's checkout.js hands back after a successful
@@ -63,7 +92,7 @@ export function verifyPaymentSignature({ razorpayOrderId, razorpayPaymentId, raz
     .update(`${razorpayOrderId}|${razorpayPaymentId}`)
     .digest('hex');
 
-  return expected === razorpaySignature;
+  return signaturesMatch(expected, razorpaySignature);
 }
 
 // Verifies the signature Razorpay sends in the X-Razorpay-Signature header on
@@ -74,7 +103,7 @@ export function verifyWebhookSignature(rawBody, signature) {
   if (!cfg?.webhookSecret) return false;
 
   const expected = crypto.createHmac('sha256', cfg.webhookSecret).update(rawBody).digest('hex');
-  return expected === signature;
+  return signaturesMatch(expected, signature);
 }
 
 export { getClient as getRazorpayClient };

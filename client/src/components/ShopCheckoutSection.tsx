@@ -112,6 +112,11 @@ export function ShopCheckoutSection() {
     setPaying(true);
     setPayError(null);
 
+    // Tracked so an order created here is cancelled again if checkout never
+    // actually opens, instead of lingering as an unpaid order.
+    let createdOrderId: string | null = null;
+    let checkoutOpened = false;
+
     try {
       const order = await postJson<{
         orderId: string;
@@ -120,18 +125,15 @@ export function ShopCheckoutSection() {
         razorpayOrder: { id: string; amount: number; currency: string } | null;
         razorpayKeyId: string | null;
       }>("/shop/checkout/orders", { addressId: selectedAddress.id });
+      createdOrderId = order.orderId;
 
       if (!order.razorpayOrder) {
-        setPayError("Online payment isn't set up yet — please contact support to complete your order.");
-        setPaying(false);
-        return;
+        throw new ApiError("Online payment isn't available right now — please contact us to complete your order.", "NOT_CONFIGURED", 503);
       }
 
       const loaded = await loadRazorpayScript();
       if (!loaded) {
-        setPayError("Couldn't load the payment gateway. Please check your connection and try again.");
-        setPaying(false);
-        return;
+        throw new ApiError("Couldn't load the payment gateway. Please check your connection and try again.", "GATEWAY_UNAVAILABLE", 0);
       }
 
       const RazorpayCtor = (window as unknown as { Razorpay: new (opts: unknown) => { open: () => void } }).Razorpay;
@@ -152,7 +154,15 @@ export function ShopCheckoutSection() {
             await refreshCart();
             router.push(`/shop/orders/${order.orderId}/confirmed`);
           } catch (err) {
-            setPayError(err instanceof ApiError ? err.message : "Payment verification failed. Contact support if money was deducted.");
+            if (err instanceof ApiError && err.status === 422) {
+              // The server checked the payment and it did not verify.
+              setPayError(err.message);
+            } else {
+              // We couldn't reach the server (or it hiccuped) but the payment may
+              // well have gone through — the confirmed page keeps checking the
+              // real status instead of leaving the customer wondering.
+              router.push(`/shop/orders/${order.orderId}/confirmed`);
+            }
           } finally {
             setPaying(false);
           }
@@ -166,8 +176,12 @@ export function ShopCheckoutSection() {
         theme: { color: "#C0355A" },
       });
 
+      checkoutOpened = true;
       rzp.open();
     } catch (err) {
+      if (createdOrderId && !checkoutOpened) {
+        postJson(`/shop/checkout/orders/${createdOrderId}/cancel`).catch(() => {});
+      }
       setPayError(err instanceof ApiError ? err.message : "Could not start checkout. Please try again.");
       setPaying(false);
     }
