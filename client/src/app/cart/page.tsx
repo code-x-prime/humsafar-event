@@ -4,8 +4,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { ArrowLeft, Minus, Plus, Trash2, PartyPopper, ShoppingBag } from "lucide-react";
 import { useCart, type CartItem } from "@/context/CartContext";
+import { ApiError } from "@/lib/api";
 import { CheckoutSection } from "@/components/CheckoutSection";
 import { ShopCheckoutSection } from "@/components/ShopCheckoutSection";
 import { SectionErrorBoundary } from "@/components/SectionErrorBoundary";
@@ -158,12 +160,41 @@ type Tab = "booking" | "shop";
 
 export default function CartPage() {
   const router = useRouter();
-  const { cart, subtotal, loading, updateQty, removeItem } = useCart();
+  const { cart, loading, updateQty, removeItem } = useCart();
   const items = cart?.items ?? [];
   const bookingItems = items.filter((i) => i.product);
   const shopItems = items.filter((i) => i.shopProduct);
 
+  // Decoration bookings and Shop orders are paid for separately, so each tab
+  // shows its own count and total — not one figure mixing the two.
+  const bookingSubtotal = bookingItems.reduce(
+    (sum, i) => sum + (Number(i.product!.price) + i.addOns.reduce((s, a) => s + Number(a.price), 0)) * i.qty,
+    0
+  );
+  const shopSubtotal = shopItems.reduce((sum, i) => sum + Number(i.shopProduct!.price) * i.qty, 0);
+
+  // A failed change (stock ran out, product removed, connection dropped) used
+  // to do nothing at all; now the customer is told.
+  async function changeQty(id: string, qty: number) {
+    try {
+      await updateQty(id, qty);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Couldn't update your cart. Please try again.");
+    }
+  }
+
+  async function deleteItem(id: string) {
+    try {
+      await removeItem(id);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Couldn't remove that item. Please try again.");
+    }
+  }
+
   const [tab, setTab] = useState<Tab>("booking");
+
+  const shownItems = tab === "booking" ? bookingItems : shopItems;
+  const shownSubtotal = tab === "booking" ? bookingSubtotal : shopSubtotal;
 
   // If the active tab has no items but the other one does, jump to the one
   // that actually has something to show (e.g. cart loads with only shop
@@ -192,7 +223,7 @@ export default function CartPage() {
           <div>
             <h1 className="font-display text-xl font-semibold text-primary sm:text-2xl">My Cart</h1>
             <p className="font-sans text-xs text-(--ink-500)">
-              {items.length} item{items.length === 1 ? "" : "s"} &middot; &#8377;{subtotal.toLocaleString("en-IN")}
+              {shownItems.length} item{shownItems.length === 1 ? "" : "s"} &middot; &#8377;{shownSubtotal.toLocaleString("en-IN")}
             </p>
           </div>
         </div>
@@ -265,12 +296,18 @@ export default function CartPage() {
           </div>
         )}
 
+        {!loading && bookingItems.length > 0 && shopItems.length > 0 && (
+          <p className="mt-2 text-center font-sans text-xs text-(--ink-500)">
+            Decoration bookings and Shop With Us orders are checked out and paid for separately.
+          </p>
+        )}
+
         {/* Decoration bookings */}
         {!loading && tab === "booking" && bookingItems.length > 0 && (
           <div className="mt-6">
             <div className="flex flex-col gap-4">
               {bookingItems.map((item) => (
-                <BookingItemCard key={item.id} item={item} updateQty={updateQty} removeItem={removeItem} />
+                <BookingItemCard key={item.id} item={item} updateQty={changeQty} removeItem={deleteItem} />
               ))}
             </div>
 
@@ -291,7 +328,7 @@ export default function CartPage() {
           <div className="mt-6">
             <div className="flex flex-col gap-4">
               {shopItems.map((item) => (
-                <ShopItemCard key={item.id} item={item} updateQty={updateQty} removeItem={removeItem} />
+                <ShopItemCard key={item.id} item={item} updateQty={changeQty} removeItem={deleteItem} />
               ))}
             </div>
 

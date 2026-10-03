@@ -3,6 +3,8 @@ import { z } from 'zod';
 export const previewOrderSchema = z.object({
   cityId: z.string().min(1),
   couponCode: z.string().optional(),
+  // The chosen time slot, so any surge charge on it is part of the price shown.
+  timeSlotId: z.string().optional(),
 });
 
 export const createOrderSchema = z.object({

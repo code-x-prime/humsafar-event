@@ -54,6 +54,8 @@ interface PreviewData {
   subtotal: number;
   addOnTotal: number;
   discount: number;
+  deliveryCharge: number;
+  surgeCharge: number;
   couponCode: string | null;
   total: number;
   advanceDueNow: number;
@@ -69,6 +71,13 @@ const EMPTY_ADDRESS_FORM = {
   cityId: "",
   pincode: "",
 };
+
+// YYYY-MM-DD in the visitor's own time zone. (Date.toISOString() is UTC, which in
+// India turns "today" into "yesterday" between midnight and 5:30 AM — the day
+// shown on the button and the day sent to the server would not match.)
+function toIsoDate(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
 function nextDays(count: number) {
   const days = [];
@@ -113,6 +122,11 @@ export function CheckoutSection() {
 
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId) || null;
 
+  // Slots exist for this date and city → the customer must choose one (it sets
+  // the time, the capacity and any slot charge). No slots set up → book without.
+  const needsSlot = slots.length > 0 && !selectedSlotId;
+  const slotsPending = loadingSlots || needsSlot;
+
   useEffect(() => {
     if (!isAuthenticated) return;
     getJson<Address[]>("/addresses")
@@ -145,6 +159,7 @@ export function CheckoutSection() {
     }
     const params = new URLSearchParams({ cityId: selectedAddress.city.id });
     if (appliedCoupon) params.set("couponCode", appliedCoupon);
+    if (selectedSlotId) params.set("timeSlotId", selectedSlotId);
     getJson<PreviewData>(`/checkout/preview?${params.toString()}`)
       .then((data) => {
         setPreview(data);
@@ -161,7 +176,7 @@ export function CheckoutSection() {
           setPreview(null);
         }
       });
-  }, [isAuthenticated, selectedAddress, appliedCoupon, cart]);
+  }, [isAuthenticated, selectedAddress, appliedCoupon, selectedSlotId, cart]);
 
   // Coupons the customer qualifies for right now — including new-user-only
   // codes for first-time customers — surfaced automatically so they don't
@@ -205,7 +220,7 @@ export function CheckoutSection() {
   }
 
   async function handlePay() {
-    if (!selectedAddress || !selectedDate || paying) return;
+    if (!selectedAddress || !selectedDate || slotsPending || paying) return;
 
     setPaying(true);
     setPayError(null);
@@ -326,7 +341,7 @@ export function CheckoutSection() {
         <div className="mt-3 flex items-stretch gap-2">
           <div className="flex flex-1 gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "thin" }}>
             {nextDays(10).map((d) => {
-              const iso = d.toISOString().slice(0, 10);
+              const iso = toIsoDate(d);
               const isSelected = selectedDate === iso;
               return (
                 <button
@@ -350,7 +365,7 @@ export function CheckoutSection() {
           <Popover open={customDatePopoverOpen} onOpenChange={setCustomDatePopoverOpen}>
             <PopoverTrigger
               className={`flex w-16 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border py-2 font-heading text-xs transition-colors ${
-                selectedDate && !nextDays(10).some((d) => d.toISOString().slice(0, 10) === selectedDate)
+                selectedDate && !nextDays(10).some((d) => toIsoDate(d) === selectedDate)
                   ? "border-primary bg-primary/5 text-primary"
                   : "border-dashed border-(--ink-300) text-(--ink-700) hover:border-primary hover:text-primary"
               }`}
@@ -362,7 +377,7 @@ export function CheckoutSection() {
               <Calendar
                 mode="single"
                 selected={
-                  selectedDate && !nextDays(10).some((d) => d.toISOString().slice(0, 10) === selectedDate)
+                  selectedDate && !nextDays(10).some((d) => toIsoDate(d) === selectedDate)
                     ? new Date(`${selectedDate}T00:00:00`)
                     : undefined
                 }
@@ -385,7 +400,7 @@ export function CheckoutSection() {
           </Popover>
         </div>
 
-        {selectedDate && !nextDays(10).some((d) => d.toISOString().slice(0, 10) === selectedDate) && (
+        {selectedDate && !nextDays(10).some((d) => toIsoDate(d) === selectedDate) && (
           <p className="mt-2 font-sans text-xs text-(--ink-700)">
             Selected: <span className="font-semibold text-primary">{new Date(selectedDate).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}</span>
           </p>
@@ -406,7 +421,9 @@ export function CheckoutSection() {
                     selectedSlotId === slot.id ? "border-primary bg-primary/10 text-primary" : "border-(--ink-300) text-(--ink-700)"
                   }`}
                 >
-                  {slot.label} {!slot.available && "(Full)"}
+                  {slot.label}
+                  {Number(slot.surgeCharge) > 0 && <span className="ml-1 text-(--coral-600)">+₹{Number(slot.surgeCharge).toLocaleString("en-IN")}</span>}
+                  {!slot.available && " (Full)"}
                 </button>
               ))}
             </div>
@@ -627,6 +644,11 @@ export function CheckoutSection() {
                     </span>
                     <span>&#8377;{Number(item.product!.price).toLocaleString("en-IN")}</span>
                   </div>
+                  {(item.variant || item.notes) && (
+                    <p className="mt-0.5 pl-3 text-xs text-(--ink-500)">
+                      {[item.variant?.name, item.notes].filter(Boolean).join(" · ")}
+                    </p>
+                  )}
                   {item.addOns.length > 0 && (
                     <ul className="mt-1 flex flex-col gap-0.5 pl-3">
                       {item.addOns.map((a) => (
@@ -657,6 +679,18 @@ export function CheckoutSection() {
               <div className="flex justify-between text-(--success,#15803D)">
                 <span>Discount</span>
                 <span>-&#8377;{preview.discount.toLocaleString("en-IN")}</span>
+              </div>
+            )}
+            {preview.deliveryCharge > 0 && (
+              <div className="flex justify-between text-(--ink-500)">
+                <span>Delivery</span>
+                <span>+&#8377;{preview.deliveryCharge.toLocaleString("en-IN")}</span>
+              </div>
+            )}
+            {preview.surgeCharge > 0 && (
+              <div className="flex justify-between text-(--ink-500)">
+                <span>Time slot charge</span>
+                <span>+&#8377;{preview.surgeCharge.toLocaleString("en-IN")}</span>
               </div>
             )}
             <div className="mt-2 flex justify-between border-t border-(--ink-100) pt-2 font-heading font-semibold text-(--navy-800)">
@@ -702,23 +736,36 @@ export function CheckoutSection() {
               </p>
               <p className="font-sans text-xs text-(--ink-500)">
                 {preview?.advancePercent ?? 50}% of decoration price now, rest after setup
-                {preview && preview.addOnTotal > 0 ? " — add-ons charged in full now" : ""}
+                {preview && preview.addOnTotal + preview.deliveryCharge + preview.surgeCharge > 0
+                  ? " — add-ons, delivery and slot charges are paid in full now"
+                  : ""}
               </p>
             </div>
             {preview && <span className="font-heading text-sm font-semibold text-primary">&#8377;{preview.advanceDueNow.toLocaleString("en-IN")}</span>}
           </button>
         </div>
 
-        {paymentMode === "ADVANCE" && preview && preview.addOnTotal > 0 && (
+        {paymentMode === "ADVANCE" && preview && preview.addOnTotal + preview.deliveryCharge + preview.surgeCharge > 0 && (
           <div className="mt-3 rounded-lg bg-(--surface-alt,#F7F9FC) p-3 font-sans text-xs text-(--ink-700)">
             <div className="flex justify-between">
               <span>Decoration advance ({preview.advancePercent ?? 50}%)</span>
-              <span>&#8377;{(preview.advanceDueNow - preview.addOnTotal).toLocaleString("en-IN")}</span>
+              <span>
+                &#8377;
+                {(preview.advanceDueNow - preview.addOnTotal - preview.deliveryCharge - preview.surgeCharge).toLocaleString("en-IN")}
+              </span>
             </div>
-            <div className="flex justify-between">
-              <span>Add-ons (100% now)</span>
-              <span>&#8377;{preview.addOnTotal.toLocaleString("en-IN")}</span>
-            </div>
+            {preview.addOnTotal > 0 && (
+              <div className="flex justify-between">
+                <span>Add-ons (100% now)</span>
+                <span>&#8377;{preview.addOnTotal.toLocaleString("en-IN")}</span>
+              </div>
+            )}
+            {preview.deliveryCharge + preview.surgeCharge > 0 && (
+              <div className="flex justify-between">
+                <span>Delivery &amp; slot charges (100% now)</span>
+                <span>&#8377;{(preview.deliveryCharge + preview.surgeCharge).toLocaleString("en-IN")}</span>
+              </div>
+            )}
             <div className="mt-1 flex justify-between border-t border-(--ink-300)/40 pt-1 font-semibold">
               <span>Pay now</span>
               <span>&#8377;{preview.advanceDueNow.toLocaleString("en-IN")}</span>
@@ -739,11 +786,11 @@ export function CheckoutSection() {
         </div>
         <button
           onClick={handlePay}
-          disabled={!selectedAddress || !selectedDate || paying}
+          disabled={!selectedAddress || !selectedDate || slotsPending || paying}
           className="flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 font-heading text-sm font-semibold text-primary-foreground disabled:opacity-50"
         >
           {paying && <Loader2 className="h-4 w-4 animate-spin" />}
-          {!selectedAddress ? "Add Address First" : !selectedDate ? "Pick a Date First" : paying ? "Processing..." : "Pay Now"}
+          {!selectedAddress ? "Add Address First" : !selectedDate ? "Pick a Date First" : loadingSlots ? "Loading Slots..." : needsSlot ? "Pick a Time Slot First" : paying ? "Processing..." : "Pay Now"}
         </button>
       </div>
     </div>

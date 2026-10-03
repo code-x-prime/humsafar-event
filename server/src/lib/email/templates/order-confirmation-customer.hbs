@@ -11,7 +11,7 @@
     <div style="background: #F7F9FC; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
       <p style="font-size: 13px; color: #6B7A88; margin: 0 0 4px;">Booking Number</p>
       <p style="font-size: 18px; font-weight: 700; color: #0E2A4D; margin: 0;">{{orderNumber}}</p>
-      <p style="font-size: 13px; color: #6B7A88; margin: 12px 0 0;">Event Date: {{eventDate}}</p>
+      <p style="font-size: 13px; color: #6B7A88; margin: 12px 0 0;">Event Date: {{eventDate}}{{#if timeSlot}} &middot; {{timeSlot}}{{/if}}</p>
     </div>
 
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">
@@ -19,6 +19,7 @@
       <tr>
         <td style="padding: 8px 0; border-bottom: 1px solid #EEF1F5; font-size: 14px;">
           {{title}}{{#if variant}} — {{variant}}{{/if}}
+          {{#if notes}}<br /><span style="font-size: 12px; color: #6B7A88;">{{notes}}</span>{{/if}}
           {{#if addOns}}<br /><span style="font-size: 12px; color: #6B7A88;">+ {{addOns}}</span>{{/if}}
           <br /><span style="font-size: 12px; color: #6B7A88;">Qty: {{qty}}</span>
         </td>

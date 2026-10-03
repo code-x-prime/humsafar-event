@@ -69,11 +69,16 @@ export async function getOrderDetailForUser(userId, orderId) {
   });
   if (!order) throw apiError(404, ERROR_CODES.NOT_FOUND, 'Order not found');
 
+  const slot = order.timeSlotId
+    ? await prisma.timeSlot.findUnique({ where: { id: order.timeSlotId }, select: { label: true, startTime: true, endTime: true } })
+    : null;
+
   return {
     id: order.id,
     orderNumber: order.orderNumber,
     status: order.status,
     eventDate: order.eventDate?.toISOString().slice(0, 10),
+    timeSlot: slot ? { label: slot.label, startTime: slot.startTime, endTime: slot.endTime } : null,
     cityName: order.city?.name,
     addressSnapshot: order.addressSnapshot,
     subtotal: order.subtotal,
@@ -94,6 +99,7 @@ export async function getOrderDetailForUser(userId, orderId) {
       productSlug: i.productSnapshot?.slug,
       title: i.productSnapshot?.title,
       variant: i.productSnapshot?.variant,
+      notes: i.productSnapshot?.notes || null,
       qty: i.qty,
       unitPrice: i.unitPrice,
       subtotal: i.subtotal,
@@ -197,7 +203,7 @@ function computeAdvanceDueNow({ productSubtotal, discount, addOnAndFeesTotal, pr
 
 // GET /checkout/preview — priced breakdown the client shows before payment,
 // with an optional coupon applied. Doesn't create anything.
-export async function previewOrder(userId, { cityId, couponCode }) {
+export async function previewOrder(userId, { cityId, couponCode, timeSlotId }) {
   const { lineItems, subtotal, addOnTotal, categoryIds } = await priceCart(userId);
   const productSubtotal = subtotal - addOnTotal;
 
@@ -210,21 +216,35 @@ export async function previewOrder(userId, { cityId, couponCode }) {
     appliedCoupon = result.coupon.code;
   }
 
-  const total = Math.max(0, subtotal - discount);
+  // The city's delivery charge and the chosen slot's surge charge are part of
+  // what gets charged, so they are part of what is shown — otherwise the amount
+  // on the checkout page and the amount Razorpay asks for would not match.
+  const [city, slot] = await Promise.all([
+    cityId ? prisma.city.findUnique({ where: { id: cityId }, select: { deliveryCharge: true } }) : null,
+    timeSlotId ? prisma.timeSlot.findUnique({ where: { id: timeSlotId }, select: { surgeCharge: true, isActive: true, cityId: true } }) : null,
+  ]);
+  const deliveryCharge = Number(city?.deliveryCharge || 0);
+  const slotUsable = slot && slot.isActive && (!slot.cityId || slot.cityId === cityId);
+  const surgeCharge = slotUsable ? Number(slot.surgeCharge || 0) : 0;
+
+  const total = round2(Math.max(0, subtotal - discount) + deliveryCharge + surgeCharge);
 
   const productWithAdvance = lineItems.find((li) => li.product.advancePercent || li.product.advanceAmount)?.product;
-  const advanceDueNow = computeAdvanceDueNow({
-    productSubtotal,
-    discount,
-    addOnAndFeesTotal: addOnTotal,
-    productWithAdvance,
-  });
+  const advanceDueNow = round2(
+    computeAdvanceDueNow({
+      productSubtotal,
+      discount,
+      addOnAndFeesTotal: addOnTotal + deliveryCharge + surgeCharge,
+      productWithAdvance,
+    })
+  );
 
   return {
     items: lineItems.map((li) => ({
       productId: li.product.id,
       title: li.product.title,
       variant: li.variant ? { id: li.variant.id, name: li.variant.name } : null,
+      notes: li.cartItem.notes || null,
       addOns: li.addOns.map((a) => ({ id: a.id, name: a.name, price: a.price })),
       qty: li.cartItem.qty,
       unitPrice: li.unitPrice,
@@ -233,6 +253,8 @@ export async function previewOrder(userId, { cityId, couponCode }) {
     subtotal,
     addOnTotal,
     discount,
+    deliveryCharge,
+    surgeCharge,
     couponCode: appliedCoupon,
     total,
     advanceDueNow,
@@ -333,6 +355,18 @@ export async function createOrder(userId, { addressId, eventDate, timeSlotId, pa
 
   await assertBookable({ cityId: address.cityId, timeSlotId, eventDate: eventDateObj });
 
+  // If this city has time slots, one has to be chosen — booking without one
+  // would skip the capacity limit and the slot's surge charge. A city with no
+  // slots set up simply books without one.
+  if (!timeSlotId) {
+    const configuredSlots = await prisma.timeSlot.count({
+      where: { isActive: true, OR: [{ cityId: address.cityId }, { cityId: null }] },
+    });
+    if (configuredSlots > 0) {
+      throw apiError(422, ERROR_CODES.VALIDATION_ERROR, 'Please choose a time slot for your booking');
+    }
+  }
+
   let discount = 0;
   let appliedCouponCode = null;
   if (couponCode) {
@@ -426,6 +460,8 @@ export async function createOrder(userId, { addressId, eventDate, timeSlotId, pa
               slug: li.product.slug,
               price: li.product.price,
               variant: li.variant ? { id: li.variant.id, name: li.variant.name, swatches: li.variant.swatches } : null,
+              // The customer's own colour request from the product page.
+              notes: li.cartItem.notes || null,
             },
             addOnsSnapshot: li.addOns.map((a) => ({ id: a.id, name: a.name, price: a.price })),
           })),

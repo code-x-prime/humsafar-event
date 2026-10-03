@@ -19,6 +19,9 @@ function apiError(status, code, message) {
 async function sendBookingConfirmationEmails(order) {
   const items = await prisma.orderItem.findMany({ where: { orderId: order.id } });
   const user = await prisma.user.findUnique({ where: { id: order.userId } });
+  const slot = order.timeSlotId
+    ? await prisma.timeSlot.findUnique({ where: { id: order.timeSlotId }, select: { label: true } })
+    : null;
 
   const emailData = {
     orderNumber: order.orderNumber,
@@ -27,10 +30,13 @@ async function sendBookingConfirmationEmails(order) {
     amountPaid: Number(order.amountPaid).toFixed(2),
     amountDue: Number(order.amountDue).toFixed(2),
     eventDate: order.eventDate?.toISOString().slice(0, 10),
+    timeSlot: slot?.label || null,
+    customerNote: order.customerNote || null,
     address: order.addressSnapshot,
     items: items.map((i) => ({
       title: i.productSnapshot?.title,
       variant: i.productSnapshot?.variant?.name,
+      notes: i.productSnapshot?.notes || null,
       qty: i.qty,
       subtotal: Number(i.subtotal).toFixed(2),
       addOns: (i.addOnsSnapshot || []).map((a) => a.name).join(', '),

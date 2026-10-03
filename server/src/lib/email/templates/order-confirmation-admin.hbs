@@ -8,13 +8,14 @@
     </p>
 
     <p style="font-size: 14px; margin: 0 0 4px;"><strong>Customer:</strong> {{customerName}}{{#if customerPhone}} · {{customerPhone}}{{/if}}</p>
-    <p style="font-size: 14px; margin: 0 0 16px;"><strong>Event Date:</strong> {{eventDate}}</p>
+    <p style="font-size: 14px; margin: 0 0 16px;"><strong>Event Date:</strong> {{eventDate}}{{#if timeSlot}} &middot; {{timeSlot}}{{/if}}</p>
 
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">
       {{#each items}}
       <tr>
         <td style="padding: 6px 0; border-bottom: 1px solid #EEF1F5; font-size: 13px;">
           {{title}}{{#if variant}} — {{variant}}{{/if}} (x{{qty}})
+          {{#if notes}}<br /><span style="font-size: 12px; color: #6B7A88;">{{notes}}</span>{{/if}}
           {{#if addOns}}<br /><span style="font-size: 12px; color: #6B7A88;">+ {{addOns}}</span>{{/if}}
         </td>
         <td style="padding: 6px 0; border-bottom: 1px solid #EEF1F5; font-size: 13px; text-align: right;">₹{{subtotal}}</td>
@@ -29,6 +30,7 @@
       {{address.cityName}} — {{address.pincode}}
     </p>
 
+    {{#if customerNote}}<p style="font-size: 13px; margin: 0 0 12px;"><strong>Customer note:</strong> {{customerNote}}</p>{{/if}}
     <p style="font-size: 13px; color: #6B7A88; margin: 0;">Total order value: ₹{{total}}</p>
   </div>
 </div>

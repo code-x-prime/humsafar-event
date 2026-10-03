@@ -77,13 +77,14 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
   const images = product.media.length > 0 ? product.media : null;
   const category = product.categories[0]?.category;
 
-  // The colour the customer has chosen — either their typed Custom text, or the
-  // selected variant's name. Flows into the WhatsApp enquiry and the cart note.
-  const chosenColor =
-    customColor !== null
-      ? customColor
-      : product.variants[activeVariant]?.name || null;
-  const colorNote = chosenColor ? `Balloon colours: ${chosenColor}` : "";
+  // The colour the customer has chosen — their saved Custom text if there is
+  // one, otherwise the selected variant's name. Goes into the WhatsApp enquiry.
+  const chosenColor = customColor ? customColor : product.variants[activeVariant]?.name || null;
+
+  // Only a typed Custom request needs a note on the cart line: a picked variant
+  // is already saved as the variant itself, and a second note would show the
+  // same colour twice in the cart and on the order.
+  const customColorNote = customColor ? `Custom colours: ${customColor}` : undefined;
 
   const whatsappMessage = `Hi! I'm interested in "${product.title}"${
     chosenColor ? `\nBalloon colours: ${chosenColor}` : ""
@@ -236,7 +237,7 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
               {product.variants.map((variant, i) => {
-                const active = customColor === null && i === activeVariant;
+                const active = !customColor && i === activeVariant;
                 return (
                   <button
                     key={variant.id}
@@ -334,8 +335,8 @@ export function ProductDetail({ product }: { product: ProductDetailData }) {
         <CustomizeOrderDialog
           productId={product.id}
           productTitle={product.title}
-          variantId={customColor !== null ? undefined : product.variants[activeVariant]?.id}
-          notes={colorNote || undefined}
+          variantId={customColor ? undefined : product.variants[activeVariant]?.id}
+          notes={customColorNote}
           addOns={product.addOns.map((a) => a.addOn)}
           open={dialogOpen}
           onClose={() => setDialogOpen(false)}

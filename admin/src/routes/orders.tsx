@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { api, ApiError } from '@/lib/api'
 import { Button } from '@/components/ui/button'
@@ -13,7 +13,7 @@ import { Eye, X } from 'lucide-react'
 
 interface OrderItem {
   id: string
-  productSnapshot: { title: string; slug: string; price: string; variant: { name: string; swatches: string[] } | null }
+  productSnapshot: { title: string; slug: string; price: string; variant: { name: string; swatches: string[] } | null; notes?: string | null }
   qty: number
   unitPrice: string
   subtotal: string
@@ -34,6 +34,8 @@ interface Order {
   orderNumber: string
   status: string
   eventDate: string
+  timeSlot: { label: string; startTime: string; endTime: string } | null
+  customerNote: string | null
   cityId: string
   city: { name: string }
   user: { id: string; name: string | null; email: string | null; phone: string | null }
@@ -79,10 +81,16 @@ function money(v: string | number) {
 export function OrdersPage() {
   const queryClient = useQueryClient()
   const [statusFilter, setStatusFilter] = useState('')
+  const [searchDraft, setSearchDraft] = useState('')
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<Order | null>(null)
   const [cancelOpen, setCancelOpen] = useState(false)
   const [cancelReason, setCancelReason] = useState('')
+
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchDraft.trim()), 400)
+    return () => clearTimeout(t)
+  }, [searchDraft])
 
   const { data, isLoading } = useQuery({
     queryKey: ['orders', { statusFilter, search }],
@@ -90,6 +98,7 @@ export function OrdersPage() {
       api.get<Order[]>(
         `/admin/orders?limit=100${statusFilter ? `&status=${statusFilter}` : ''}${search ? `&search=${encodeURIComponent(search)}` : ''}`
       ),
+    placeholderData: keepPreviousData,
   })
 
   const statusMutation = useMutation({
@@ -116,10 +125,10 @@ export function OrdersPage() {
 
       <div className="mt-4 flex flex-wrap gap-2">
         <Input
-          placeholder="Search order number..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-xs"
+          placeholder="Search order #, name, phone, email, pincode…"
+          value={searchDraft}
+          onChange={(e) => setSearchDraft(e.target.value)}
+          className="max-w-sm"
         />
         <select
           value={statusFilter}
@@ -142,9 +151,10 @@ export function OrdersPage() {
               <TableHead>Order #</TableHead>
               <TableHead>Customer</TableHead>
               <TableHead>City</TableHead>
-              <TableHead>Event Date</TableHead>
+              <TableHead>Event</TableHead>
               <TableHead>Total</TableHead>
               <TableHead>Paid</TableHead>
+              <TableHead>Due</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -153,7 +163,7 @@ export function OrdersPage() {
             {isLoading &&
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={8}>
+                  <TableCell colSpan={9}>
                     <Skeleton className="h-6 w-full" />
                   </TableCell>
                 </TableRow>
@@ -161,7 +171,7 @@ export function OrdersPage() {
 
             {!isLoading && orders.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-muted-foreground">
+                <TableCell colSpan={9} className="text-muted-foreground">
                   No orders yet.
                 </TableCell>
               </TableRow>
@@ -173,9 +183,15 @@ export function OrdersPage() {
                   <TableCell className="font-medium">{order.orderNumber}</TableCell>
                   <TableCell>{order.user?.name || order.user?.email || order.user?.phone || '—'}</TableCell>
                   <TableCell>{order.city?.name}</TableCell>
-                  <TableCell>{order.eventDate?.slice(0, 10)}</TableCell>
+                  <TableCell>
+                    <div>{order.eventDate?.slice(0, 10)}</div>
+                    <div className="text-xs text-muted-foreground">{order.timeSlot ? order.timeSlot.label : 'No slot'}</div>
+                  </TableCell>
                   <TableCell>{money(order.total)}</TableCell>
                   <TableCell>{money(order.amountPaid)}</TableCell>
+                  <TableCell className={order.status !== 'PENDING_PAYMENT' && order.status !== 'CANCELLED' && Number(order.amountDue) > 0 ? 'font-medium text-destructive' : 'text-muted-foreground'}>
+                    {order.status === 'PENDING_PAYMENT' || order.status === 'CANCELLED' ? '—' : money(order.amountDue)}
+                  </TableCell>
                   <TableCell>
                     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[order.status] || ''}`}>
                       {order.status.replace('_', ' ')}
@@ -277,8 +293,25 @@ export function OrdersPage() {
 
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Event</p>
-                  <p className="mt-1 text-sm">{selected.eventDate?.slice(0, 10)} &middot; {selected.city?.name}</p>
+                  <p className="mt-1 text-sm">
+                    {selected.eventDate?.slice(0, 10)} &middot; {selected.city?.name}
+                    <br />
+                    {selected.timeSlot ? (
+                      <>
+                        {selected.timeSlot.label} ({selected.timeSlot.startTime} – {selected.timeSlot.endTime})
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground">No time slot — confirm the timing with the customer</span>
+                    )}
+                  </p>
                 </div>
+
+                {selected.customerNote && (
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Customer Note</p>
+                    <p className="mt-1 text-sm">{selected.customerNote}</p>
+                  </div>
+                )}
 
                 {selected.cancelReason && (
                   <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3">
@@ -307,6 +340,9 @@ export function OrdersPage() {
                                 )}
                                 {item.productSnapshot.variant.name}
                               </p>
+                            )}
+                            {item.productSnapshot?.notes && (
+                              <p className="mt-0.5 text-xs font-medium text-primary">{item.productSnapshot.notes}</p>
                             )}
                             <p className="mt-0.5 text-xs text-muted-foreground">Qty: {item.qty}</p>
                           </div>
@@ -378,7 +414,7 @@ export function OrdersPage() {
                       </div>
                     )}
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Payment mode: {selected.paymentMode === 'ADVANCE' ? '50% Advance' : 'Full amount'}
+                      Payment mode: {selected.paymentMode === 'ADVANCE' ? 'Advance (balance due after setup)' : 'Full amount'}
                     </p>
                   </div>
                 </div>

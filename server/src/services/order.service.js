@@ -21,9 +21,36 @@ const INCLUDE = {
   payments: true,
 };
 
+// An order stores its time slot as a plain id; the admin needs to see which
+// slot (label and hours) it is, so it is looked up here and attached.
+async function withTimeSlots(orders) {
+  const list = Array.isArray(orders) ? orders : [orders];
+  const ids = [...new Set(list.map((o) => o.timeSlotId).filter(Boolean))];
+  const slots = ids.length
+    ? await prisma.timeSlot.findMany({ where: { id: { in: ids } }, select: { id: true, label: true, startTime: true, endTime: true } })
+    : [];
+  const slotById = new Map(slots.map((s) => [s.id, s]));
+  const attach = (o) => ({ ...o, timeSlot: o.timeSlotId ? slotById.get(o.timeSlotId) ?? null : null });
+  return Array.isArray(orders) ? list.map(attach) : attach(orders);
+}
+
 export async function list(query) {
   const { page, limit, skip, take } = getPagination(query);
-  const where = { kind: 'BOOKING', ...buildWhere(query, { searchFields: ['orderNumber'], filterFields: ['status', 'cityId'] }) };
+  const where = { kind: 'BOOKING', ...buildWhere(query, { filterFields: ['status', 'cityId'] }) };
+
+  // One search box for whatever the admin has to hand: the order number, or the
+  // customer's name / email / phone, or the delivery phone / pincode.
+  const q = query.search?.trim();
+  if (q) {
+    const contains = { contains: q, mode: 'insensitive' };
+    where.OR = [
+      { orderNumber: contains },
+      { user: { is: { OR: [{ name: contains }, { email: contains }, { phone: contains }] } } },
+      { addressSnapshot: { path: ['phone'], string_contains: q } },
+      { addressSnapshot: { path: ['pincode'], string_contains: q } },
+    ];
+  }
+
   const orderBy = buildOrderBy(query, 'createdAt', 'desc');
 
   const [items, total] = await Promise.all([
@@ -31,13 +58,13 @@ export async function list(query) {
     prisma.order.count({ where }),
   ]);
 
-  return { items, meta: buildMeta(total, { page, limit }) };
+  return { items: await withTimeSlots(items), meta: buildMeta(total, { page, limit }) };
 }
 
 export async function getById(id) {
   const order = await prisma.order.findFirst({ where: { id, kind: 'BOOKING' }, include: INCLUDE });
   if (!order) throw apiError(404, ERROR_CODES.NOT_FOUND, 'Order not found');
-  return order;
+  return withTimeSlots(order);
 }
 
 function generateOrderNumber() {
@@ -57,7 +84,7 @@ export async function create(data) {
 
 export async function update(id, data) {
   await getById(id);
-  return prisma.order.update({ where: { id }, data, include: INCLUDE });
+  return withTimeSlots(await prisma.order.update({ where: { id }, data, include: INCLUDE }));
 }
 
 export async function updateStatus(id, status, cancelReason) {
@@ -124,7 +151,7 @@ export async function updateStatus(id, status, cancelReason) {
     }
   }
 
-  return order;
+  return withTimeSlots(order);
 }
 
 export async function remove(id) {

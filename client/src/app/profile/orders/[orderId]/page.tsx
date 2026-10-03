@@ -13,6 +13,7 @@ interface OrderDetail {
   orderNumber: string;
   status: string;
   eventDate: string;
+  timeSlot: { label: string; startTime: string; endTime: string } | null;
   cityName: string;
   addressSnapshot: { fullName: string; phone: string; line1: string; line2: string | null; landmark: string | null; pincode: string };
   subtotal: string;
@@ -29,6 +30,7 @@ interface OrderDetail {
     productId: string;
     title: string;
     variant: { name: string } | null;
+    notes: string | null;
     qty: number;
     subtotal: string;
     addOns: { name: string; price: string }[];
@@ -86,7 +88,9 @@ export default function OrderDetailPage() {
                   {order.status.replace("_", " ")}
                 </span>
               </div>
-              <p className="mt-1 font-sans text-sm text-(--ink-500)">Event date: {order.eventDate}</p>
+              <p className="mt-1 font-sans text-sm text-(--ink-500)">Event date: {order.eventDate}
+                {order.timeSlot && <> &middot; {order.timeSlot.label} ({order.timeSlot.startTime} – {order.timeSlot.endTime})</>}
+              </p>
 
               <div className="mt-5 rounded-2xl border border-(--ink-100) bg-white p-5">
                 <p className="font-heading text-sm font-semibold text-(--navy-800)">Items</p>
@@ -98,6 +102,7 @@ export default function OrderDetailPage() {
                           <p className="font-sans text-sm font-medium text-(--navy-800)">
                             {item.title}{item.variant ? ` — ${item.variant.name}` : ""}
                           </p>
+                          {item.notes && <p className="font-sans text-xs text-(--ink-500)">{item.notes}</p>}
                           <p className="font-sans text-xs text-(--ink-500)">Qty: {item.qty}</p>
                           {item.addOns.length > 0 && (
                             <p className="font-sans text-xs text-(--ink-500)">+ {item.addOns.map((a) => a.name).join(", ")}</p>

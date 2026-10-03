@@ -1,5 +1,6 @@
 import { prisma } from '../config/db.js';
 import { ERROR_CODES } from '../config/constants.js';
+import { logger } from '../config/logger.js';
 
 function apiError(status, code, message) {
   const err = new Error(message);
@@ -95,8 +96,11 @@ export async function getCart(identity) {
 }
 
 // Adds a decoration-booking product to the cart. If an identical line (same
-// product + same add-on selection + same event date/slot/city) already
-// exists, its qty is increased instead of creating a duplicate row.
+// product + same colour + same add-on selection + same event date/slot/city +
+// same colour note) already exists, its qty is increased instead of creating a
+// duplicate row. The note is part of the match, so two different custom colour
+// requests for the same product stay as two lines instead of one overwriting
+// the other.
 export async function addItem(identity, { productId, variantId, addOnIds = [], qty = 1, eventDate, timeSlotId, cityId, notes }) {
   const product = await prisma.product.findUnique({ where: { id: productId } });
   if (!product || !product.isActive) throw apiError(404, ERROR_CODES.NOT_FOUND, 'Product not found');
@@ -116,7 +120,8 @@ export async function addItem(identity, { productId, variantId, addOnIds = [], q
       JSON.stringify([...item.addOnIds].sort()) === JSON.stringify(sortedAddOnIds) &&
       (item.eventDate ? item.eventDate.toISOString() : null) === (eventDate || null) &&
       item.timeSlotId === (timeSlotId || null) &&
-      item.cityId === (cityId || null)
+      item.cityId === (cityId || null) &&
+      (item.notes || null) === (notes || null)
   );
 
   if (existing) {
@@ -149,6 +154,15 @@ export async function addShopItem(identity, { productId, qty = 1 }) {
   const cart = await getOrCreateCart(identity);
   const existing = cart.items.find((item) => item.shopProductId === productId);
 
+  // The page stops at the stock limit, but the server has the final say.
+  if ((existing?.qty || 0) + qty > product.stock) {
+    throw apiError(
+      422,
+      ERROR_CODES.VALIDATION_ERROR,
+      product.stock > 0 ? `Only ${product.stock} of "${product.title}" left in stock` : `"${product.title}" is out of stock`
+    );
+  }
+
   if (existing) {
     await prisma.cartItem.update({ where: { id: existing.id }, data: { qty: existing.qty + qty } });
   } else {
@@ -164,7 +178,12 @@ export async function updateItem(identity, itemId, data) {
   if (!item) throw apiError(404, ERROR_CODES.NOT_FOUND, 'Cart item not found');
 
   const patch = {};
-  if (data.qty !== undefined) patch.qty = Math.max(1, data.qty);
+  if (data.qty !== undefined) {
+    patch.qty = Math.max(1, data.qty);
+    if (item.shopProduct && patch.qty > item.shopProduct.stock) {
+      throw apiError(422, ERROR_CODES.VALIDATION_ERROR, `Only ${item.shopProduct.stock} of "${item.shopProduct.title}" left in stock`);
+    }
+  }
   if (data.variantId !== undefined) patch.variantId = data.variantId;
   if (data.addOnIds !== undefined) patch.addOnIds = data.addOnIds;
   if (data.eventDate !== undefined) patch.eventDate = data.eventDate ? new Date(data.eventDate) : null;
@@ -199,22 +218,28 @@ export async function mergeGuestCart(userId, guestSessionId) {
 
   if (guestCart && guestCart.items.length > 0) {
     for (const item of guestCart.items) {
-      if (item.shopProductId) {
-        await addShopItem({ userId }, { productId: item.shopProductId, qty: item.qty });
-      } else {
-        await addItem(
-          { userId },
-          {
-            productId: item.productId,
-            variantId: item.variantId || undefined,
-            addOnIds: item.addOnIds,
-            qty: item.qty,
-            eventDate: item.eventDate?.toISOString(),
-            timeSlotId: item.timeSlotId || undefined,
-            cityId: item.cityId || undefined,
-            notes: item.notes || undefined,
-          }
-        );
+      // One item that can no longer be added (sold out, product taken down)
+      // must not stop the rest of the cart — or the login itself — from going through.
+      try {
+        if (item.shopProductId) {
+          await addShopItem({ userId }, { productId: item.shopProductId, qty: item.qty });
+        } else {
+          await addItem(
+            { userId },
+            {
+              productId: item.productId,
+              variantId: item.variantId || undefined,
+              addOnIds: item.addOnIds,
+              qty: item.qty,
+              eventDate: item.eventDate?.toISOString(),
+              timeSlotId: item.timeSlotId || undefined,
+              cityId: item.cityId || undefined,
+              notes: item.notes || undefined,
+            }
+          );
+        }
+      } catch (err) {
+        logger.warn({ err, productId: item.productId, shopProductId: item.shopProductId }, 'Skipped a guest cart item while merging into the account cart');
       }
     }
   }
