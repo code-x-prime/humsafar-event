@@ -64,6 +64,8 @@ export const RATE_LIMITS = {
   // approval, this just stops one address flooding the moderation queue.
   REVIEW_WINDOW_MS: 60 * 60 * 1000,
   REVIEW_MAX: 5,
+  // Review photo uploads: up to 5 per review, so a little headroom for retries.
+  REVIEW_UPLOAD_MAX: 15,
 };
 
 export const PAGINATION = {

@@ -9,6 +9,9 @@ export const openShopReviewSchema = z.object({
   rating: z.coerce.number().int().min(1).max(5),
   title: z.string().trim().max(150).optional(),
   comment: z.string().trim().min(10).max(2000),
+  // Photos the customer uploaded first via the review upload endpoint. Only the
+  // key is accepted — the URL is looked up server-side.
+  media: z.array(z.object({ r2Key: z.string().min(1) })).max(5).optional(),
   // Honeypot: hidden from people, so only bots fill it in.
   website: z.string().max(0).optional(),
 });

@@ -3,6 +3,7 @@ import { ERROR_CODES } from '../config/constants.js';
 import { sendMail } from '../lib/email/index.js';
 import { logger } from '../config/logger.js';
 import * as settings from '../config/settings.service.js';
+import { resolveCustomerUploads, syncReviewMedia } from './reviewMedia.helper.js';
 
 function apiError(status, code, message) {
   const err = new Error(message);
@@ -93,12 +94,16 @@ export async function getReviewableItems(userId) {
 // only appears on the site once an admin approves it. A logged-in customer is
 // limited to one review per product, and gets the "verified" order link when
 // they really did receive an order containing it.
-export async function submitOpenReview(userId, { productId, reviewerName, reviewerCity, rating, title, comment }) {
+export async function submitOpenReview(userId, { productId, reviewerName, reviewerCity, rating, title, comment, media }) {
   const product = await prisma.shopProduct.findFirst({
     where: { id: productId, isActive: true },
     select: { id: true, title: true },
   });
   if (!product) throw apiError(404, ERROR_CODES.NOT_FOUND, 'Product not found');
+
+  // Checked up front so a bad photo fails the whole submission instead of
+  // leaving a text-only review behind.
+  const photos = await resolveCustomerUploads(media);
 
   let orderId = null;
   if (userId) {
@@ -127,6 +132,8 @@ export async function submitOpenReview(userId, { productId, reviewerName, review
     },
     select: { id: true },
   });
+
+  await syncReviewMedia(prisma.shopProductReviewMedia, review.id, photos);
 
   const notifyEmail = settings.get('orderNotifyEmail');
   if (notifyEmail) {

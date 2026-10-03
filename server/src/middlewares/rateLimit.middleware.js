@@ -26,6 +26,21 @@ export const reviewRateLimiter = rateLimit({
   },
 });
 
+export const reviewUploadRateLimiter = rateLimit({
+  windowMs: RATE_LIMITS.REVIEW_WINDOW_MS,
+  limit: RATE_LIMITS.REVIEW_UPLOAD_MAX,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => String(req.headers['x-real-ip'] || req.ip),
+  validate: false,
+  message: {
+    success: false,
+    code: ERROR_CODES.RATE_LIMITED,
+    message: 'Too many photos uploaded recently — please try again in a while.',
+    errors: [],
+  },
+});
+
 export const otpRateLimiter = rateLimit({
   windowMs: RATE_LIMITS.OTP_WINDOW_MS,
   limit: RATE_LIMITS.OTP_MAX,

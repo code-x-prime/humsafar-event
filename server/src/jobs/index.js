@@ -3,6 +3,7 @@ import { logger } from '../config/logger.js';
 import { expireSlotHolds } from './expireSlotHolds.job.js';
 import { completePastOrders } from './completePastOrders.job.js';
 import { sendReviewReminders } from './sendReviewReminders.job.js';
+import { cleanupReviewUploads } from './cleanupReviewUploads.job.js';
 
 // releaseAbandonedOrders, eventReminder, and balanceReminder jobs are still
 // deferred — no data/UI exists yet for those flows.
@@ -25,6 +26,12 @@ export function startJobs() {
   tasks.push(
     cron.schedule('*/15 * * * *', () => {
       sendReviewReminders().catch((err) => logger.error({ err }, 'sendReviewReminders job failed'));
+    })
+  );
+
+  tasks.push(
+    cron.schedule('30 3 * * *', () => {
+      cleanupReviewUploads().catch((err) => logger.error({ err }, 'cleanupReviewUploads job failed'));
     })
   );
 

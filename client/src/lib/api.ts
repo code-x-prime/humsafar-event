@@ -86,6 +86,19 @@ export async function postJson<T>(path: string, body?: unknown): Promise<T> {
   return parseEnvelope<T>(res);
 }
 
+// Multipart upload (e.g. a review photo). No Content-Type header on purpose —
+// the browser sets the multipart boundary itself.
+export async function postForm<T>(path: string, formData: FormData): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: { ...authHeaders() },
+    credentials: "include",
+    body: formData,
+  });
+
+  return parseEnvelope<T>(res);
+}
+
 export async function patchJson<T>(path: string, body?: unknown): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     method: "PATCH",
