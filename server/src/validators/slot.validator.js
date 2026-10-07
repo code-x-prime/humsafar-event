@@ -6,7 +6,7 @@ export const createSlotSchema = z.object({
   endTime: z.string().min(1),
   capacity: z.coerce.number().int().positive().optional(),
   surgeCharge: z.coerce.number().nonnegative().optional(),
-  cityId: z.string().optional(),
+  cityId: z.string().nullable().optional(),
   isActive: z.boolean().optional(),
   position: z.coerce.number().int().optional(),
 });

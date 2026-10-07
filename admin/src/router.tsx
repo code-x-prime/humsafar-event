@@ -15,6 +15,7 @@ import { UsersPage } from './routes/users'
 import { ReviewsPage } from './routes/reviews'
 import { SectionsPage } from './routes/sections'
 import { CouponsPage } from './routes/coupons'
+import { SlotsPage } from './routes/slots'
 import { TestimonialsPage } from './routes/testimonials'
 import { EnquiriesPage } from './routes/enquiries'
 import { GalleryPage } from './routes/gallery'
@@ -37,6 +38,7 @@ export const router = createBrowserRouter([
       { path: 'products/:id', element: <ProductFormPage /> },
       { path: 'sections', element: <SectionsPage /> },
       { path: 'coupons', element: <CouponsPage /> },
+      { path: 'slots', element: <SlotsPage /> },
       { path: 'testimonials', element: <TestimonialsPage /> },
       { path: 'attributes', element: <AttributesPage /> },
       { path: 'addons', element: <AddOnsPage /> },
