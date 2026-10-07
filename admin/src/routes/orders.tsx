@@ -17,7 +17,8 @@ interface OrderItem {
   qty: number
   unitPrice: string
   subtotal: string
-  addOnsSnapshot: { id: string; name: string; price: string }[] | null
+  addOnsSnapshot: { id: string; name: string; price: string; image?: string | null }[] | null
+  product?: { shortDescription: string | null; media: { url: string; type: string }[] } | null
 }
 
 interface Payment {
@@ -73,6 +74,8 @@ const STATUS_STYLES: Record<string, string> = {
 function errorMessage(err: unknown) {
   return err instanceof ApiError ? err.message : 'Something went wrong. Please try again.'
 }
+
+const SITE_URL = ((import.meta.env.VITE_SITE_URL as string | undefined) || 'https://humsafarevent.com').replace(/\/$/, '')
 
 function money(v: string | number) {
   return `₹${Number(v).toLocaleString('en-IN')}`
@@ -325,9 +328,39 @@ export function OrdersPage() {
                   <div className="mt-2 flex flex-col gap-3">
                     {selected.items.map((item) => (
                       <div key={item.id} className="rounded-md border border-border p-3">
-                        <div className="flex items-start justify-between">
-                          <div>
+                        <div className="flex items-start justify-between gap-3">
+                          {(() => {
+                            const img = item.product?.media?.find((m) => m.type === 'IMAGE') ?? item.product?.media?.[0]
+                            return img ? (
+                              <a href={img.url} target="_blank" rel="noreferrer" title="Open full image">
+                                <img src={img.url} alt={item.productSnapshot?.title} className="h-20 w-20 shrink-0 rounded-md border border-border object-cover" />
+                              </a>
+                            ) : null
+                          })()}
+                          <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium">{item.productSnapshot?.title}</p>
+                            {item.product?.shortDescription && (
+                              <p className="mt-0.5 line-clamp-3 text-xs text-muted-foreground">{item.product.shortDescription}</p>
+                            )}
+                            {item.productSnapshot?.slug && (
+                              <a
+                                href={`${SITE_URL}/decoration/${item.productSnapshot.slug}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="mt-1 inline-block text-xs font-medium text-primary underline"
+                              >
+                                View product page ↗
+                              </a>
+                            )}
+                            {(item.product?.media?.filter((m) => m.type === 'IMAGE').length ?? 0) > 1 && (
+                              <div className="mt-2 flex flex-wrap gap-1.5">
+                                {item.product!.media.filter((m) => m.type === 'IMAGE').slice(1).map((m) => (
+                                  <a key={m.url} href={m.url} target="_blank" rel="noreferrer" title="Open full image">
+                                    <img src={m.url} alt="" className="h-10 w-10 rounded border border-border object-cover" />
+                                  </a>
+                                ))}
+                              </div>
+                            )}
                             {item.productSnapshot?.variant && (
                               <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
                                 Color:
@@ -358,10 +391,17 @@ export function OrdersPage() {
                             <p className="text-xs font-semibold text-muted-foreground">Add-ons</p>
                             <ul className="mt-1 flex flex-col gap-0.5">
                               {item.addOnsSnapshot.map((a) => (
-                                <li key={a.id} className="flex justify-between text-xs">
-                                  <span>
-                                    + {a.name}
-                                    {item.qty > 1 ? ` × ${item.qty}` : ''}
+                                <li key={a.id} className="flex items-center justify-between gap-2 text-xs">
+                                  <span className="flex items-center gap-2">
+                                    {a.image && (
+                                      <a href={a.image} target="_blank" rel="noreferrer" title="Open full image">
+                                        <img src={a.image} alt={a.name} className="h-10 w-10 rounded border border-border object-cover" />
+                                      </a>
+                                    )}
+                                    <span>
+                                      + {a.name}
+                                      {item.qty > 1 ? ` × ${item.qty}` : ''}
+                                    </span>
                                   </span>
                                   <span>{money(Number(a.price) * item.qty)}</span>
                                 </li>

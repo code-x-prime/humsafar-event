@@ -17,7 +17,21 @@ function apiError(status, code, message) {
 const INCLUDE = {
   user: { select: { id: true, name: true, email: true, phone: true } },
   city: true,
-  items: true,
+  items: {
+    include: {
+      // So the admin can see what was ordered: the product's picture and blurb.
+      product: {
+        select: {
+          shortDescription: true,
+          media: {
+            select: { url: true, type: true },
+            orderBy: [{ isPrimary: 'desc' }, { position: 'asc' }],
+            take: 5,
+          },
+        },
+      },
+    },
+  },
   payments: true,
 };
 
@@ -30,7 +44,26 @@ async function withTimeSlots(orders) {
     ? await prisma.timeSlot.findMany({ where: { id: { in: ids } }, select: { id: true, label: true, startTime: true, endTime: true } })
     : [];
   const slotById = new Map(slots.map((s) => [s.id, s]));
-  const attach = (o) => ({ ...o, timeSlot: o.timeSlotId ? slotById.get(o.timeSlotId) ?? null : null });
+
+  // An add-on snapshot keeps only id/name/price; its picture is looked up here.
+  const addOnIds = [
+    ...new Set(list.flatMap((o) => (o.items || []).flatMap((i) => (i.addOnsSnapshot || []).map((a) => a.id)))),
+  ];
+  const addOnRows = addOnIds.length
+    ? await prisma.addOn.findMany({ where: { id: { in: addOnIds } }, select: { id: true, image: true } })
+    : [];
+  const imageByAddOn = new Map(addOnRows.map((a) => [a.id, a.image]));
+
+  const attach = (o) => ({
+    ...o,
+    timeSlot: o.timeSlotId ? slotById.get(o.timeSlotId) ?? null : null,
+    items: (o.items || []).map((i) => ({
+      ...i,
+      addOnsSnapshot: i.addOnsSnapshot
+        ? i.addOnsSnapshot.map((a) => ({ ...a, image: imageByAddOn.get(a.id) ?? null }))
+        : i.addOnsSnapshot,
+    })),
+  });
   return Array.isArray(orders) ? list.map(attach) : attach(orders);
 }
 
