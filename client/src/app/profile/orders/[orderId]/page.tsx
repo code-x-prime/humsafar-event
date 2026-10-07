@@ -141,7 +141,7 @@ export default function OrderDetailPage() {
                   <p className="font-heading text-sm font-semibold text-(--navy-800)">Payment</p>
                 </div>
                 <div className="mt-3 flex flex-col gap-1.5 font-sans text-sm">
-                  <div className="flex justify-between text-(--ink-700)"><span>Subtotal</span><span>&#8377;{order.subtotal}</span></div>
+                  <div className="flex justify-between text-(--ink-700)"><span>Subtotal</span><span>&#8377;{Number(order.subtotal) - Number(order.addOnTotal || 0)}</span></div>
                   {Number(order.addOnTotal) > 0 && <div className="flex justify-between text-(--ink-500)"><span>Add-ons</span><span>+&#8377;{order.addOnTotal}</span></div>}
                   {Number(order.discount) > 0 && <div className="flex justify-between text-(--success,#15803D)"><span>Discount {order.couponCode ? `(${order.couponCode})` : ""}</span><span>-&#8377;{order.discount}</span></div>}
                   <div className="flex justify-between border-t border-(--ink-100) pt-2 font-heading font-semibold text-(--navy-800)"><span>Total</span><span>&#8377;{order.total}</span></div>

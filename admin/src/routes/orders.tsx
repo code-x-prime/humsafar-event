@@ -346,7 +346,12 @@ export function OrdersPage() {
                             )}
                             <p className="mt-0.5 text-xs text-muted-foreground">Qty: {item.qty}</p>
                           </div>
-                          <p className="text-sm font-semibold">{money(item.subtotal)}</p>
+                          <p className="text-sm font-semibold">
+                            {money(
+                              Number(item.subtotal) -
+                                (item.addOnsSnapshot || []).reduce((s, a) => s + Number(a.price), 0) * item.qty
+                            )}
+                          </p>
                         </div>
                         {item.addOnsSnapshot && item.addOnsSnapshot.length > 0 && (
                           <div className="mt-2 border-t border-border pt-2">
@@ -354,8 +359,11 @@ export function OrdersPage() {
                             <ul className="mt-1 flex flex-col gap-0.5">
                               {item.addOnsSnapshot.map((a) => (
                                 <li key={a.id} className="flex justify-between text-xs">
-                                  <span>{a.name}</span>
-                                  <span>{money(a.price)}</span>
+                                  <span>
+                                    + {a.name}
+                                    {item.qty > 1 ? ` × ${item.qty}` : ''}
+                                  </span>
+                                  <span>{money(Number(a.price) * item.qty)}</span>
                                 </li>
                               ))}
                             </ul>
@@ -371,7 +379,7 @@ export function OrdersPage() {
                   <div className="mt-2 flex flex-col gap-1 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Subtotal</span>
-                      <span>{money(selected.subtotal)}</span>
+                      <span>{money(Number(selected.subtotal) - Number(selected.addOnTotal || 0))}</span>
                     </div>
                     {Number(selected.addOnTotal) > 0 && (
                       <div className="flex justify-between">
