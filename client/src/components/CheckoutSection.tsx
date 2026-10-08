@@ -141,13 +141,16 @@ export function CheckoutSection() {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (!selectedDate || !selectedAddress) {
+    if (!selectedDate) {
       setSlots([]);
       return;
     }
     setLoadingSlots(true);
     setSelectedSlotId(null);
-    getJson<SlotOption[]>(`/slots/availability?cityId=${selectedAddress.city.id}&date=${selectedDate}`)
+    // Times show as soon as a date is picked; once an address is chosen they
+    // are refreshed for that city (its own slots, bookings and closures).
+    const cityParam = selectedAddress ? `cityId=${selectedAddress.city.id}&` : "";
+    getJson<SlotOption[]>(`/slots/availability?${cityParam}date=${selectedDate}`)
       .then(setSlots)
       .catch(() => setSlots([]))
       .finally(() => setLoadingSlots(false));

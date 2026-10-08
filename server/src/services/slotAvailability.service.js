@@ -15,7 +15,7 @@ function apiError(status, code, message) {
 // that city (or a city-agnostic slot), with how many bookings/holds already
 // exist against it so the client can grey out full or blacked-out slots.
 export async function getAvailability(cityId, dateStr) {
-  const city = await prisma.city.findUnique({ where: { id: cityId } });
+  const city = cityId ? await prisma.city.findUnique({ where: { id: cityId } }) : true;
   if (!city) throw apiError(404, ERROR_CODES.NOT_FOUND, 'City not found');
 
   const date = new Date(`${dateStr}T00:00:00.000Z`);
@@ -32,12 +32,12 @@ export async function getAvailability(cityId, dateStr) {
 
   const [slots, bookings, holds, blackouts] = await Promise.all([
     prisma.timeSlot.findMany({
-      where: { isActive: true, OR: [{ cityId }, { cityId: null }] },
+      where: { isActive: true, OR: cityId ? [{ cityId }, { cityId: null }] : [{ cityId: null }] },
       orderBy: { position: 'asc' },
     }),
-    prisma.slotBooking.findMany({ where: { date, cityId } }),
-    prisma.slotHold.findMany({ where: { date, cityId, status: 'ACTIVE', expiresAt: { gt: new Date() } } }),
-    prisma.slotBlackout.findMany({ where: { date, OR: [{ cityId }, { cityId: null }] } }),
+    cityId ? prisma.slotBooking.findMany({ where: { date, cityId } }) : [],
+    cityId ? prisma.slotHold.findMany({ where: { date, cityId, status: 'ACTIVE', expiresAt: { gt: new Date() } } }) : [],
+    prisma.slotBlackout.findMany({ where: { date, OR: cityId ? [{ cityId }, { cityId: null }] : [{ cityId: null }] } }),
   ]);
 
   const bookedBySlot = new Map(bookings.map((b) => [b.timeSlotId, b.bookedCount]));
