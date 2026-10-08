@@ -36,6 +36,7 @@ interface SlotOption {
   endTime: string;
   surgeCharge: string;
   available: boolean;
+  closed?: boolean;
   remaining: number;
 }
 
@@ -423,7 +424,7 @@ export function CheckoutSection() {
                 >
                   {slot.label}
                   {Number(slot.surgeCharge) > 0 && <span className="ml-1 text-(--coral-600)">+₹{Number(slot.surgeCharge).toLocaleString("en-IN")}</span>}
-                  {!slot.available && " (Full)"}
+                  {!slot.available && (slot.closed ? " (Closed)" : " (Full)")}
                 </button>
               ))}
             </div>

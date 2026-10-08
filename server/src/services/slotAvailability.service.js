@@ -1,6 +1,7 @@
 import { prisma } from '../config/db.js';
 import { ERROR_CODES } from '../config/constants.js';
 import { nowIST } from '../utils/datetime.js';
+import { isSlotTooSoon } from '../utils/slotTime.js';
 
 function apiError(status, code, message) {
   const err = new Error(message);
@@ -47,7 +48,9 @@ export async function getAvailability(cityId, dateStr) {
   return slots.map((slot) => {
     const taken = (bookedBySlot.get(slot.id) || 0) + (heldBySlot.get(slot.id) || 0);
     const remaining = Math.max(0, slot.capacity - taken);
-    const isBlackedOut = fullyBlackedOut || blackedOutSlotIds.has(slot.id);
+    // Today's slots close a few hours before they start.
+    const tooSoon = isSlotTooSoon(date, slot.startTime);
+    const isBlackedOut = fullyBlackedOut || blackedOutSlotIds.has(slot.id) || tooSoon;
 
     return {
       id: slot.id,
@@ -56,6 +59,7 @@ export async function getAvailability(cityId, dateStr) {
       endTime: slot.endTime,
       surgeCharge: slot.surgeCharge,
       available: !isBlackedOut && remaining > 0,
+      closed: isBlackedOut,
       remaining,
     };
   });

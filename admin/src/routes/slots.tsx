@@ -59,6 +59,187 @@ function toPayload(form: Form) {
   }
 }
 
+interface Blackout {
+  id: string
+  date: string
+  timeSlotId: string | null
+  cityId: string | null
+  reason: string | null
+  timeSlot: { label: string; startTime: string; endTime: string } | null
+  city: City | null
+}
+
+// Dates (or single slots on a date) the admin has switched off. Everything not
+// listed here stays open, however far ahead the customer books.
+function ClosedDates({ slots, cities }: { slots: Slot[]; cities: City[] }) {
+  const queryClient = useQueryClient()
+  const today = new Date().toISOString().slice(0, 10)
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
+  const [slotId, setSlotId] = useState('')
+  const [cityId, setCityId] = useState('')
+  const [reason, setReason] = useState('')
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['slot-blackouts'],
+    queryFn: () => api.get<Blackout[]>('/admin/slot-blackouts?limit=200&sortBy=date&sortOrder=asc'),
+  })
+  const rows = (data?.data ?? []).filter((b) => b.date.slice(0, 10) >= today)
+
+  const addMutation = useMutation({
+    mutationFn: async () => {
+      const last = to || from
+      const days: string[] = []
+      for (let d = new Date(`${from}T00:00:00Z`); d <= new Date(`${last}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + 1)) {
+        days.push(d.toISOString().slice(0, 10))
+      }
+      if (days.length > 92) throw new Error('Pick at most 3 months at a time')
+      for (const date of days) {
+        await api.post('/admin/slot-blackouts', {
+          date,
+          timeSlotId: slotId || undefined,
+          cityId: cityId || undefined,
+          reason: reason.trim() || undefined,
+        })
+      }
+      return days.length
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: ['slot-blackouts'] })
+      setFrom('')
+      setTo('')
+      setReason('')
+      toast.success(`Closed ${count} day${count === 1 ? '' : 's'}`)
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : errorMessage(err)),
+  })
+
+  const removeMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/admin/slot-blackouts/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['slot-blackouts'] })
+      toast.success('Reopened')
+    },
+    onError: (err) => toast.error(errorMessage(err)),
+  })
+
+  return (
+    <div className="mt-10">
+      <h2 className="font-display text-xl font-semibold text-primary">Closed Dates &amp; Slots</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Every date and every slot is open by default, for any date ahead. Close a whole day, or just one slot, only when
+        you can&apos;t take bookings. Customers then see it as &quot;Closed&quot; at checkout. Delete the row to reopen it.
+      </p>
+
+      <form
+        className="mt-4 grid grid-cols-1 gap-3 rounded-md border border-border p-4 sm:grid-cols-2 lg:grid-cols-3"
+        onSubmit={(e) => {
+          e.preventDefault()
+          if (to && to < from) return toast.error('"To" date is before "From" date')
+          addMutation.mutate()
+        }}
+      >
+        <div className="space-y-1">
+          <Label htmlFor="b-from">From date</Label>
+          <Input id="b-from" type="date" min={today} value={from} onChange={(e) => setFrom(e.target.value)} required />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="b-to">To date (optional, for a range)</Label>
+          <Input id="b-to" type="date" min={from || today} value={to} onChange={(e) => setTo(e.target.value)} />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="b-slot">Which slot</Label>
+          <select
+            id="b-slot"
+            value={slotId}
+            onChange={(e) => setSlotId(e.target.value)}
+            className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none"
+          >
+            <option value="">Whole day (all slots)</option>
+            {slots.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.label} ({s.startTime}–{s.endTime})
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="b-city">City</Label>
+          <select
+            id="b-city"
+            value={cityId}
+            onChange={(e) => setCityId(e.target.value)}
+            className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none"
+          >
+            <option value="">All cities</option>
+            {cities.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-1 sm:col-span-1">
+          <Label htmlFor="b-reason">Reason (only you see this)</Label>
+          <Input id="b-reason" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Team on leave" />
+        </div>
+        <div className="flex items-end">
+          <Button type="submit" disabled={addMutation.isPending}>
+            {addMutation.isPending ? 'Closing...' : 'Close it'}
+          </Button>
+        </div>
+      </form>
+
+      <div className="mt-4 overflow-x-auto rounded-md border border-border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Closed</TableHead>
+              <TableHead>City</TableHead>
+              <TableHead>Reason</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading && (
+              <TableRow>
+                <TableCell colSpan={5}>
+                  <Skeleton className="h-6 w-full" />
+                </TableCell>
+              </TableRow>
+            )}
+            {!isLoading && rows.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="text-muted-foreground">
+                  Nothing closed — all upcoming dates and slots are open.
+                </TableCell>
+              </TableRow>
+            )}
+            {rows.map((b) => (
+              <TableRow key={b.id}>
+                <TableCell className="font-medium">
+                  {new Date(b.date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })}
+                </TableCell>
+                <TableCell className="text-sm">
+                  {b.timeSlot ? `${b.timeSlot.label} (${b.timeSlot.startTime}–${b.timeSlot.endTime})` : 'Whole day'}
+                </TableCell>
+                <TableCell className="text-sm">{b.city?.name ?? 'All cities'}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">{b.reason ?? '—'}</TableCell>
+                <TableCell className="text-right">
+                  <Button variant="ghost" size="sm" onClick={() => removeMutation.mutate(b.id)}>
+                    Reopen
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  )
+}
+
 export function SlotsPage() {
   const queryClient = useQueryClient()
   const [editing, setEditing] = useState<Slot | 'new' | null>(null)
@@ -292,6 +473,8 @@ export function SlotsPage() {
           </TableBody>
         </Table>
       </div>
+
+      <ClosedDates slots={slots} cities={cities} />
     </div>
   )
 }

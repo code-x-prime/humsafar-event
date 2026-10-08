@@ -1,6 +1,7 @@
 import { prisma } from '../config/db.js';
 import { ERROR_CODES } from '../config/constants.js';
 import { nowIST } from '../utils/datetime.js';
+import { isSlotTooSoon } from '../utils/slotTime.js';
 import { generateUniqueOrderNumber } from '../utils/orderNumber.js';
 import { validateCoupon, getEligibleCoupons } from './couponValidation.service.js';
 import { cancelStalePendingOrders } from './payment.checkout.service.js';
@@ -305,6 +306,9 @@ async function holdSlot({ cityId, timeSlotId, eventDate }) {
   const slot = await prisma.timeSlot.findUnique({ where: { id: timeSlotId } });
   if (!slot || !slot.isActive || (slot.cityId && slot.cityId !== cityId)) {
     throw apiError(404, ERROR_CODES.NOT_FOUND, 'That time slot is not available');
+  }
+  if (isSlotTooSoon(eventDate, slot.startTime)) {
+    throw apiError(409, ERROR_CODES.CONFLICT, 'That time slot is too close to start — please pick a later slot or day');
   }
 
   const hold = await prisma.$transaction(async (tx) => {
