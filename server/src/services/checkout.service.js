@@ -2,6 +2,7 @@ import { prisma } from '../config/db.js';
 import { ERROR_CODES } from '../config/constants.js';
 import { nowIST } from '../utils/datetime.js';
 import { isSlotTooSoon } from '../utils/slotTime.js';
+import { ensureDefaultSlots } from './defaultSlots.service.js';
 import { generateUniqueOrderNumber } from '../utils/orderNumber.js';
 import { validateCoupon, getEligibleCoupons } from './couponValidation.service.js';
 import { cancelStalePendingOrders } from './payment.checkout.service.js';
@@ -363,6 +364,7 @@ export async function createOrder(userId, { addressId, eventDate, timeSlotId, pa
   // would skip the capacity limit and the slot's surge charge. A city with no
   // slots set up simply books without one.
   if (!timeSlotId) {
+    await ensureDefaultSlots();
     const configuredSlots = await prisma.timeSlot.count({
       where: { isActive: true, OR: [{ cityId: address.cityId }, { cityId: null }] },
     });

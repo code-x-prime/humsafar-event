@@ -2,6 +2,7 @@ import { prisma } from '../config/db.js';
 import { ERROR_CODES } from '../config/constants.js';
 import { nowIST } from '../utils/datetime.js';
 import { isSlotTooSoon } from '../utils/slotTime.js';
+import { ensureDefaultSlots } from './defaultSlots.service.js';
 
 function apiError(status, code, message) {
   const err = new Error(message);
@@ -21,6 +22,8 @@ export async function getAvailability(cityId, dateStr) {
   if (Number.isNaN(date.getTime())) {
     throw apiError(422, ERROR_CODES.VALIDATION_ERROR, 'Invalid date');
   }
+
+  await ensureDefaultSlots();
 
   const today = nowIST().startOf('day').toDate();
   if (date < today) {
