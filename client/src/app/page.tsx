@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { BannerCarousel } from "@/components/BannerCarousel";
+import { BannerCarousel, type HeroBanner } from "@/components/BannerCarousel";
 import { CategoryGrid, type HomeCategory } from "@/components/CategoryGrid";
 import { HomeCategorySection, type HomeSection } from "@/components/HomeCategorySection";
 import { HomeBannerRow, type HomeBanner } from "@/components/HomeBannerRow";
@@ -16,43 +16,55 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v
 
 type HomeFeedRow = { type: "section"; data: HomeSection } | { type: "banner"; data: HomeBanner };
 
+async function getHeroBanners(): Promise<HeroBanner[]> {
+  try {
+    const res = await fetch(`${API_BASE}/banners?placement=HOME_HERO`, { next: { revalidate: 60 } });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.success ? json.data : [];
+  } catch {
+    return [];
+  }
+}
+
 async function getHomeFeed(): Promise<HomeFeedRow[]> {
-  const res = await fetch(`${API_BASE}/products/home-feed`, { cache: "no-store" });
+  const res = await fetch(`${API_BASE}/products/home-feed`, { next: { revalidate: 60 } });
   if (!res.ok) return [];
   const json = await res.json();
   return json.success ? json.data : [];
 }
 
 async function getTestimonials(): Promise<Testimonial[]> {
-  const res = await fetch(`${API_BASE}/testimonials`, { cache: "no-store" });
+  const res = await fetch(`${API_BASE}/testimonials`, { next: { revalidate: 60 } });
   if (!res.ok) return [];
   const json = await res.json();
   return json.success ? json.data : [];
 }
 
 async function getHomeCategories(): Promise<HomeCategory[]> {
-  const res = await fetch(`${API_BASE}/categories/home`, { cache: "no-store" });
+  const res = await fetch(`${API_BASE}/categories/home`, { next: { revalidate: 60 } });
   if (!res.ok) return [];
   const json = await res.json();
   return json.success ? json.data : [];
 }
 
 async function getHomeGalleryImages(): Promise<GalleryImage[]> {
-  const res = await fetch(`${API_BASE}/gallery?homeOnly=true`, { cache: "no-store" });
+  const res = await fetch(`${API_BASE}/gallery?homeOnly=true`, { next: { revalidate: 60 } });
   if (!res.ok) return [];
   const json = await res.json();
   return json.success ? json.data : [];
 }
 
 async function getTrendingShopProducts(): Promise<TrendingShopProduct[]> {
-  const res = await fetch(`${API_BASE}/shop/products?featured=true&limit=10`, { cache: "no-store" });
+  const res = await fetch(`${API_BASE}/shop/products?featured=true&limit=10`, { next: { revalidate: 60 } });
   if (!res.ok) return [];
   const json = await res.json();
   return json.success ? json.data : [];
 }
 
 export default async function Home() {
-  const [feed, testimonials, categories, galleryImages, trendingProducts, blogPosts] = await Promise.all([
+  const [heroBanners, feed, testimonials, categories, galleryImages, trendingProducts, blogPosts] = await Promise.all([
+    getHeroBanners(),
     getHomeFeed(),
     getTestimonials(),
     getHomeCategories(),
@@ -67,7 +79,7 @@ export default async function Home() {
 
       <main className="flex-1">
         <section className="bg-(--surface-warm,#FFF9F2) py-8 sm:py-12">
-          <BannerCarousel placement="HOME_HERO" />
+          <BannerCarousel placement="HOME_HERO" initialBanners={heroBanners} />
         </section>
 
         <CategoryGrid categories={categories} />

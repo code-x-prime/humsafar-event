@@ -11,7 +11,19 @@ const extraImageHosts = (process.env.NEXT_PUBLIC_IMAGE_HOST || "")
   .filter(Boolean)
   .map((hostname) => ({ protocol: "https" as const, hostname }));
 
+// Files in /public are served with no cache lifetime by default, so every visit
+// re-downloads the banners and logos. Cache them for a month; a replaced image
+// should be given a new file name.
+const longCache = [{ key: "Cache-Control", value: "public, max-age=2592000, stale-while-revalidate=86400" }];
+
 const nextConfig: NextConfig = {
+  async headers() {
+    return [
+      { source: "/banner/:path*", headers: longCache },
+      { source: "/banners/:path*", headers: longCache },
+      { source: "/:file(logo-2.png|logo.jpeg|whatsapp.png)", headers: longCache },
+    ];
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "**.r2.dev" },

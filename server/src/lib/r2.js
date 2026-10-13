@@ -69,7 +69,15 @@ export async function deleteObject(key) {
 export async function uploadObject({ key, contentType, body }) {
   const { client, bucket, publicUrl } = getClient();
 
-  await client.send(new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: contentType, Body: body }));
+  await client.send(new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      ContentType: contentType,
+      Body: body,
+      // Keys are unique per upload, so the file never changes: browsers and the
+      // CDN can keep it for a year.
+      CacheControl: 'public, max-age=31536000, immutable',
+    }));
 
   const base = publicUrl ? publicUrl.replace(/\/$/, '') : null;
   if (!base) throw notConfiguredError();

@@ -13,26 +13,17 @@ export function SiteLoader() {
   const [fadingOut, setFadingOut] = useState(false);
 
   useEffect(() => {
-    let windowLoaded = false;
     let bannerReady = false;
     let finished = false;
 
     function maybeFinish() {
-      if (finished || !windowLoaded || !bannerReady) return;
+      // The hero is part of the server-rendered page, so there is nothing
+      // left to wait for once it signals ready — in particular not the window
+      // `load` event, which waits on every image and script on the page.
+      if (finished || !bannerReady) return;
       finished = true;
       setFadingOut(true);
       setTimeout(() => setVisible(false), 350);
-    }
-
-    function onWindowLoad() {
-      windowLoaded = true;
-      maybeFinish();
-    }
-
-    if (document.readyState === "complete") {
-      onWindowLoad();
-    } else {
-      window.addEventListener("load", onWindowLoad);
     }
 
     const offBannerReady = onBannerReady(() => {
@@ -48,10 +39,9 @@ export function SiteLoader() {
     const fallback = setTimeout(() => {
       bannerReady = true;
       maybeFinish();
-    }, 1200);
+    }, 700);
 
     return () => {
-      window.removeEventListener("load", onWindowLoad);
       offBannerReady();
       clearTimeout(fallback);
     };

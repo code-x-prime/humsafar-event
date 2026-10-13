@@ -73,7 +73,7 @@ export function TestimonialsCarousel({ testimonials }: { testimonials: Testimoni
                   <div className="flex items-center gap-2.5 border-t border-(--ink-100) pt-3">
                     {t.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={t.image} alt={t.name} className="h-9 w-9 rounded-full object-cover" />
+                      <img src={t.image} alt={t.name} loading="lazy" decoding="async" className="h-9 w-9 rounded-full object-cover" />
                     ) : (
                       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-(--coral-100) font-heading text-xs font-semibold text-(--coral-600)">
                         {t.name.slice(0, 2).toUpperCase()}

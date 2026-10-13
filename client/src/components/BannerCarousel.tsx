@@ -13,6 +13,19 @@ import {
 import { getJson } from "@/lib/api";
 import { signalBannerReady } from "@/lib/siteLoaderSignal";
 
+export interface HeroBanner {
+  id: string;
+  eyebrow?: string | null;
+  title: string | null;
+  highlightWord?: string | null;
+  subtitle: string | null;
+  ctaText: string | null;
+  ctaLink: string | null;
+  ctaFootnote?: string | null;
+  desktopImageUrl: string | null;
+  mobileImageUrl: string | null;
+}
+
 interface Banner {
   id: string;
   eyebrow?: string | null;
@@ -210,7 +223,7 @@ function HeadingText({ title, highlightWord }: { title: string; highlightWord?: 
   );
 }
 
-function BannerSlide({ banner }: { banner: Banner }) {
+function BannerSlide({ banner, first }: { banner: Banner; first: boolean }) {
   const hasImage = banner.desktopImageUrl || banner.mobileImageUrl;
   // Empty-string fields from the admin form are falsy but not null — trim so
   // an all-whitespace/empty value never renders overlay text or a dead button.
@@ -248,6 +261,11 @@ function BannerSlide({ banner }: { banner: Banner }) {
             src={banner.desktopImageUrl || banner.mobileImageUrl!}
             alt={title || "Humsafar Events banner"}
             className="absolute inset-0 h-full w-full object-cover"
+            // The first slide is the page's largest paint: fetch it at top
+            // priority. Later slides wait until they are near the viewport.
+            loading={first ? "eager" : "lazy"}
+            fetchPriority={first ? "high" : "auto"}
+            decoding={first ? "sync" : "async"}
           />
         </picture>
       )}
@@ -304,10 +322,22 @@ function BannerSlide({ banner }: { banner: Banner }) {
   );
 }
 
-export function BannerCarousel({ placement = "HOME_HERO" }: { placement?: string }) {
-  const [banners, setBanners] = useState<Banner[] | null>(null);
+export function BannerCarousel({
+  placement = "HOME_HERO",
+  initialBanners,
+}: {
+  placement?: string;
+  // Fetched on the server so the hero image is already in the page HTML and
+  // starts downloading immediately, instead of after the JS has loaded.
+  initialBanners?: HeroBanner[];
+}) {
+  const [banners, setBanners] = useState<Banner[] | null>(initialBanners && initialBanners.length > 0 ? initialBanners : null);
 
   useEffect(() => {
+    if (initialBanners && initialBanners.length > 0) {
+      signalBannerReady();
+      return;
+    }
     getJson<Banner[]>(`/banners?placement=${placement}`)
       .then((data) => {
         setBanners(data.length > 0 ? data : DEFAULT_BANNERS);
@@ -317,7 +347,7 @@ export function BannerCarousel({ placement = "HOME_HERO" }: { placement?: string
         setBanners(DEFAULT_BANNERS);
       })
       .finally(() => signalBannerReady());
-  }, [placement]);
+  }, [placement, initialBanners]);
 
   if (banners === null) {
     return (
@@ -334,9 +364,9 @@ export function BannerCarousel({ placement = "HOME_HERO" }: { placement?: string
       className="mx-auto max-w-7xl px-4"
     >
       <CarouselContent>
-        {banners.map((banner) => (
+        {banners.map((banner, index) => (
           <CarouselItem key={banner.id}>
-            <BannerSlide banner={banner} />
+            <BannerSlide banner={banner} first={index === 0} />
           </CarouselItem>
         ))}
       </CarouselContent>

@@ -20,7 +20,7 @@ export function HomeBannerRow({ banner }: { banner: HomeBanner }) {
           next/image doesn't support directly. */}
       <picture>
         {banner.mobileImage && <source media="(max-width: 640px)" srcSet={banner.mobileImage} />}
-        <img src={banner.desktopImage} alt={banner.heading || ""} className="w-full object-cover" />
+        <img src={banner.desktopImage} alt={banner.heading || ""} loading="lazy" decoding="async" className="w-full object-cover" />
       </picture>
 
       {hasOverlayText && (
