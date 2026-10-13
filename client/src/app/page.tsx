@@ -96,8 +96,6 @@ export default async function Home() {
 
         <TestimonialsCarousel testimonials={testimonials} />
 
-        <BlogSection posts={blogPosts} />
-
         <HomeSeoContent />
 
         {galleryImages.length > 0 && (
@@ -120,7 +118,7 @@ export default async function Home() {
         )}
       </main>
 
-      <Footer />
+      <Footer beforeLinks={<BlogSection posts={blogPosts} />} />
     </div>
   );
 }

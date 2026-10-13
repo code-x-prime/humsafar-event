@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Phone, Mail, ShieldCheck, Truck, Headset } from "lucide-react";
@@ -19,9 +20,12 @@ const IMPORTANT_LINKS = [
   { href: "/refund-policy", label: "Refund Policy" },
 ];
 
-const INFO_LINKS = [
+// `external` links leave the Next.js app (the blog is a separate WordPress
+// install on the same domain), so they use a plain <a>, not <Link>.
+const INFO_LINKS: { href: string; label: string; external?: boolean }[] = [
   { href: "/contact", label: "Contact Us" },
   { href: "/gallery", label: "Gallery" },
+  { href: "https://humsafarevent.com/blog/", label: "Blogs", external: true },
   { href: "/faq", label: "FAQ" },
 ];
 
@@ -43,7 +47,9 @@ const SOCIAL_LINKS = [
   },
 ];
 
-export function Footer() {
+// `beforeLinks` is an optional slot between the trust badges and the link
+// columns — the homepage puts its blog section there.
+export function Footer({ beforeLinks }: { beforeLinks?: ReactNode }) {
   const { citiesByRegion } = useCity();
   const topCities = Object.values(citiesByRegion)
     .flat()
@@ -68,6 +74,8 @@ export function Footer() {
           ))}
         </div>
       </div>
+
+      {beforeLinks && <div className="mt-8">{beforeLinks}</div>}
 
       {/* Main footer */}
       <div className="mt-8 border-t border-(--ink-100) bg-(--surface-alt,#F7F9FC) pt-12 pb-8 text-(--ink-700)">
@@ -152,9 +160,15 @@ export function Footer() {
             <ul className="mt-4 flex flex-col gap-2 font-sans text-sm">
               {INFO_LINKS.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="hover:text-(--orange-600)">
-                    {link.label}
-                  </Link>
+                  {link.external ? (
+                    <a href={link.href} className="hover:text-(--orange-600)">
+                      {link.label}
+                    </a>
+                  ) : (
+                    <Link href={link.href} className="hover:text-(--orange-600)">
+                      {link.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
