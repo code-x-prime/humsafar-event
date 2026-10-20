@@ -2,6 +2,8 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CategoryListing, type CategoryDetail } from "@/components/CategoryListing";
 import { notFound } from "next/navigation";
+import { LocationSeoContent } from "@/components/LocationSeoContent";
+import { getCategoryContent } from "@/lib/locationContent";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
 
@@ -26,9 +28,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const category = await getCategory(slug, {});
   if (!category) return { title: "Category Not Found — Humsafar Events" };
+  // Campaign copy for this category (if any) takes priority over the generic meta.
+  const content = getCategoryContent(category.slug);
   return {
-    title: category.metaTitle || `${category.name} — Humsafar Events`,
+    title: content?.metaTitle || category.metaTitle || `${category.name} — Humsafar Events`,
     description:
+      content?.metaDescription ||
       category.metaDescription ||
       category.description ||
       `Browse premium ${category.name.toLowerCase()} decoration packages from Humsafar Events.`,
@@ -50,12 +55,16 @@ export default async function CategoryPage({
 
   if (!category) notFound();
 
+  const content = getCategoryContent(category.slug);
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
 
       <main className="flex-1 bg-(--surface-alt,#F7F9FC)">
         <CategoryListing category={category} activeSort={query.sort} activeMinPrice={query.minPrice} activeMaxPrice={query.maxPrice} />
+
+        {content && <LocationSeoContent content={content} />}
       </main>
 
       <Footer />

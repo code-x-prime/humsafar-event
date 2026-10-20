@@ -1,7 +1,7 @@
-// Long-form SEO copy for the city landing pages (/locations/[slug]). Each
-// entry is keyed by the city's slug; a city with no entry here simply shows no
-// extra content. To add another city, add another entry — the page and the
-// <LocationSeoContent> component need no changes.
+// Long-form SEO copy shown under the listing on a city page (/locations/[slug])
+// or a category page (/category/[slug]). Each entry is keyed by that page's
+// slug; a page with no entry simply shows no extra content. To add another,
+// add another entry — the pages and <LocationSeoContent> need no changes.
 
 export interface LocationContentItem {
   title: string;
@@ -21,12 +21,12 @@ export interface LocationContentSection {
 }
 
 export interface LocationContent {
-  // Overrides the city's own meta tags and hero heading while this campaign
-  // content is live.
+  // Override the page's own meta tags while this content is live.
   metaTitle: string;
   metaDescription: string;
-  heroTitle: string;
-  heroSubtitle: string;
+  // Optional: replace a city page's hero heading and line.
+  heroTitle?: string;
+  heroSubtitle?: string;
   heading: string;
   intro: string[];
   sections: LocationContentSection[];
@@ -36,13 +36,10 @@ export interface LocationContent {
 export const CONTACT_NUMBER_DISPLAY = "+91-9899899150";
 export const CONTACT_NUMBER_WHATSAPP = "919899899150";
 
-const DIWALI_DELHI: LocationContent = {
-  metaTitle: "Diwali Decoration Services in Delhi for Homes, Offices & Shops | Humsafar Events",
+const DIWALI: LocationContent = {
+  metaTitle: "Diwali Decoration Services for Homes, Offices & Shops in Delhi NCR | Humsafar Events",
   metaDescription:
-    "Diwali decoration services in Delhi for homes, offices, shops, showrooms and halls — floral entrances, balloon backdrops and festive lighting. WhatsApp +91-9899899150 for a free quote.",
-  heroTitle: "Diwali Decoration Services in Delhi",
-  heroSubtitle:
-    "Floral entrances, festive lighting and balloon backdrops for homes, offices, shops and event venues across Delhi.",
+    "Diwali decoration services in Delhi NCR for homes, offices, shops, showrooms and halls — floral entrances, balloon backdrops and festive lighting. WhatsApp +91-9899899150 for a free quote.",
   heading: "Diwali Decoration Services for Homes, Offices & Businesses",
   intro: [
     "No one plans to hang lights at 9 p.m. the night before Diwali. It just happens. The sweets arrive, relatives call to say they’re coming early, and suddenly the front door looks bare. That’s the gap Humsafar Event’s Diwali decoration services fill. Flowers, lights, balloon backdrops, and a proper festive entrance. We do it for homes, offices, shops, and event venues.",
@@ -316,10 +313,16 @@ const DIWALI_DELHI: LocationContent = {
   ],
 };
 
-const CONTENT_BY_CITY_SLUG: Record<string, LocationContent> = {
-  delhi: DIWALI_DELHI,
+const CONTENT_BY_CITY_SLUG: Record<string, LocationContent> = {};
+
+const CONTENT_BY_CATEGORY_SLUG: Record<string, LocationContent> = {
+  diwali: DIWALI,
 };
 
 export function getLocationContent(slug: string): LocationContent | null {
   return CONTENT_BY_CITY_SLUG[slug] ?? null;
+}
+
+export function getCategoryContent(slug: string): LocationContent | null {
+  return CONTENT_BY_CATEGORY_SLUG[slug] ?? null;
 }
