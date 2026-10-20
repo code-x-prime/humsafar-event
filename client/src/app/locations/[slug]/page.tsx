@@ -3,6 +3,8 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CategoryGrid, type HomeCategory } from "@/components/CategoryGrid";
 import { SetCityOnVisit } from "@/components/SetCityOnVisit";
+import { LocationSeoContent } from "@/components/LocationSeoContent";
+import { getLocationContent } from "@/lib/locationContent";
 import { MapPin, CheckCircle2 } from "lucide-react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
@@ -37,9 +39,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const city = await getCity(slug);
   if (!city) return { title: "City Not Found — Humsafar Events" };
+  // Campaign copy for this city (if any) takes priority over the generic meta.
+  const content = getLocationContent(city.slug);
   return {
-    title: city.metaTitle || `Event Decoration in ${city.name} — Humsafar Events`,
+    title: content?.metaTitle || city.metaTitle || `Event Decoration in ${city.name} — Humsafar Events`,
     description:
+      content?.metaDescription ||
       city.metaDescription ||
       `Book premium event and party decorations in ${city.name}. Same-day setup, trusted by hundreds of happy customers.`,
     alternates: { canonical: `/locations/${city.slug}` },
@@ -51,6 +56,8 @@ export default async function LocationPage({ params }: { params: Promise<{ slug:
   const [city, categories] = await Promise.all([getCity(slug), getHomeCategories()]);
 
   if (!city) notFound();
+
+  const content = getLocationContent(city.slug);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -64,10 +71,11 @@ export default async function LocationPage({ params }: { params: Promise<{ slug:
             {city.region || city.state}
           </p>
           <h1 className="mt-2 font-display text-2xl font-semibold text-(--navy-800) sm:text-4xl">
-            Event Decoration in {city.name}
+            {content?.heroTitle || `Event Decoration in ${city.name}`}
           </h1>
           <p className="mx-auto mt-3 max-w-lg font-sans text-sm text-(--ink-500) sm:text-base">
-            Premium birthday, anniversary &amp; party decorations delivered and set up across {city.name}.
+            {content?.heroSubtitle ||
+              `Premium birthday, anniversary & party decorations delivered and set up across ${city.name}.`}
           </p>
 
           {city.isServiceable ? (
@@ -83,6 +91,8 @@ export default async function LocationPage({ params }: { params: Promise<{ slug:
         </div>
 
         <CategoryGrid categories={categories} />
+
+        {content && <LocationSeoContent content={content} />}
       </main>
 
       <Footer />
