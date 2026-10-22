@@ -3,9 +3,15 @@
 // slug; a page with no entry simply shows no extra content. To add another,
 // add another entry — the pages and <LocationSeoContent> need no changes.
 
+import { CHRISTMAS } from "@/lib/christmasContent";
+import { DELHI } from "@/lib/delhiContent";
+
+// Any text may contain inline links written as [anchor text](/path-or-url).
 export interface LocationContentItem {
   title: string;
   body: string[];
+  // Optional WhatsApp button under the card (the label is the button text).
+  cta?: string;
 }
 
 export interface LocationContentSection {
@@ -16,25 +22,36 @@ export interface LocationContentSection {
   // Short "Label: text" lines rendered as a list (e.g. lighting ideas).
   bullets?: { label: string; text: string }[];
   outro?: string[];
-  // Shown as a call-to-action line with WhatsApp and call links.
+  // Call-to-action line with WhatsApp and call buttons. The text is shown as
+  // written. `ctaLabels` overrides the button captions.
   cta?: string;
+  ctaLabels?: { whatsapp: string; call: string };
+  // A single WhatsApp button (no call button) with this caption.
+  ctaButton?: string;
 }
 
 export interface LocationContent {
-  // Override the page's own meta tags while this content is live.
-  metaTitle: string;
-  metaDescription: string;
+  // Optional: override the page's own meta tags while this content is live.
+  // Leave out to keep the title/description set in the admin.
+  metaTitle?: string;
+  metaDescription?: string;
   // Optional: replace a city page's hero heading and line.
   heroTitle?: string;
   heroSubtitle?: string;
   heading: string;
   intro: string[];
+  // Call-to-action line right under the intro.
+  introCta: string;
   sections: LocationContentSection[];
   faqs: { q: string; a: string }[];
+  // Optional closing line under the FAQs (e.g. links to related pages).
+  faqFooter?: string;
 }
 
 export const CONTACT_NUMBER_DISPLAY = "+91-9899899150";
 export const CONTACT_NUMBER_WHATSAPP = "919899899150";
+
+const DIWALI_CONTACT = `WhatsApp Now: ${CONTACT_NUMBER_DISPLAY} or call us at ${CONTACT_NUMBER_DISPLAY}`;
 
 const DIWALI: LocationContent = {
   metaTitle: "Diwali Decoration Services for Homes, Offices & Shops in Delhi NCR | Humsafar Events",
@@ -46,6 +63,7 @@ const DIWALI: LocationContent = {
     "Planning Laxmi Puja at home? Corporate party on Friday? A showroom that has to look festive before customers pour in? There’s a setup for each of those. Go through the collection, choose what you like, and tell us what you need.",
     "Looking for Diwali Decoration Services in Delhi or a nearby city? Look at the designs first. Then send our team a note with your location, your theme, and your requirements.",
   ],
+  introCta: `To get a Free Quote, ${DIWALI_CONTACT}`,
   sections: [
     {
       eyebrow: "What We Do",
@@ -182,7 +200,7 @@ const DIWALI: LocationContent = {
       outro: [
         "Looking up Diwali decoration light ideas, Diwali decoration lights ideas, or Diwali lights ideas? Choose options that fit your space and your theme. Good lighting decoration for Diwali works with flowers, balloons, and other features. It shouldn’t make the setup feel crowded.",
       ],
-      cta: "Ready to discuss your setup?",
+      cta: `Ready to discuss your setup? ${DIWALI_CONTACT}`,
     },
     {
       eyebrow: "Where We Work",
@@ -282,7 +300,7 @@ const DIWALI: LocationContent = {
         "Send us your location, event date, preferred theme, and requirements. We’ll go over what suits you and confirm availability.",
         "Explore the Diwali collection and contact Humsafar Event to plan your festive decoration.",
       ],
-      cta: "Get a free quote",
+      cta: `Get a free quote. ${DIWALI_CONTACT}`,
     },
   ],
   faqs: [
@@ -313,10 +331,13 @@ const DIWALI: LocationContent = {
   ],
 };
 
-const CONTENT_BY_CITY_SLUG: Record<string, LocationContent> = {};
+const CONTENT_BY_CITY_SLUG: Record<string, LocationContent> = {
+  delhi: DELHI,
+};
 
 const CONTENT_BY_CATEGORY_SLUG: Record<string, LocationContent> = {
   diwali: DIWALI,
+  christmas: CHRISTMAS,
 };
 
 export function getLocationContent(slug: string): LocationContent | null {
