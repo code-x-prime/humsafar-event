@@ -5,6 +5,8 @@
 
 import { CHRISTMAS } from "@/lib/christmasContent";
 import { DELHI } from "@/lib/delhiContent";
+import { GHAZIABAD } from "@/lib/ghaziabadContent";
+import { NOIDA } from "@/lib/noidaContent";
 
 // Any text may contain inline links written as [anchor text](/path-or-url).
 export interface LocationContentItem {
@@ -333,6 +335,8 @@ const DIWALI: LocationContent = {
 
 const CONTENT_BY_CITY_SLUG: Record<string, LocationContent> = {
   delhi: DELHI,
+  ghaziabad: GHAZIABAD,
+  noida: NOIDA,
 };
 
 const CONTENT_BY_CATEGORY_SLUG: Record<string, LocationContent> = {
